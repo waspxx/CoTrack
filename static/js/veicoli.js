@@ -3435,6 +3435,45 @@ elActivityForm.addEventListener('submit', async (e) => {
             }
             if (entryData.triggerType === 'odometer' || entryData.triggerType === 'both') {
                 entryData.recurrenceKm = parseFloat(document.getElementById('rem-recurrence-km').value) || null;
+                if (entryData.recurrenceKm && (!id || !entryData.targetOdometer)) {
+                    // Find the last recorded matching maintenance or expense
+                    let lastOdometer = null;
+                    const sortedMatchingEntries = state.entries
+                        .filter(e => {
+                            if (e.vehicleId !== state.activeVehicleId || !e.odometer) return false;
+                            let isMatch = false;
+                            if (e.type === 'service') {
+                                try {
+                                    const selectedItems = JSON.parse(e.description);
+                                    if (entryData.description in selectedItems) {
+                                        isMatch = true;
+                                    }
+                                } catch (err) {
+                                    if (e.description === entryData.description) {
+                                        isMatch = true;
+                                    }
+                                }
+                            } else if (e.type === 'expense') {
+                                if (e.category === entryData.description) {
+                                    isMatch = true;
+                                }
+                            }
+                            return isMatch;
+                        })
+                        .sort((a, b) => {
+                            if (a.date !== b.date) {
+                                return b.date.localeCompare(a.date);
+                            }
+                            return (b.odometer || 0) - (a.odometer || 0);
+                        });
+                        
+                    if (sortedMatchingEntries.length > 0) {
+                        lastOdometer = sortedMatchingEntries[0].odometer;
+                    }
+                    
+                    const baseOdo = lastOdometer !== null ? lastOdometer : getCurrentOdometer(state.activeVehicleId, true);
+                    entryData.targetOdometer = baseOdo + entryData.recurrenceKm;
+                }
             } else {
                 entryData.recurrenceKm = null;
             }

@@ -11,6 +11,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Calcolo automatico della scadenza iniziale per promemoria ricorrenti chilometrici basandosi sulla manutenzione precedente registrata dello stesso tipo
 - [x] **Feature** Controllo giornaliero dei promemoria dei veicoli in scadenza e invio mail di avviso via SMTP
 - [x] **Feature** Tracciamento bici elettriche e sessioni di ricarica nel garage (Ah/Volt per calcolo capacità batteria, percentuali di avvio/fine ricarica e calcolo kWh automatico)
 - [x] **Marketing** Aggiornare README.md
