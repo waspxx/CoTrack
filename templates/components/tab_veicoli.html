@@ -472,6 +472,13 @@
 <canvas id="chart-fuel-consumption"></canvas>
 </div>
 </div>
+<!-- Battery capacity trend (Chart) -->
+<div class="card report-card" id="report-card-battery-capacity" style="display: none;">
+  <h3>{{ _('Battery Capacity Trend') }}</h3>
+  <div class="chart-container">
+    <canvas id="chart-battery-capacity"></canvas>
+  </div>
+</div>
 <!-- Cost per Km (Line Chart) -->
 <div class="card report-card">
 <h3>{{ _('Annual Cost per Kilometer (€/km)') }}</h3>
@@ -609,6 +616,17 @@
 <label for="f-total-cost">{{ _('Total Cost (€) *') }}</label>
 <input id="f-total-cost" min="0.01" placeholder="{{ _('e.g., 50.00') }}" step="0.01" type="number" required/>
 </div>
+</div>
+<!-- Battery charging percentage details for electric vehicles -->
+<div class="form-row" id="f-battery-charge-row" style="display: none;">
+  <div class="form-group">
+    <label for="f-battery-start">{{ _('Starting Battery') }} %</label>
+    <input id="f-battery-start" type="number" min="0" max="100" placeholder="{{ _('e.g., 20') }}"/>
+  </div>
+  <div class="form-group">
+    <label for="f-battery-end">{{ _('Ending Battery') }} %</label>
+    <input id="f-battery-end" type="number" min="0" max="100" placeholder="{{ _('e.g., 100') }}"/>
+  </div>
 </div>
 <div class="form-row">
 <div class="form-group checkbox-group">
@@ -881,11 +899,35 @@
 <option value="Elettrico">Elettrico / Ibrido plug-in</option>
 <option value="Nessuno">{{ _('None (Manual Bicycles)') }}</option>
 </select>
+  </div>
 </div>
+<!-- Battery Fields for Electric Vehicles -->
+<div class="form-row" id="v-battery-section" style="display: none;">
+  <div class="form-group">
+    <label for="v-battery-capacity">{{ _('Battery Capacity') }}</label>
+    <input id="v-battery-capacity" type="number" min="0" placeholder="{{ _('e.g., 500 (Wh) or 75 (kWh)') }}" step="0.1"/>
+  </div>
+  <div class="form-group">
+    <label for="v-battery-unit">{{ _('Battery Unit') }}</label>
+    <select id="v-battery-unit">
+      <option value="Wh">Wh (Watt-hours)</option>
+      <option value="kWh">kWh (Kilowatt-hours)</option>
+    </select>
+  </div>
+</div>
+<div class="form-row" id="v-battery-calc-section" style="display: none;">
+  <div class="form-group">
+    <label for="v-battery-amp-hours">{{ _('Battery Capacity (Ah) - Optional') }}</label>
+    <input id="v-battery-amp-hours" type="number" min="0" placeholder="{{ _('e.g., 14') }}" step="0.1"/>
+  </div>
+  <div class="form-group">
+    <label for="v-battery-voltage">{{ _('Battery Voltage (V) - Optional') }}</label>
+    <input id="v-battery-voltage" type="number" min="0" placeholder="{{ _('e.g., 36') }}" step="0.1"/>
+  </div>
 </div>
 <div class="form-row">
-<div class="form-group">
-<label for="v-plate">{{ _('Plate (optional)') }}</label>
+  <div class="form-group">
+    <label for="v-plate">{{ _('Plate (optional)') }}</label>
 <input id="v-plate" placeholder="{{ _('e.g., AB 123 CD') }}" type="text"/>
 </div>
 <div class="form-group">

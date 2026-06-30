@@ -327,6 +327,7 @@ let state = {
 // --- CHART INSTANCES (Global references to destroy before recreate) ---
 let chartBreakdown = null;
 let chartConsumption = null;
+let chartBatteryCapacity = null;
 let chartMonthlyByCategory = null;
 let chartExpenseTypes = null;
 let chartMaintenanceTypes = null;
@@ -481,7 +482,7 @@ function router() {
     
     // Adjust UI depending on active vehicle type (e.g. bicycle vs motor vehicles)
     const veh = getActiveVehicle();
-    const isBicycle = veh && veh.type === 'Bicicletta';
+    const isBicycle = veh && veh.type === 'Bicicletta' && veh.fuel !== 'Elettrico';
     
     if (tabName === 'refuel' && isBicycle) {
         window.location.hash = '#dashboard';
@@ -586,36 +587,125 @@ window.addEventListener('DOMContentLoaded', async () => {
         router();
     }
     
-    // Dynamic fields for Bicicletta type in vehicle form
+    // Dynamic fields for Bicicletta type and electric battery specifications
     const selectVType = document.getElementById('v-type');
     const selectVFuel = document.getElementById('v-fuel');
     const inputVTank = document.getElementById('v-tank-size');
+    const inputAh = document.getElementById('v-battery-amp-hours');
+    const inputV = document.getElementById('v-battery-voltage');
+    const inputCap = document.getElementById('v-battery-capacity');
+    const selectUnit = document.getElementById('v-battery-unit');
     
-    function toggleVehicleFields() {
-        if (selectVType.value === 'Bicicletta') {
-            selectVFuel.value = 'Nessuno';
-            selectVFuel.disabled = true;
-            inputVTank.value = '';
-            inputVTank.disabled = true;
+    window.toggleVehicleFields = function() {
+        if (!selectVType || !selectVFuel || !inputVTank) return;
+        const fuelOptions = selectVFuel.querySelectorAll('option');
+        const isBicycle = selectVType.value === 'Bicicletta';
+        
+        if (isBicycle) {
+            // For Bicycles, only allow Elettrico or Nessuno
+            fuelOptions.forEach(opt => {
+                if (opt.value === 'Nessuno' || opt.value === 'Elettrico') {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+            if (selectVFuel.value !== 'Nessuno' && selectVFuel.value !== 'Elettrico') {
+                selectVFuel.value = 'Nessuno';
+            }
         } else {
-            selectVFuel.disabled = false;
-            inputVTank.disabled = false;
+            // For other vehicles, show all except Nessuno
+            fuelOptions.forEach(opt => {
+                if (opt.value === 'Nessuno') {
+                    opt.style.display = 'none';
+                } else {
+                    opt.style.display = 'block';
+                }
+            });
             if (selectVFuel.value === 'Nessuno') {
                 selectVFuel.value = 'Benzina';
             }
         }
-    }
+        
+        const batterySec = document.getElementById('v-battery-section');
+        const batteryCalcSec = document.getElementById('v-battery-calc-section');
+        
+        if (selectVFuel.value === 'Elettrico') {
+            if (batterySec) batterySec.style.display = 'flex';
+            if (batteryCalcSec) batteryCalcSec.style.display = 'flex';
+            inputVTank.value = '';
+            inputVTank.disabled = true;
+            if (inputVTank.parentElement) inputVTank.parentElement.style.display = 'none';
+        } else {
+            if (batterySec) batterySec.style.display = 'none';
+            if (batteryCalcSec) batteryCalcSec.style.display = 'none';
+            inputVTank.disabled = isBicycle;
+            if (inputVTank.parentElement) {
+                inputVTank.parentElement.style.display = isBicycle ? 'none' : 'block';
+            }
+        }
+    };
     
-    selectVType.addEventListener('change', toggleVehicleFields);
+    window.calcCapacityFromAhV = function() {
+        if (!inputAh || !inputV || !inputCap || !selectUnit) return;
+        const ah = parseFloat(inputAh.value) || 0;
+        const v = parseFloat(inputV.value) || 0;
+        if (ah > 0 && v > 0) {
+            inputCap.value = (ah * v).toFixed(1);
+            selectUnit.value = 'Wh';
+        }
+    };
+    
+    if (selectVType) selectVType.addEventListener('change', window.toggleVehicleFields);
+    if (selectVFuel) selectVFuel.addEventListener('change', window.toggleVehicleFields);
+    if (inputAh) inputAh.addEventListener('input', window.calcCapacityFromAhV);
+    if (inputV) inputV.addEventListener('input', window.calcCapacityFromAhV);
     
     // Real time fueling form volume calculation (volume calculated automatically, total cost mandatory)
     const inputLiters = document.getElementById('f-liters');
     const inputPrice = document.getElementById('f-price-unit');
     const inputTotal = document.getElementById('f-total-cost');
+    const inputBatteryStart = document.getElementById('f-battery-start');
+    const inputBatteryEnd = document.getElementById('f-battery-end');
     
     function calcVolume() {
+        const fuelType = document.getElementById('f-fuel-type').value;
+        const activeVeh = getActiveVehicle();
         const t = parseFloat(inputTotal.value) || 0;
         const p = parseFloat(inputPrice.value) || 0;
+        
+        let capacity = activeVeh ? parseFloat(activeVeh.batteryCapacity) : 0;
+        let capUnit = activeVeh ? activeVeh.batteryCapacityUnit || 'Wh' : 'Wh';
+        
+        const entryId = document.getElementById('entry-id').value;
+        if (entryId) {
+            const entry = state.entries.find(e => e.id === entryId);
+            if (entry && entry.batteryCapacity) {
+                capacity = parseFloat(entry.batteryCapacity);
+                capUnit = entry.batteryCapacityUnit || 'Wh';
+            }
+        }
+        
+        if (fuelType === 'Elettrico' && capacity > 0) {
+            const start = parseFloat(inputBatteryStart.value);
+            const end = parseFloat(inputBatteryEnd.value);
+            if (!isNaN(start) && !isNaN(end) && end > start) {
+                let volume = capacity * (end - start) / 100;
+                if (capUnit === 'Wh') volume = volume / 1000; // Wh to kWh
+                
+                inputLiters.value = volume.toFixed(3);
+                
+                if (document.activeElement === inputTotal && t > 0) {
+                    inputPrice.value = (t / volume).toFixed(3);
+                } else if (document.activeElement === inputPrice && p > 0) {
+                    inputTotal.value = (volume * p).toFixed(2);
+                } else if (p > 0) {
+                    inputTotal.value = (volume * p).toFixed(2);
+                }
+                return;
+            }
+        }
+        
         if (t > 0 && p > 0) {
             inputLiters.value = (t / p).toFixed(2);
         } else {
@@ -625,11 +715,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     inputTotal.addEventListener('input', calcVolume);
     inputPrice.addEventListener('input', calcVolume);
-
+    if (inputBatteryStart) inputBatteryStart.addEventListener('input', calcVolume);
+    if (inputBatteryEnd) inputBatteryEnd.addEventListener('input', calcVolume);
+    
     // Fuel type change listener for unit updates
     const selectFFuel = document.getElementById('f-fuel-type');
     if (selectFFuel) {
-        selectFFuel.addEventListener('change', window.updateRefuelLabels);
+        selectFFuel.addEventListener('change', () => {
+            window.updateRefuelLabels();
+            calcVolume();
+        });
     }
 
     // Reminder fields trigger type change listener and is-recurring change listener
@@ -738,40 +833,84 @@ function adjustUIForActiveVehicle() {
     const veh = getActiveVehicle();
     if (!veh) return;
 
-    const isBicycle = veh.type === 'Bicicletta';
+    const isBicycle = veh.type === 'Bicicletta' && veh.fuel !== 'Elettrico';
+    const isElectric = veh.fuel === 'Elettrico';
+    const lang = document.documentElement.lang || 'it';
 
     // 1. Hide/show navigation links
     const navRefuel = document.getElementById('nav-refuel');
     if (navRefuel) {
         navRefuel.style.display = isBicycle ? 'none' : 'flex';
+        const labelSpan = navRefuel.querySelector('span');
+        if (labelSpan) {
+            if (isElectric) {
+                labelSpan.textContent = lang === 'it' ? 'Ricariche' : 'Charging';
+            } else {
+                labelSpan.textContent = lang === 'it' ? 'Rifornimenti' : 'Refuelings';
+            }
+        }
     }
 
     // 2. Hide/show refuel in modals
     const modalTypeRefuelBtn = document.querySelector('.type-sel-btn[data-type="refuel"]');
     if (modalTypeRefuelBtn) {
         modalTypeRefuelBtn.style.display = isBicycle ? 'none' : 'block';
+        if (isElectric) {
+            modalTypeRefuelBtn.textContent = lang === 'it' ? 'Ricarica' : 'Charge';
+        } else {
+            modalTypeRefuelBtn.textContent = lang === 'it' ? 'Rifornimento' : 'Refueling';
+        }
     }
 
     // 3. Hide/show refuel button in quick action card
     const quickRefuelBtn = document.querySelector('.quick-action-btn.r-fuel');
     if (quickRefuelBtn) {
         quickRefuelBtn.style.display = isBicycle ? 'none' : 'flex';
+        const labelSpan = quickRefuelBtn.querySelector('.btn-label');
+        if (labelSpan) {
+            if (isElectric) {
+                labelSpan.textContent = lang === 'it' ? 'Ricarica' : 'Charge';
+            } else {
+                labelSpan.textContent = lang === 'it' ? 'Rifornimento' : 'Refueling';
+            }
+        }
     }
 
     // 4. Hide/show fuel consumption stat card
     const fuelStatCard = document.querySelector('.stat-card.fuel-consumption');
     if (fuelStatCard) {
         fuelStatCard.style.display = isBicycle ? 'none' : 'flex';
+        const labelH4 = fuelStatCard.querySelector('h4');
+        if (labelH4) {
+            if (isElectric) {
+                labelH4.textContent = lang === 'it' ? 'Consumo Medio Elettrico' : 'Average Electricity Cons.';
+            } else {
+                labelH4.textContent = lang === 'it' ? 'Consumo Medio Carburante' : 'Average Fuel Consumption';
+            }
+        }
     }
 
     // 5. Hide/show fuel charts card wrappers in reports
     const reportCardConsumption = document.getElementById('report-card-fuel-consumption');
     const reportCardPrices = document.getElementById('report-card-fuel-prices');
+    const reportCardBattery = document.getElementById('report-card-battery-capacity');
+    
     if (reportCardConsumption) {
         reportCardConsumption.style.display = isBicycle ? 'none' : 'flex';
+        const titleH3 = reportCardConsumption.querySelector('h3');
+        if (titleH3) {
+            if (isElectric) {
+                titleH3.textContent = lang === 'it' ? 'Andamento Consumo Energia' : 'Energy Consumption Trend';
+            } else {
+                titleH3.textContent = lang === 'it' ? 'Andamento Consumo Carburante' : 'Fuel Consumption Trend';
+            }
+        }
     }
     if (reportCardPrices) {
         reportCardPrices.style.display = isBicycle ? 'none' : 'flex';
+    }
+    if (reportCardBattery) {
+        reportCardBattery.style.display = isElectric ? 'flex' : 'none';
     }
 }
 
@@ -1371,6 +1510,15 @@ function renderRefuelsTable() {
             if (diff > 0) tripDist = `${diff.toLocaleString('it-IT')} km`;
         }
         
+        let fullStatus = e.isFull ? 'Sì' : 'No';
+        if (e.fuelType === 'Elettrico') {
+            if (e.batteryStart !== null && e.batteryStart !== undefined && e.batteryEnd !== null && e.batteryEnd !== undefined) {
+                fullStatus = `${e.batteryStart}% ➔ ${e.batteryEnd}%`;
+            } else if (e.isFull) {
+                fullStatus = '100%';
+            }
+        }
+        
         tr.innerHTML = `
             <td>${formatDate(e.date)}</td>
             <td>${parseInt(e.odometer).toLocaleString('it-IT')}</td>
@@ -1380,7 +1528,7 @@ function renderRefuelsTable() {
             <td>€ ${parseFloat(e.priceUnit).toFixed(3)}</td>
             <td><strong>€ ${parseFloat(e.totalCost).toFixed(2)}</strong></td>
             <td>${fuelAvgs[e.id] || '---'}</td>
-            <td>${e.isFull ? 'Sì' : 'No'}</td>
+            <td>${fullStatus}</td>
             <td class="action-cols">
                 <button class="icon-btn" onclick="editEntry('${e.id}', 'refuel')" title="Modifica">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1607,8 +1755,13 @@ function renderVehiclesTab() {
                     <span class="vehicle-card-info-val">${curOdo.toLocaleString('it-IT')} km</span>
                 </div>
                 <div class="vehicle-card-info-item">
-                    <span class="vehicle-card-info-label">Serbatoio:</span>
-                    <span class="vehicle-card-info-val">${v.tankSize ? `${v.tankSize} L` : '---'}</span>
+                    <span class="vehicle-card-info-label">${v.fuel === 'Elettrico' ? 'Batteria' : 'Serbatoio'}:</span>
+                    <span class="vehicle-card-info-val">
+                        ${v.fuel === 'Elettrico' 
+                            ? (v.batteryCapacity ? `${v.batteryCapacity} ${v.batteryCapacityUnit || 'Wh'}` : '---')
+                            : (v.tankSize ? `${v.tankSize} ${v.fuel === 'Metano' ? 'kg' : 'L'}` : '---')
+                        }
+                    </span>
                 </div>
             </div>
             
@@ -1829,6 +1982,7 @@ function renderCharts() {
     // Destroy previous charts to avoid canvas overwrite errors
     if (chartBreakdown) chartBreakdown.destroy();
     if (chartConsumption) chartConsumption.destroy();
+    if (chartBatteryCapacity) chartBatteryCapacity.destroy();
     if (chartMonthlyByCategory) chartMonthlyByCategory.destroy();
     if (chartExpenseTypes) chartExpenseTypes.destroy();
     if (chartMaintenanceTypes) chartMaintenanceTypes.destroy();
@@ -2011,8 +2165,68 @@ function renderCharts() {
             }
         });
     }
-
-
+    
+    // Chart 3B: Battery Capacity Trend (Line Chart for Electric Vehicles)
+    const electricRefuels = vEntries
+        .filter(e => e.type === 'refuel' && e.fuelType === 'Elettrico' && e.batteryCapacity)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+    const batteryLabels = [];
+    const batteryData = [];
+    const activeVehUnit = (activeVeh && activeVeh.batteryCapacityUnit) || 'Wh';
+    
+    electricRefuels.forEach(e => {
+        batteryLabels.push(formatDate(e.date));
+        let val = parseFloat(e.batteryCapacity);
+        const unit = e.batteryCapacityUnit || 'Wh';
+        if (unit !== activeVehUnit) {
+            if (unit === 'kWh' && activeVehUnit === 'Wh') {
+                val = val * 1000;
+            } else if (unit === 'Wh' && activeVehUnit === 'kWh') {
+                val = val / 1000;
+            }
+        }
+        batteryData.push(val.toFixed(1));
+    });
+    
+    const canvasBattery = document.getElementById('chart-battery-capacity');
+    if (canvasBattery) {
+        if (batteryData.length === 0) {
+            const ctx = canvasBattery.getContext('2d');
+            ctx.clearRect(0, 0, canvasBattery.width, canvasBattery.height);
+            ctx.fillStyle = textThemeColor;
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(document.documentElement.lang === 'it' ? 'Dati capacità batteria non disponibili.' : 'No battery capacity data available.', canvasBattery.width / 2, canvasBattery.height / 2);
+        } else {
+            chartBatteryCapacity = new Chart(canvasBattery, {
+                type: 'line',
+                data: {
+                    labels: batteryLabels,
+                    datasets: [{
+                        label: document.documentElement.lang === 'it' ? `Capacità Batteria (${activeVehUnit})` : `Battery Capacity (${activeVehUnit})`,
+                        data: batteryData,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: textThemeColor } }
+                    },
+                    scales: {
+                        x: { grid: { color: gridThemeColor }, ticks: { color: textThemeColor } },
+                        y: { grid: { color: gridThemeColor }, ticks: { color: textThemeColor } }
+                    }
+                }
+            });
+        }
+    }
 
     // -----------------------------------------------------------------------
     // Chart 5: Spese per Categoria (Mensile o Annuale) — delegato a helper
@@ -2483,22 +2697,30 @@ window.updateRefuelLabels = function() {
     const lblPrice = document.getElementById('lbl-f-price');
     const inputLiters = document.getElementById('f-liters');
     const inputPrice = document.getElementById('f-price-unit');
+    const batteryRow = document.getElementById('f-battery-charge-row');
+    const lblIsFull = document.querySelector('label[for="f-is-full"]');
     
     if (fuelType === 'Metano') {
         if (lblLiters) lblLiters.innerHTML = 'Volume (kg)';
         if (lblPrice) lblPrice.innerHTML = 'Prezzo al kg (€) *';
         if (inputLiters) inputLiters.placeholder = 'Calcolato in automatico (kg)';
         if (inputPrice) inputPrice.placeholder = 'Esempio: 1.250';
+        if (batteryRow) batteryRow.style.display = 'none';
+        if (lblIsFull) lblIsFull.innerHTML = 'Serbatoio pieno (consigliato per calcolo consumi)';
     } else if (fuelType === 'Elettrico') {
         if (lblLiters) lblLiters.innerHTML = 'Volume (kWh)';
         if (lblPrice) lblPrice.innerHTML = 'Prezzo al kWh (€) *';
         if (inputLiters) inputLiters.placeholder = 'Calcolato in automatico (kWh)';
         if (inputPrice) inputPrice.placeholder = 'Esempio: 0.35';
+        if (batteryRow) batteryRow.style.display = 'flex';
+        if (lblIsFull) lblIsFull.innerHTML = 'Batteria carica al 100% (consigliato per calcolo consumi)';
     } else {
         if (lblLiters) lblLiters.innerHTML = 'Volume (Litri)';
         if (lblPrice) lblPrice.innerHTML = 'Prezzo al Litro (€) *';
         if (inputLiters) inputLiters.placeholder = 'Calcolato in automatico (Litri)';
         if (inputPrice) inputPrice.placeholder = 'Esempio: 1.849';
+        if (batteryRow) batteryRow.style.display = 'none';
+        if (lblIsFull) lblIsFull.innerHTML = 'Serbatoio pieno (consigliato per calcolo consumi)';
     }
 };
 
@@ -2804,6 +3026,9 @@ window.editEntry = function(id, type) {
         document.getElementById('f-driver').value = entry.driver || '';
         document.getElementById('f-reason').value = entry.reason || '';
         document.getElementById('f-payment-method').value = entry.paymentMethod || '';
+        
+        document.getElementById('f-battery-start').value = (entry.batteryStart !== undefined && entry.batteryStart !== null) ? entry.batteryStart : '';
+        document.getElementById('f-battery-end').value = (entry.batteryEnd !== undefined && entry.batteryEnd !== null) ? entry.batteryEnd : '';
     } else if (type === 'expense') {
         document.getElementById('e-date').value = toInputDate(entry.date);
         document.getElementById('e-category').value = entry.category;
@@ -2887,6 +3112,32 @@ elActivityForm.addEventListener('submit', async (e) => {
         entryData.driver = document.getElementById('f-driver').value;
         entryData.reason = document.getElementById('f-reason').value;
         entryData.paymentMethod = document.getElementById('f-payment-method').value;
+        
+        if (entryData.fuelType === 'Elettrico') {
+            const startVal = document.getElementById('f-battery-start').value;
+            const endVal = document.getElementById('f-battery-end').value;
+            entryData.batteryStart = startVal !== '' ? parseInt(startVal) : null;
+            entryData.batteryEnd = endVal !== '' ? parseInt(endVal) : null;
+            if (entryData.batteryEnd === 100) {
+                entryData.isFull = 1;
+            }
+            
+            const activeVeh = getActiveVehicle();
+            const existingEntry = id ? state.entries.find(e => e.id === id) : null;
+            
+            entryData.batteryCapacity = (existingEntry && existingEntry.batteryCapacity !== undefined && existingEntry.batteryCapacity !== null)
+                ? existingEntry.batteryCapacity
+                : (activeVeh ? activeVeh.batteryCapacity : null);
+                
+            entryData.batteryCapacityUnit = (existingEntry && existingEntry.batteryCapacityUnit !== undefined && existingEntry.batteryCapacityUnit !== null)
+                ? existingEntry.batteryCapacityUnit
+                : (activeVeh ? activeVeh.batteryCapacityUnit : 'Wh');
+        } else {
+            entryData.batteryStart = null;
+            entryData.batteryEnd = null;
+            entryData.batteryCapacity = null;
+            entryData.batteryCapacityUnit = null;
+        }
     } else if (type === 'expense') {
         entryData.date = document.getElementById('e-date').value;
         entryData.category = document.getElementById('e-category').value;
@@ -3030,6 +3281,11 @@ function openVehicleModal(id = null) {
         document.getElementById('v-odometer').value = v.odometer;
         document.getElementById('v-tank-size').value = v.tankSize || '';
         
+        document.getElementById('v-battery-capacity').value = v.batteryCapacity || '';
+        document.getElementById('v-battery-unit').value = v.batteryCapacityUnit || 'Wh';
+        document.getElementById('v-battery-voltage').value = v.batteryVoltage || '';
+        document.getElementById('v-battery-amp-hours').value = v.batteryAmpHours || '';
+        
         document.getElementById('v-archived-row').style.display = 'block';
         document.getElementById('v-archived').checked = !!v.archived;
         
@@ -3042,17 +3298,8 @@ function openVehicleModal(id = null) {
     }
     
     // Call change trigger to adjust enabled/disabled inputs
-    const selectVType = document.getElementById('v-type');
-    const selectVFuel = document.getElementById('v-fuel');
-    const inputVTank = document.getElementById('v-tank-size');
-    if (selectVType.value === 'Bicicletta') {
-        selectVFuel.value = 'Nessuno';
-        selectVFuel.disabled = true;
-        inputVTank.value = '';
-        inputVTank.disabled = true;
-    } else {
-        selectVFuel.disabled = false;
-        inputVTank.disabled = false;
+    if (window.toggleVehicleFields) {
+        window.toggleVehicleFields();
     }
     
     elVehicleModal.classList.add('open');
@@ -3074,6 +3321,7 @@ elVehicleForm.addEventListener('submit', async (e) => {
     const id = document.getElementById('vehicle-edit-id').value;
     const isBicycle = document.getElementById('v-type').value === 'Bicicletta';
     const isArchivedChecked = document.getElementById('v-archived').checked;
+    const fuelVal = document.getElementById('v-fuel').value;
     
     const vId = id || `veh-${Date.now()}`;
     let vData = {
@@ -3081,12 +3329,16 @@ elVehicleForm.addEventListener('submit', async (e) => {
         brand: document.getElementById('v-brand').value,
         model: document.getElementById('v-model').value,
         type: document.getElementById('v-type').value,
-        fuel: isBicycle ? 'Nessuno' : document.getElementById('v-fuel').value,
+        fuel: (isBicycle && fuelVal !== 'Elettrico') ? 'Nessuno' : fuelVal,
         plate: document.getElementById('v-plate').value || null,
         year: parseInt(document.getElementById('v-year').value) || null,
         odometer: parseInt(document.getElementById('v-odometer').value) || 0,
-        tankSize: isBicycle ? null : (parseFloat(document.getElementById('v-tank-size').value) || null),
-        archived: isArchivedChecked ? 1 : 0
+        tankSize: (isBicycle && fuelVal !== 'Elettrico') ? null : (parseFloat(document.getElementById('v-tank-size').value) || null),
+        archived: isArchivedChecked ? 1 : 0,
+        batteryCapacity: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-capacity').value) || null) : null,
+        batteryCapacityUnit: fuelVal === 'Elettrico' ? document.getElementById('v-battery-unit').value : 'Wh',
+        batteryVoltage: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-voltage').value) || null) : null,
+        batteryAmpHours: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-amp-hours').value) || null) : null
     };
     
     try {

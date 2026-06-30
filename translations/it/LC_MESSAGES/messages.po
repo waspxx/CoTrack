@@ -3753,3 +3753,24 @@ msgstr "Mappa Colonne CSV Wallet"
 #~ msgid "Performance Analysis & Management"
 #~ msgstr "Analisi Performance & Gestione"
 
+msgid "Battery Capacity"
+msgstr "Capacità Batteria"
+
+msgid "Battery Unit"
+msgstr "Unità Batteria"
+
+msgid "Battery Capacity (Ah) - Optional"
+msgstr "Capacità Batteria (Ah) - Opzionale"
+
+msgid "Battery Voltage (V) - Optional"
+msgstr "Voltaggio Batteria (V) - Opzionale"
+
+msgid "Starting Battery"
+msgstr "Batteria all'avvio"
+
+msgid "Ending Battery"
+msgstr "Batteria al termine"
+
+msgid "Battery Capacity Trend"
+msgstr "Andamento Capacità Batteria"
+

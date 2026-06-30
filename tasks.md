@@ -11,6 +11,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tracciamento bici elettriche e sessioni di ricarica nel garage (Ah/Volt per calcolo capacità batteria, percentuali di avvio/fine ricarica e calcolo kWh automatico)
 - [x] **Marketing** Aggiornare README.md
 - [x] **Bug** Tab Impostazioni: quando si passa a un altro tab, il contenuto del tab impostazioni rimane visibile in fondo alla pagina.
 - [x] **BUG** Tab prestiti: in Registrazione & Storico il tasto modifica transazione registrata non fa nulla.

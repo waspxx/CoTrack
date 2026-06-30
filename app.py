@@ -432,6 +432,10 @@ def init_db():
             tankSize REAL,
             garage_id INTEGER NOT NULL,
             archived INTEGER DEFAULT 0,
+            batteryCapacity REAL,
+            batteryCapacityUnit TEXT DEFAULT 'Wh',
+            batteryVoltage REAL,
+            batteryAmpHours REAL,
             FOREIGN KEY (garage_id) REFERENCES garages (id) ON DELETE CASCADE
         )
     ''')
@@ -538,6 +542,11 @@ def init_db():
             recurrenceVal INTEGER,
             recurrenceUnit TEXT,
             
+            batteryStart INTEGER,
+            batteryEnd INTEGER,
+            batteryCapacity REAL,
+            batteryCapacityUnit TEXT,
+            
             FOREIGN KEY (vehicleId) REFERENCES vehicles(id) ON DELETE CASCADE
         )
     ''')
@@ -563,9 +572,41 @@ def init_db():
         conn.execute("ALTER TABLE vehicle_activities ADD COLUMN recurrenceUnit TEXT")
     except sqlite3.OperationalError:
         pass
+    try:
+        conn.execute("ALTER TABLE vehicle_activities ADD COLUMN batteryStart INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicle_activities ADD COLUMN batteryEnd INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicle_activities ADD COLUMN batteryCapacity REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicle_activities ADD COLUMN batteryCapacityUnit TEXT")
+    except sqlite3.OperationalError:
+        pass
 
     try:
         conn.execute("ALTER TABLE vehicles ADD COLUMN archived INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN batteryCapacity REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN batteryCapacityUnit TEXT DEFAULT 'Wh'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN batteryVoltage REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN batteryAmpHours REAL")
     except sqlite3.OperationalError:
         pass
 
@@ -3230,15 +3271,20 @@ def vehicles_route():
         odometer = float(data.get('odometer')) if data.get('odometer') else 0.0
         tank_size = float(data.get('tankSize')) if data.get('tankSize') else 40.0
         
+        battery_capacity = float(data.get('batteryCapacity')) if data.get('batteryCapacity') is not None and data.get('batteryCapacity') != '' else None
+        battery_capacity_unit = data.get('batteryCapacityUnit', 'Wh')
+        battery_voltage = float(data.get('batteryVoltage')) if data.get('batteryVoltage') is not None and data.get('batteryVoltage') != '' else None
+        battery_amp_hours = float(data.get('batteryAmpHours')) if data.get('batteryAmpHours') is not None and data.get('batteryAmpHours') != '' else None
+        
         if not veh_id or not brand or not model:
             conn.close()
             return jsonify({"errore": "Missing required fields"}), 400
             
         try:
             conn.execute('''
-                INSERT INTO vehicles (id, brand, model, type, fuel, plate, year, odometer, tankSize, garage_id, archived)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (veh_id, brand, model, v_type, fuel, plate, year, odometer, tank_size, garage_id, 0))
+                INSERT INTO vehicles (id, brand, model, type, fuel, plate, year, odometer, tankSize, garage_id, archived, batteryCapacity, batteryCapacityUnit, batteryVoltage, batteryAmpHours)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (veh_id, brand, model, v_type, fuel, plate, year, odometer, tank_size, garage_id, 0, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours))
             conn.commit()
         except sqlite3.IntegrityError as e:
             conn.close()
@@ -3285,11 +3331,17 @@ def vehicle_detail_route(vehicle_id):
     tank_size = float(data.get('tankSize')) if data.get('tankSize') else v['tankSize']
     archived = int(data.get('archived', v['archived'])) if 'archived' in data else v['archived']
     
+    battery_capacity = float(data.get('batteryCapacity')) if 'batteryCapacity' in data and data.get('batteryCapacity') not in (None, '') else None
+    battery_capacity_unit = data.get('batteryCapacityUnit', v['batteryCapacityUnit'])
+    battery_voltage = float(data.get('batteryVoltage')) if 'batteryVoltage' in data and data.get('batteryVoltage') not in (None, '') else None
+    battery_amp_hours = float(data.get('batteryAmpHours')) if 'batteryAmpHours' in data and data.get('batteryAmpHours') not in (None, '') else None
+    
     conn.execute('''
         UPDATE vehicles 
-        SET brand = ?, model = ?, type = ?, fuel = ?, plate = ?, year = ?, odometer = ?, tankSize = ?, archived = ?
+        SET brand = ?, model = ?, type = ?, fuel = ?, plate = ?, year = ?, odometer = ?, tankSize = ?, archived = ?,
+            batteryCapacity = ?, batteryCapacityUnit = ?, batteryVoltage = ?, batteryAmpHours = ?
         WHERE id = ?
-    ''', (brand, model, v_type, fuel, plate, year, odometer, tank_size, archived, vehicle_id))
+    ''', (brand, model, v_type, fuel, plate, year, odometer, tank_size, archived, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours, vehicle_id))
     conn.commit()
     
     row = conn.execute("SELECT * FROM vehicles WHERE id = ?", (vehicle_id,)).fetchone()
