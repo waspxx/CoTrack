@@ -1031,8 +1031,292 @@ def send_weekly_report():
                 except Exception as e: print(f"Errore invio report a {email_destinatario}: {e}")
         conn.close()
 
+def send_daily_reminders():
+    with app.app_context():
+        smtp_server = app.config.get('SMTP_SERVER')
+        smtp_port = app.config.get('SMTP_PORT')
+        smtp_user = app.config.get('SMTP_USERNAME')
+        smtp_pass = app.config.get('SMTP_PASSWORD')
+        mittente = app.config.get('MAIL_DEFAULT_SENDER') or smtp_user
+        
+        if not smtp_server or not smtp_user or not smtp_pass:
+            print("Credenziali SMTP mancanti per l'invio dei promemoria giornalieri.")
+            return
+
+        conn = get_db_connection()
+        try:
+            reminders = conn.execute('''
+                SELECT r.*, v.brand, v.model, v.plate, v.odometer AS current_odometer, u.username, u.id AS user_id
+                FROM vehicle_activities r
+                JOIN vehicles v ON r.vehicleId = v.id
+                JOIN garages g ON v.garage_id = g.id
+                JOIN users u ON g.user_id = u.id
+                WHERE r.type = 'reminder'
+            ''').fetchall()
+        except Exception as e:
+            print(f"Errore durante il recupero dei promemoria dal database: {e}")
+            conn.close()
+            return
+            
+        today = datetime.today().date()
+        user_reminders = {}
+        
+        for r in reminders:
+            trigger_type = r['triggerType']
+            is_recurring = r['isRecurring']
+            effective_date_str = r['nextTargetDate'] if (is_recurring and r['nextTargetDate']) else r['targetDate']
+            target_odometer = r['targetOdometer']
+            current_odometer = r['current_odometer'] or 0
+            
+            status = None
+            reasons = []
+            
+            # Date check
+            days_left = None
+            if trigger_type in ['date', 'both'] and effective_date_str:
+                try:
+                    exp_date = datetime.strptime(effective_date_str, "%Y-%m-%d").date()
+                    days_left = (exp_date - today).days
+                except Exception as ex:
+                    print(f"Errore parsing data per promemoria {r['id']}: {ex}")
+            
+            # Odometer check
+            km_left = None
+            if trigger_type in ['odometer', 'both'] and target_odometer is not None:
+                try:
+                    km_left = float(target_odometer) - float(current_odometer)
+                except Exception as ex:
+                    print(f"Errore parsing contachilometri per promemoria {r['id']}: {ex}")
+                    
+            if trigger_type == 'date':
+                if days_left is not None:
+                    if days_left < 0:
+                        status = 'expired'
+                        reasons.append(f"scaduto il {effective_date_str} (da {abs(days_left)} giorni)")
+                    elif 0 <= days_left <= 7:
+                        status = 'expiring'
+                        if days_left == 0:
+                            reasons.append("scade oggi!")
+                        else:
+                            reasons.append(f"in scadenza il {effective_date_str} (tra {days_left} giorni)")
+            elif trigger_type == 'odometer':
+                if km_left is not None:
+                    if km_left <= 0:
+                        status = 'expired'
+                        reasons.append(f"scaduto a {int(target_odometer):_} km (superato di {abs(int(km_left)):_} km)".replace('_', '.'))
+                    elif 0 < km_left <= 500:
+                        status = 'expiring'
+                        reasons.append(f"in scadenza a {int(target_odometer):_} km (tra {int(km_left):_} km)".replace('_', '.'))
+            elif trigger_type == 'both':
+                is_date_expired = days_left is not None and days_left < 0
+                is_odo_expired = km_left is not None and km_left <= 0
+                is_date_expiring = days_left is not None and 0 <= days_left <= 7
+                is_odo_expiring = km_left is not None and 0 < km_left <= 500
+                
+                if is_date_expired or is_odo_expired:
+                    status = 'expired'
+                    if is_date_expired:
+                        reasons.append(f"scaduto il {effective_date_str} (da {abs(days_left)} giorni)")
+                    if is_odo_expired:
+                        reasons.append(f"scaduto a {int(target_odometer):_} km (superato di {abs(int(km_left)):_} km)".replace('_', '.'))
+                elif is_date_expiring or is_odo_expiring:
+                    status = 'expiring'
+                    if is_date_expiring:
+                        if days_left == 0:
+                            reasons.append("scade oggi!")
+                        else:
+                            reasons.append(f"in scadenza il {effective_date_str} (tra {days_left} giorni)")
+                    if is_odo_expiring:
+                        reasons.append(f"in scadenza a {int(target_odometer):_} km (tra {int(km_left):_} km)".replace('_', '.'))
+            
+            if status:
+                email = r['username']
+                if email.lower() in ['admin', 'admin@admin.com']:
+                    email = mittente
+                
+                if not email or '@' not in email:
+                    continue
+                    
+                if email not in user_reminders:
+                    user_reminders[email] = []
+                user_reminders[email].append({
+                    'reminder': r,
+                    'status': status,
+                    'reasons': reasons
+                })
+        
+        conn.close()
+        
+        # Invia le email
+        for email, items in user_reminders.items():
+            cards_html = []
+            for item in items:
+                r = item['reminder']
+                status = item['status']
+                reasons = " e ".join(item['reasons'])
+                
+                badge_class = "badge-expired" if status == "expired" else "badge-expiring"
+                status_label = "Scaduto" if status == "expired" else "In Scadenza"
+                card_class = "reminder-card expired" if status == "expired" else "reminder-card"
+                
+                vehicle_info = f"{r['brand']} {r['model']}"
+                if r['plate']:
+                    vehicle_info += f" ({r['plate']})"
+                
+                notes_html = f'<div class="reminder-info" style="margin-top: 8px; font-style: italic; color: #555;"><b>Note:</b> {r["notes"]}</div>' if r['notes'] else ''
+                
+                card_html = f"""
+                <div class="{card_class}">
+                    <span class="reminder-badge {badge_class}">{status_label}</span>
+                    <div class="reminder-title">{r['description']}</div>
+                    <div class="reminder-info"><b>Veicolo:</b> {vehicle_info}</div>
+                    <div class="reminder-info"><b>Stato:</b> {reasons}</div>
+                    {notes_html}
+                </div>
+                """
+                cards_html.append(card_html)
+                
+            reminders_list_html = "\n".join(cards_html)
+            
+            email_body = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Avviso Promemoria Veicoli - CoTrack</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f5f6;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e1e4e6;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #673AB7, #512DA8);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }}
+        .header p {{
+            margin: 5px 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .content {{
+            padding: 30px 20px;
+        }}
+        .intro {{
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #555555;
+        }}
+        .reminder-card {{
+            background-color: #faf9ff;
+            border-left: 4px solid #673AB7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(103, 58, 183, 0.05);
+        }}
+        .reminder-card.expired {{
+            background-color: #fff8f8;
+            border-left-color: #d32f2f;
+            box-shadow: 0 2px 6px rgba(211, 47, 47, 0.05);
+        }}
+        .reminder-title {{
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }}
+        .reminder-info {{
+            font-size: 14px;
+            color: #666666;
+            margin: 4px 0;
+        }}
+        .reminder-badge {{
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }}
+        .badge-expired {{
+            background-color: #ffebee;
+            color: #c62828;
+        }}
+        .badge-expiring {{
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }}
+        .footer {{
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+            border-top: 1px solid #e1e4e6;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CoTrack</h1>
+            <p>Promemoria Veicoli in Scadenza</p>
+        </div>
+        <div class="content">
+            <p class="intro">Ciao,</p>
+            <p class="intro">Ecco il riepilogo giornaliero dei promemoria dei tuoi veicoli che sono scaduti o in scadenza:</p>
+            
+            {reminders_list_html}
+            
+            <p class="intro" style="margin-top: 30px;">Ti consigliamo di accedere a CoTrack per aggiornare le attività o completare le manutenzioni necessarie.</p>
+        </div>
+        <div class="footer">
+            Generato automaticamente da CoTrack. Non rispondere a questa email.
+        </div>
+    </div>
+</body>
+</html>
+"""
+            msg = MIMEMultipart()
+            msg['From'] = mittente
+            msg['To'] = email
+            msg['Subject'] = "Avviso Promemoria Veicoli - CoTrack"
+            msg.attach(MIMEText(email_body, 'html'))
+            
+            try:
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+                server.quit()
+                print(f"Email promemoria inviata con successo a {email}")
+            except Exception as e:
+                print(f"Errore durante l'invio dell'email promemoria a {email}: {e}")
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
+scheduler.add_job(func=send_daily_reminders, trigger="cron", hour=8, minute=0)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 

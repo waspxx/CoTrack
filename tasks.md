@@ -11,6 +11,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Controllo giornaliero dei promemoria dei veicoli in scadenza e invio mail di avviso via SMTP
 - [x] **Feature** Tracciamento bici elettriche e sessioni di ricarica nel garage (Ah/Volt per calcolo capacità batteria, percentuali di avvio/fine ricarica e calcolo kWh automatico)
 - [x] **Marketing** Aggiornare README.md
 - [x] **Bug** Tab Impostazioni: quando si passa a un altro tab, il contenuto del tab impostazioni rimane visibile in fondo alla pagina.
