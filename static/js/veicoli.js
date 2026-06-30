@@ -2979,6 +2979,37 @@ function openAddModal(defaultType = 'refuel') {
     
     // Default fuel type should match the active vehicle's fuel type if applicable
     const activeVeh = getActiveVehicle();
+    const isBicycle = activeVeh && activeVeh.type === 'Bicicletta' && activeVeh.fuel !== 'Elettrico';
+    
+    // Determine active tab from URL hash to match current view if header button is clicked
+    const hash = window.location.hash || '#dashboard';
+    const currentTab = hash.replace('#', '');
+    const tabToTypeMap = {
+        'refuel': 'refuel',
+        'expenses': 'expense',
+        'expense': 'expense',
+        'services': 'service',
+        'service': 'service',
+        'income': 'income',
+        'reminders': 'reminder',
+        'reminder': 'reminder'
+    };
+    
+    let typeToSelect = defaultType;
+    if (!typeToSelect || typeToSelect === 'refuel') {
+        const mappedType = tabToTypeMap[currentTab];
+        if (mappedType) {
+            typeToSelect = mappedType;
+        } else {
+            typeToSelect = 'refuel';
+        }
+    }
+    
+    // Fallback to expense if manual bicycle and refueling/charging is selected
+    if (isBicycle && typeToSelect === 'refuel') {
+        typeToSelect = 'expense';
+    }
+    
     if (activeVeh && activeVeh.fuel && activeVeh.fuel !== 'Nessuno') {
         document.getElementById('f-fuel-type').value = activeVeh.fuel;
     }
@@ -2987,7 +3018,7 @@ function openAddModal(defaultType = 'refuel') {
     window.updateReminderRequiredFields();
     window.updateReminderRecurrenceFields();
     
-    selectFormType(defaultType);
+    selectFormType(typeToSelect);
     window.updateRefuelLabels();
     window.updateLastOdometerDisplay();
     
