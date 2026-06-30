@@ -742,6 +742,24 @@ window.addEventListener('DOMContentLoaded', async () => {
             window.updateReminderRecurrenceFields();
         });
     }
+    const inputRemDate = document.getElementById('rem-date');
+    if (inputRemDate) {
+        inputRemDate.addEventListener('input', () => {
+            window.updateReminderNextDate();
+        });
+    }
+    const inputRemRecVal = document.getElementById('rem-recurrence-val');
+    if (inputRemRecVal) {
+        inputRemRecVal.addEventListener('input', () => {
+            window.updateReminderNextDate();
+        });
+    }
+    const selectRemRecUnit = document.getElementById('rem-recurrence-unit');
+    if (selectRemRecUnit) {
+        selectRemRecUnit.addEventListener('change', () => {
+            window.updateReminderNextDate();
+        });
+    }
 });
 
 // --- VEHICLE POPULATION & SYNCS ---
@@ -1139,12 +1157,13 @@ function checkReminders() {
             const curOdo = getCurrentOdometer(e.vehicleId, true);
             let isExpired = false;
             
-            if (e.triggerType === 'date' && e.targetDate) {
-                isExpired = (e.targetDate < nowStr);
+            const effectiveDate = (e.isRecurring && e.nextTargetDate) ? e.nextTargetDate : e.targetDate;
+            if (e.triggerType === 'date' && effectiveDate) {
+                isExpired = (effectiveDate < nowStr);
             } else if (e.triggerType === 'odometer' && e.targetOdometer) {
                 isExpired = (curOdo >= parseInt(e.targetOdometer));
             } else if (e.triggerType === 'both') {
-                const dateExp = e.targetDate ? (e.targetDate < nowStr) : false;
+                const dateExp = effectiveDate ? (effectiveDate < nowStr) : false;
                 const odoExp = e.targetOdometer ? (curOdo >= parseInt(e.targetOdometer)) : false;
                 isExpired = (dateExp || odoExp);
             }
@@ -1313,19 +1332,60 @@ function renderDashboard() {
             item.className = `reminder-summary-item ${r._isExpired ? 'urgent' : ''}`;
             
             let triggerText = '';
+            const effectiveDate = (r.isRecurring && r.nextTargetDate) ? r.nextTargetDate : r.targetDate;
             if (r.triggerType === 'date') {
-                triggerText = `Entro il ${formatDate(r.targetDate)}`;
+                triggerText = `Entro il ${formatDate(effectiveDate)}`;
             } else if (r.triggerType === 'odometer') {
                 triggerText = `Ai ${parseInt(r.targetOdometer).toLocaleString('it-IT')} km`;
             } else {
-                triggerText = `Entro il ${formatDate(r.targetDate)} o ai ${parseInt(r.targetOdometer).toLocaleString('it-IT')} km`;
+                triggerText = `Entro il ${formatDate(effectiveDate)} o ai ${parseInt(r.targetOdometer).toLocaleString('it-IT')} km`;
+            }
+            
+            let daysLeftText = '';
+            if (r.triggerType === 'date' || r.triggerType === 'both') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const target = new Date(effectiveDate);
+                target.setHours(0, 0, 0, 0);
+                const diffTime = target - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays > 0) {
+                    daysLeftText = `${diffDays} gg rimasti`;
+                } else if (diffDays === 0) {
+                    daysLeftText = `Scade oggi!`;
+                } else {
+                    daysLeftText = `Scaduto (${Math.abs(diffDays)} gg)`;
+                }
+            }
+            
+            let kmLeftText = '';
+            if (r.triggerType === 'odometer' || r.triggerType === 'both') {
+                const curOdo = getCurrentOdometer(r.vehicleId, true);
+                const targetOdo = parseInt(r.targetOdometer) || 0;
+                const diffKm = targetOdo - curOdo;
+                if (diffKm > 0) {
+                    kmLeftText = `${diffKm.toLocaleString('it-IT')} km rimasti`;
+                } else if (diffKm === 0) {
+                    kmLeftText = `Scade ora!`;
+                } else {
+                    kmLeftText = `Scaduto (${Math.abs(diffKm).toLocaleString('it-IT')} km)`;
+                }
+            }
+            
+            let countdownParts = [];
+            if (daysLeftText) countdownParts.push(daysLeftText);
+            if (kmLeftText) countdownParts.push(kmLeftText);
+            
+            let countdownStr = '';
+            if (countdownParts.length > 0) {
+                countdownStr = ` • <span style="font-weight: 600; color: ${r._isExpired ? 'var(--danger-color)' : '#2e7d32'};">${countdownParts.join(' • ')}</span>`;
             }
             
             item.innerHTML = `
                 <div class="activity-type-icon bg-reminder">R</div>
                 <div class="reminder-summary-content">
                     <span class="reminder-summary-title">${r.description}</span>
-                    <span class="reminder-summary-desc">${triggerText}</span>
+                    <span class="reminder-summary-desc">${triggerText}${countdownStr}</span>
                 </div>
                 <div>
                     ${r._isExpired ? '<span style="color:var(--danger-color); font-weight:700; font-size:10px;">URGENTE</span>' : '<span style="color:var(--text-muted); font-size:10px;">ATTIVO</span>'}
@@ -1669,16 +1729,17 @@ function renderReminders() {
         const card = document.createElement('div');
         card.className = `reminder-card ${e._isExpired ? 'expired' : ''}`;
         
+        const effectiveDate = (e.isRecurring && e.nextTargetDate) ? e.nextTargetDate : e.targetDate;
         let targetText = '';
         if (e.triggerType === 'date') {
             targetText = `<div class="reminder-info-label">Scadenza Data</div>
-                          <div class="reminder-info-value">${formatDate(e.targetDate)}</div>`;
+                          <div class="reminder-info-value">${formatDate(effectiveDate)}</div>`;
         } else if (e.triggerType === 'odometer') {
             targetText = `<div class="reminder-info-label">Scadenza Chilometri</div>
                           <div class="reminder-info-value">${parseInt(e.targetOdometer).toLocaleString('it-IT')} km</div>`;
         } else {
             targetText = `<div class="reminder-info-label">Scadenza Doppia</div>
-                          <div class="reminder-info-value">${formatDate(e.targetDate)} • ${parseInt(e.targetOdometer).toLocaleString('it-IT')} km</div>`;
+                          <div class="reminder-info-value">${formatDate(effectiveDate)} • ${parseInt(e.targetOdometer).toLocaleString('it-IT')} km</div>`;
         }
         
         let recurrenceText = '';
@@ -1696,11 +1757,53 @@ function renderReminders() {
             }
         }
         
+        let daysLeftText = '';
+        if (e.triggerType === 'date' || e.triggerType === 'both') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(effectiveDate);
+            target.setHours(0, 0, 0, 0);
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) {
+                daysLeftText = `<span style="color: #2e7d32;">${diffDays} giorni rimasti</span>`;
+            } else if (diffDays === 0) {
+                daysLeftText = `<span style="color: #e65100; font-weight: bold;">Scade oggi!</span>`;
+            } else {
+                daysLeftText = `<span style="color: var(--danger-color); font-weight: bold;">Scaduto da ${Math.abs(diffDays)} giorni!</span>`;
+            }
+        }
+        
+        let kmLeftText = '';
+        if (e.triggerType === 'odometer' || e.triggerType === 'both') {
+            const curOdo = getCurrentOdometer(e.vehicleId, true);
+            const targetOdo = parseInt(e.targetOdometer) || 0;
+            const diffKm = targetOdo - curOdo;
+            if (diffKm > 0) {
+                kmLeftText = `<span style="color: #2e7d32;">${diffKm.toLocaleString('it-IT')} km rimasti</span>`;
+            } else if (diffKm === 0) {
+                kmLeftText = `<span style="color: #e65100; font-weight: bold;">Scade ora!</span>`;
+            } else {
+                kmLeftText = `<span style="color: var(--danger-color); font-weight: bold;">Scaduto da ${Math.abs(diffKm).toLocaleString('it-IT')} km!</span>`;
+            }
+        }
+        
+        let countdownHtml = '';
+        if (daysLeftText || kmLeftText) {
+            countdownHtml = `
+                <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 2px; font-size: 11px; font-weight: 600;">
+                    ${daysLeftText ? `<div>⏳ ${daysLeftText}</div>` : ''}
+                    ${kmLeftText ? `<div>🚗 ${kmLeftText}</div>` : ''}
+                </div>
+            `;
+        }
+        
         card.innerHTML = `
             <div>
                 <span class="timeline-tag bg-reminder" style="margin-bottom:10px;">Reminder</span>
                 <div class="reminder-title">${e.description}</div>
                 ${recurrenceText}
+                ${countdownHtml}
             </div>
             <div class="reminder-info-row">
                 ${targetText}
@@ -2628,6 +2731,27 @@ function formatDate(dateStr) {
     return dateStr;
 }
 
+function normalizeToYYYYMMDD(dateStr) {
+    if (!dateStr) return null;
+    const clean = dateStr.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+        return clean;
+    }
+    let match = clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (match) {
+        return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+    }
+    match = clean.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if (match) {
+        return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+    }
+    if (clean.includes(' ')) {
+        const parts = clean.split(' ');
+        return normalizeToYYYYMMDD(parts[0]);
+    }
+    return clean;
+}
+
 // --- CRUD OPERATIONS FOR ACTIVITIES ---
 
 // Toggle fields based on selected type inside Add Modal
@@ -2878,6 +3002,53 @@ window.updateReminderRecurrenceFields = function() {
         if (inputRecVal) inputRecVal.required = false;
         if (inputRecKm) inputRecKm.required = false;
     }
+    window.updateReminderNextDate();
+};
+
+window.updateReminderNextDate = function() {
+    const isRec = document.getElementById('rem-is-recurring').value === '1';
+    const triggerType = document.getElementById('rem-trigger-type').value;
+    const baseDateVal = document.getElementById('rem-date').value;
+    const recVal = parseInt(document.getElementById('rem-recurrence-val').value) || 0;
+    const recUnit = document.getElementById('rem-recurrence-unit').value || 'months';
+    
+    const container = document.getElementById('rem-next-date-container');
+    const displayVal = document.getElementById('rem-next-date-display');
+    
+    if (isRec && (triggerType === 'date' || triggerType === 'both') && baseDateVal && recVal > 0) {
+        const parts = baseDateVal.split('-');
+        if (parts.length === 3) {
+            const y = parseInt(parts[0]);
+            const m = parseInt(parts[1]) - 1;
+            const d = parseInt(parts[2]);
+            const baseDate = new Date(y, m, d);
+            
+            if (recUnit === 'days') {
+                baseDate.setDate(baseDate.getDate() + recVal);
+            } else if (recUnit === 'months') {
+                baseDate.setMonth(baseDate.getMonth() + recVal);
+            } else if (recUnit === 'years') {
+                baseDate.setFullYear(baseDate.getFullYear() + recVal);
+            }
+            
+            const newY = baseDate.getFullYear();
+            const newM = String(baseDate.getMonth() + 1).padStart(2, '0');
+            const newD = String(baseDate.getDate()).padStart(2, '0');
+            const nextDateStr = `${newY}-${newM}-${newD}`;
+            
+            if (displayVal) {
+                displayVal.value = nextDateStr;
+            }
+            if (container) {
+                container.style.display = 'block';
+            }
+            return;
+        }
+    }
+    
+    if (container) {
+        container.style.display = 'none';
+    }
 };
 
 // Automatically resolve or update targets of matching reminders when recording an activity
@@ -2912,25 +3083,52 @@ async function checkAndHandleTriggeredReminders(newEntry) {
                 let newTargetDate = rem.targetDate;
                 let newTargetOdometer = rem.targetOdometer;
                 
+                let nextTargetDate = null;
                 if ((rem.triggerType === 'date' || rem.triggerType === 'both') && rem.recurrenceVal && rem.recurrenceUnit) {
-                    const parts = date.split('-');
-                    const y = parseInt(parts[0]);
-                    const m = parseInt(parts[1]) - 1;
-                    const d = parseInt(parts[2]);
-                    const baseDate = new Date(y, m, d);
-                    
-                    if (rem.recurrenceUnit === 'days') {
-                        baseDate.setDate(baseDate.getDate() + parseInt(rem.recurrenceVal));
-                    } else if (rem.recurrenceUnit === 'months') {
-                        baseDate.setMonth(baseDate.getMonth() + parseInt(rem.recurrenceVal));
-                    } else if (rem.recurrenceUnit === 'years') {
-                        baseDate.setFullYear(baseDate.getFullYear() + parseInt(rem.recurrenceVal));
+                    if (rem.nextTargetDate) {
+                        newTargetDate = rem.nextTargetDate;
+                    } else {
+                        const parts = date.split('-');
+                        const y = parseInt(parts[0]);
+                        const m = parseInt(parts[1]) - 1;
+                        const d = parseInt(parts[2]);
+                        const baseDate = new Date(y, m, d);
+                        
+                        if (rem.recurrenceUnit === 'days') {
+                            baseDate.setDate(baseDate.getDate() + parseInt(rem.recurrenceVal));
+                        } else if (rem.recurrenceUnit === 'months') {
+                            baseDate.setMonth(baseDate.getMonth() + parseInt(rem.recurrenceVal));
+                        } else if (rem.recurrenceUnit === 'years') {
+                            baseDate.setFullYear(baseDate.getFullYear() + parseInt(rem.recurrenceVal));
+                        }
+                        
+                        const newY = baseDate.getFullYear();
+                        const newM = String(baseDate.getMonth() + 1).padStart(2, '0');
+                        const newD = String(baseDate.getDate()).padStart(2, '0');
+                        newTargetDate = `${newY}-${newM}-${newD}`;
                     }
                     
-                    const newY = baseDate.getFullYear();
-                    const newM = String(baseDate.getMonth() + 1).padStart(2, '0');
-                    const newD = String(baseDate.getDate()).padStart(2, '0');
-                    newTargetDate = `${newY}-${newM}-${newD}`;
+                    // Calculate subsequent next target date relative to the new target date
+                    const partsNext = newTargetDate.split('-');
+                    if (partsNext.length === 3) {
+                        const yN = parseInt(partsNext[0]);
+                        const mN = parseInt(partsNext[1]) - 1;
+                        const dN = parseInt(partsNext[2]);
+                        const nextBaseDate = new Date(yN, mN, dN);
+                        
+                        if (rem.recurrenceUnit === 'days') {
+                            nextBaseDate.setDate(nextBaseDate.getDate() + parseInt(rem.recurrenceVal));
+                        } else if (rem.recurrenceUnit === 'months') {
+                            nextBaseDate.setMonth(nextBaseDate.getMonth() + parseInt(rem.recurrenceVal));
+                        } else if (rem.recurrenceUnit === 'years') {
+                            nextBaseDate.setFullYear(nextBaseDate.getFullYear() + parseInt(rem.recurrenceVal));
+                        }
+                        
+                        const nY = nextBaseDate.getFullYear();
+                        const nM = String(nextBaseDate.getMonth() + 1).padStart(2, '0');
+                        const nD = String(nextBaseDate.getDate()).padStart(2, '0');
+                        nextTargetDate = `${nY}-${nM}-${nD}`;
+                    }
                 }
                 
                 if ((rem.triggerType === 'odometer' || rem.triggerType === 'both') && rem.recurrenceKm) {
@@ -2940,7 +3138,8 @@ async function checkAndHandleTriggeredReminders(newEntry) {
                 const updatedRem = {
                     ...rem,
                     targetDate: newTargetDate,
-                    targetOdometer: newTargetOdometer
+                    targetOdometer: newTargetOdometer,
+                    nextTargetDate: nextTargetDate
                 };
                 
                 await fetch(`/api/vehicle-entries/${rem.id}`, {
@@ -3093,6 +3292,7 @@ window.editEntry = function(id, type) {
         document.getElementById('rem-recurrence-val').value = entry.recurrenceVal || '';
         document.getElementById('rem-recurrence-unit').value = entry.recurrenceUnit || 'months';
         document.getElementById('rem-recurrence-km').value = entry.recurrenceKm || '';
+        document.getElementById('rem-next-date-display').value = toInputDate(entry.nextTargetDate) || '';
         
         window.updateReminderRequiredFields();
         window.updateReminderRecurrenceFields();
@@ -3130,7 +3330,7 @@ elActivityForm.addEventListener('submit', async (e) => {
     
     // Form validation checks for custom types
     if (type === 'refuel') {
-        entryData.date = document.getElementById('f-date').value;
+        entryData.date = normalizeToYYYYMMDD(document.getElementById('f-date').value);
         entryData.odometer = parseInt(document.getElementById('f-odometer').value);
         entryData.fuelType = document.getElementById('f-fuel-type').value;
         entryData.priceUnit = parseFloat(document.getElementById('f-price-unit').value);
@@ -3170,7 +3370,7 @@ elActivityForm.addEventListener('submit', async (e) => {
             entryData.batteryCapacityUnit = null;
         }
     } else if (type === 'expense') {
-        entryData.date = document.getElementById('e-date').value;
+        entryData.date = normalizeToYYYYMMDD(document.getElementById('e-date').value);
         entryData.category = document.getElementById('e-category').value;
         entryData.cost = parseFloat(document.getElementById('e-cost').value);
         const odo = document.getElementById('e-odometer').value;
@@ -3181,7 +3381,7 @@ elActivityForm.addEventListener('submit', async (e) => {
         entryData.reason = document.getElementById('e-reason').value;
         entryData.paymentMethod = document.getElementById('e-payment-method').value;
     } else if (type === 'service') {
-        entryData.date = document.getElementById('s-date').value;
+        entryData.date = normalizeToYYYYMMDD(document.getElementById('s-date').value);
         entryData.odometer = parseInt(document.getElementById('s-odometer').value);
         
         // Build JSON description from multi-selector
@@ -3207,16 +3407,17 @@ elActivityForm.addEventListener('submit', async (e) => {
         entryData.driver = document.getElementById('s-driver').value;
         entryData.paymentMethod = document.getElementById('s-payment-method').value;
     } else if (type === 'income') {
-        entryData.date = document.getElementById('i-date').value;
+        entryData.date = normalizeToYYYYMMDD(document.getElementById('i-date').value);
         entryData.category = document.getElementById('i-category').value;
         entryData.amount = parseFloat(document.getElementById('i-amount').value);
         const odo = document.getElementById('i-odometer').value;
         entryData.odometer = odo ? parseInt(odo) : null;
 
     } else if (type === 'reminder') {
+        entryData.date = normalizeToYYYYMMDD(document.getElementById('rem-date').value) || new Date().toISOString().split('T')[0];
         entryData.description = document.getElementById('rem-description').value;
         entryData.triggerType = document.getElementById('rem-trigger-type').value;
-        entryData.targetDate = document.getElementById('rem-date').value || null;
+        entryData.targetDate = normalizeToYYYYMMDD(document.getElementById('rem-date').value) || null;
         const targetOdo = document.getElementById('rem-odometer').value;
         entryData.targetOdometer = targetOdo ? parseInt(targetOdo) : null;
         
@@ -3226,9 +3427,11 @@ elActivityForm.addEventListener('submit', async (e) => {
             if (entryData.triggerType === 'date' || entryData.triggerType === 'both') {
                 entryData.recurrenceVal = parseInt(document.getElementById('rem-recurrence-val').value) || null;
                 entryData.recurrenceUnit = document.getElementById('rem-recurrence-unit').value || 'months';
+                entryData.nextTargetDate = normalizeToYYYYMMDD(document.getElementById('rem-next-date-display').value) || null;
             } else {
                 entryData.recurrenceVal = null;
                 entryData.recurrenceUnit = null;
+                entryData.nextTargetDate = null;
             }
             if (entryData.triggerType === 'odometer' || entryData.triggerType === 'both') {
                 entryData.recurrenceKm = parseFloat(document.getElementById('rem-recurrence-km').value) || null;
@@ -3239,6 +3442,7 @@ elActivityForm.addEventListener('submit', async (e) => {
             entryData.recurrenceVal = null;
             entryData.recurrenceUnit = null;
             entryData.recurrenceKm = null;
+            entryData.nextTargetDate = null;
         }
     }
     

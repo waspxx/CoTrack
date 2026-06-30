@@ -3774,3 +3774,6 @@ msgstr "Batteria al termine"
 msgid "Battery Capacity Trend"
 msgstr "Andamento Capacità Batteria"
 
+msgid "Next Date"
+msgstr "Prossima data"
+

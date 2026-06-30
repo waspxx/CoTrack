@@ -546,6 +546,7 @@ def init_db():
             batteryEnd INTEGER,
             batteryCapacity REAL,
             batteryCapacityUnit TEXT,
+            nextTargetDate TEXT,
             
             FOREIGN KEY (vehicleId) REFERENCES vehicles(id) ON DELETE CASCADE
         )
@@ -586,6 +587,10 @@ def init_db():
         pass
     try:
         conn.execute("ALTER TABLE vehicle_activities ADD COLUMN batteryCapacityUnit TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicle_activities ADD COLUMN nextTargetDate TEXT")
     except sqlite3.OperationalError:
         pass
 
