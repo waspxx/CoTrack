@@ -5,13 +5,13 @@
 *Spazio per annotare al volo qualsiasi idea, spunto o task prima di organizzarlo.*
 - [ ] **Feature** Cambiare alcune cose di grafica del tab wallet per cercare di differenziarsi da Wallet by Budgetbakers
 - [ ] **Feature** In base ai tab in uso, aggiornare il report di Gemini per inviare via mail i dati più significativi per compararli con la settimana o il mese precedente. Cercare di ridurre il più possibile il consumo di token.
-- [ ] **Marketing** Aggiornare README.md
 
 ## 🟡 In Corso (In Progress)
 *Attività su cui si sta lavorando attualmente.*
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Marketing** Aggiornare README.md
 - [x] **Bug** Tab Impostazioni: quando si passa a un altro tab, il contenuto del tab impostazioni rimane visibile in fondo alla pagina.
 - [x] **BUG** Tab prestiti: in Registrazione & Storico il tasto modifica transazione registrata non fa nulla.
 - [x] **Feature** Implementare tab prestiti (inserire simulatore risparmio interessi se rimborsato anticipatamente, dashboard progressi, storico transazioni, import/export transazioni)
