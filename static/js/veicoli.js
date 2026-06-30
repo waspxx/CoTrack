@@ -920,6 +920,17 @@ function getStats() {
         const startOdo = veh.odometer;
         const currentOdo = getCurrentOdometer(vId, true);
         totalDist = currentOdo - startOdo;
+        
+        // Fallback: Se la distanza è <= 0 a causa del fatto che veh.odometer è stato aggiornato dal backend,
+        // calcoliamo la differenza tra l'odometro massimo e minimo presenti nei record del veicolo.
+        if (totalDist <= 0) {
+            const odometers = vEntries.filter(e => e.odometer).map(e => parseInt(e.odometer));
+            if (odometers.length > 0) {
+                const minOdo = Math.min(...odometers);
+                const maxOdo = Math.max(...odometers);
+                totalDist = maxOdo - minOdo;
+            }
+        }
     } else {
         const odometers = vEntries.filter(e => e.odometer).map(e => parseInt(e.odometer));
         if (odometers.length > 0) {
@@ -1900,7 +1911,31 @@ function renderCharts() {
                 plugins: {
                     legend: {
                         position: 'right',
-                        labels: { color: textThemeColor, font: { family: 'Inter', size: 12 } }
+                        labels: {
+                            color: textThemeColor,
+                            font: { family: 'Inter', size: 12 },
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+                                const dataset = chart.data.datasets[0];
+                                const total = dataset.data.reduce((a, b) => a + b, 0);
+                                labels.forEach(label => {
+                                    const value = dataset.data[label.index];
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    label.text = `${label.text} (${percentage}%)`;
+                                });
+                                return labels;
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = ((ctx.raw / total) * 100).toFixed(1);
+                                return ` ${ctx.label}: € ${ctx.raw.toFixed(2)} (${pct}%)`;
+                            }
+                        }
                     }
                 }
             }
