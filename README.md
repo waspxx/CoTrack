@@ -1,8 +1,18 @@
 # CoTrack 📊
+### *The Ultimate Collaborative & Complete Tracking Hub*
 
-CoTrack is a modern, self-hosted, lightweight personal finance and investment portfolio tracker. It features automated real-time price caching, advanced asset allocation visualization, risk KPI calculations (Volatility, Sharpe Ratio), and integrated Google Gemini AI for automated weekly reports and portfolio diagnostics.
+**CoTrack** (*Collaboration Tracking* / *Complete Tracking*) is a modern, self-hosted, privacy-first platform designed to track and organize your life’s assets, finances, and resources—together. 
+
+No longer just a personal finance tool, CoTrack is engineered for **multiple users, families, and collaborative groups** to keep everything that matters under control in one elegant, unified, and self-hosted dashboard:
+
+- **💰 Collaborative Wealth & Investments**: Track multi-user portfolios, wallets, cash flows, and shared bills.
+- **🚗 Shared Garage & Fleet**: Co-manage vehicle maintenance logs, dynamic fuel consumption trends, and shared reminders.
+- **💼 Salaries & Pension Funds**: Monitor payrolls, gross-to-net incomes, and pension allocations for multiple profiles with automated AI-powered PDF parsing.
+- **📉 Shared Loans & Amortization**: Keep tabs on group debts, amortization progress, and simulate interest-saving early repayments.
+- **🤖 Built-in Google Gemini AI**: Leverage advanced AI diagnostics, automated weekly summaries, and smart PDF extraction.
 
 ---
+
 
 ## ✨ Features
 
