@@ -1,0 +1,474 @@
+<div id="tab-stipendi" class="tab-content">
+
+    <!-- SELETTORE GRUPPO STIPENDI -->
+    <div class="garage-selector-container" id="stip-group-selector-bar">
+        <span style="font-size:0.9em;font-weight:600;color:var(--text-primary);">{{ _('Group:') }}</span>
+        <select id="select-stip-group" onchange="window.cambiaGruppoStipendi()" style="border:1px solid var(--border-color);border-radius:6px;padding:5px 10px;font-weight:bold;color:var(--primary-color);background:var(--bg-card);cursor:pointer;outline:none;"></select>
+        <button onclick="window.nuovoGruppoStipendi()" style="background:#f3e8ff;border:1px solid #d8b4fe;font-size:1em;cursor:pointer;color:#7c3aed;padding:5px 10px;border-radius:6px;font-weight:bold;">+</button>
+        <button onclick="window.rinominaGruppoStipendi()" style="background:#f5f5f5;border:1px solid #e0e0e0;font-size:1em;cursor:pointer;color:#616161;padding:5px 10px;border-radius:6px;">✏️ {{ _('Rename') }}</button>
+        <button onclick="window.eliminaGruppoStipendi()" style="background:#ffebee;border:1px solid #ffcdd2;font-size:1em;cursor:pointer;color:#c62828;padding:5px 10px;border-radius:6px;">🗑️ {{ _('Delete') }}</button>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <svg class="logo-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <span class="brand-name">{{ _('Salaries') }}</span>
+            </div>
+
+            <!-- Active Person Selector -->
+            <div class="vehicle-selector-wrapper">
+                <label class="nav-label" for="active-person-select">{{ _('Active Person') }}</label>
+                <div class="custom-select-container">
+                    <select class="vehicle-select" id="active-person-select" onchange="window.handlePersonChange(event)"></select>
+                    <button class="icon-btn-small" onclick="window.openSalaryPersonModal()" title="{{ _('Add person') }}">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <span class="nav-label">{{ _('Menu') }}</span>
+                <a class="nav-link active" data-stip-tab="dashboard" href="#" id="stip-nav-dashboard" onclick="window.switchStipSubTab('dashboard',event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    <span>{{ _('Dashboard') }}</span>
+                </a>
+                <a class="nav-link" data-stip-tab="buste" href="#" id="stip-nav-buste" onclick="window.switchStipSubTab('buste',event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>{{ _('Payslips') }}</span>
+                </a>
+                <a class="nav-link" data-stip-tab="persone" href="#" id="stip-nav-persone" onclick="window.switchStipSubTab('persone',event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>{{ _('Manage People') }}</span>
+                </a>
+            </nav>
+
+            <!-- PDF Parsing Keywords Section -->
+            <div style="margin-top: 15px; padding: 12px 4px 4px; border-top: 1px solid var(--border-color);">
+                <span class="nav-label" style="padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;" onclick="window.toggleStipSidebarTags()">
+                    <span>⚙️ {{ _('PDF Keywords') }}</span>
+                    <span id="stip-sidebar-tags-chevron" style="font-size: 0.85em; transition: transform 0.2s;">▼</span>
+                </span>
+                <div id="stip-sidebar-tags-content" style="display: none; flex-direction: column; gap: 8px; margin-top: 8px; padding: 4px 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.72em; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">{{ _('Month/Period') }}</label>
+                        <input type="text" id="setting-stip-month-tags" onchange="window.saveStipTagSetting('stip_month_tags', this.value)" style="width: 100%; padding: 5px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8em; outline: none;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.72em; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">{{ _('Employee') }}</label>
+                        <input type="text" id="setting-stip-person-tags" onchange="window.saveStipTagSetting('stip_person_tags', this.value)" style="width: 100%; padding: 5px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8em; outline: none;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.72em; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">{{ _('Gross Salary') }}</label>
+                        <input type="text" id="setting-stip-gross-tags" onchange="window.saveStipTagSetting('stip_gross_tags', this.value)" style="width: 100%; padding: 5px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8em; outline: none;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <label style="font-size: 0.72em; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">{{ _('Net Salary') }}</label>
+                        <input type="text" id="setting-stip-net-tags" onchange="window.saveStipTagSetting('stip_net_tags', this.value)" style="width: 100%; padding: 5px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8em; outline: none;">
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="window.resetStipTagsToDefault()" style="width: 100%; margin-top: 4px; padding: 5px; font-size: 0.75em; font-weight: 600;">{{ _('Reset Defaults') }}</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- 1. DASHBOARD -->
+            <section class="stip-tab-content active" id="stip-tab-dashboard">
+                <div class="dashboard-header">
+                    <h1 id="stip-dashboard-title">{{ _('Salary Dashboard') }}</h1>
+                    <p class="description">{{ _('Gross/net summary and main items for the selected period.') }}</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card stip-gross">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                <circle cx="12" cy="12" r="2"></circle>
+                                <path d="M6 12h.01M18 12h.01"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Total Gross (12m)') }}</span>
+                            <h3 class="stat-value" id="kpi-gross-total">€ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stip-net">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="12" x2="12" y1="2" y2="22"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Total Net (12m)') }}</span>
+                            <h3 class="stat-value" id="kpi-net-total" style="color:var(--success-color);">€ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stip-avg">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Monthly Net Average') }}</span>
+                            <h3 class="stat-value" id="kpi-net-avg">€ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stip-allowance">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Allowances (12m)') }}</span>
+                            <h3 class="stat-value" id="kpi-assegno-unico">€ 0,00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-grid">
+                    <div class="card report-card">
+                        <h3>{{ _('Average Payslip Breakdown') }}</h3>
+                        <div class="chart-container" style="height:240px;">
+                            <canvas id="chart-stip-donut"></canvas>
+                        </div>
+                    </div>
+                    <div class="card report-card">
+                        <h3>{{ _('Monthly Net Trend') }}</h3>
+                        <div class="chart-container" style="height:240px;">
+                            <canvas id="chart-stip-line"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:20px;">
+                    <h3>{{ _('Recent Payslips') }}</h3>
+                    <div style="overflow-x:auto;margin-top:12px;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Month') }}</th>
+                                    <th>{{ _('Gross') }}</th>
+                                    <th>{{ _('Net') }}</th>
+                                    <th>{{ _('Allowance') }}</th>
+                                    <th>{{ _('Notes') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stip-recent-table-body">
+                                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">{{ _('No payslips registered.') }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. BUSTE PAGA -->
+            <section class="stip-tab-content" id="stip-tab-buste">
+                <div class="dashboard-header">
+                    <h1>{{ _('Payslips') }}</h1>
+                    <p class="description">{{ _('Record and manage monthly payslips. You can import from PDF for automatic recognition.') }}</p>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;align-items:start;">
+                    <!-- Form -->
+                    <div style="display:flex;flex-direction:column;gap:20px;">
+                        <div class="card" style="padding:20px;">
+                            <h3>{{ _('Record Payslip') }}</h3>
+                            <form id="stip-salary-form" onsubmit="window.handleSalarySubmit(event)" style="margin-top:15px;display:flex;flex-direction:column;gap:14px;">
+                                <input type="hidden" id="stip-edit-id" value="">
+                                <div class="form-group">
+                                    <label for="stip-month">{{ _('Month *') }}</label>
+                                    <input type="month" id="stip-month" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stip-gross">{{ _('Gross (€) *') }}</label>
+                                    <input type="number" id="stip-gross" step="0.01" min="0" placeholder="{{ _('e.g., 2800.00') }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stip-net">{{ _('Net (€) *') }}</label>
+                                    <input type="number" id="stip-net" step="0.01" min="0" placeholder="{{ _('e.g., 1980.00') }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stip-notes">{{ _('Notes') }}</label>
+                                    <input type="text" id="stip-notes" placeholder="{{ _('e.g., with 13th month') }}">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="window.resetSalaryForm()">{{ _('Cancel') }}</button>
+                                    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- PDF Import -->
+                        <div class="card" style="padding:20px;">
+                            <h3>{{ _('Import from PDF Payslip') }}</h3>
+                            <p style="font-size:0.85em;color:var(--text-muted);margin:8px 0 12px;line-height:1.4;">{{ _('Upload payslip in PDF to automatically detect gross, net, and items.') }}</p>
+                            <input type="file" id="stip-pdf-input" accept=".pdf" style="display:none;" onchange="window.handleStipPdfUpload(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('stip-pdf-input').click()" style="width:100%;">📄 {{ _('Select PDF') }}</button>
+                            <input type="file" id="stip-custom-pdf-input" accept=".pdf" style="display:none;" onchange="window.handleStipCustomPdfUpload(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('stip-custom-pdf-input').click()" style="width:100%; margin-top: 6px;">⚙️ {{ _('Custom PDF Import') }}</button>
+                            <div id="stip-pdf-loading" style="display:none;text-align:center;font-size:0.9em;color:var(--primary-color);margin-top:8px;font-weight:600;">{{ _('Analysis in progress... ⏳') }}</div>
+                        </div>
+
+                        <!-- CSV Import -->
+                        <div class="card" style="padding:20px;">
+                            <h3>{{ _('Import from CSV') }}</h3>
+                            <p style="font-size:0.85em;color:var(--text-muted);margin:8px 0 12px;line-height:1.4;">{{ _('Upload a CSV file to import multiple salaries by mapping columns.') }}</p>
+                            <input type="file" id="stip-custom-csv-file" accept=".csv" style="display:none;" onchange="window.handleStipCSVUpload(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('stip-custom-csv-file').click()" style="width:100%;">📊 {{ _('Select CSV and Import') }}</button>
+                        </div>
+                    </div>
+
+                    <!-- Storico -->
+                    <div class="card" style="padding:20px;">
+                        <div class="card-header-actions" style="margin-bottom:12px;">
+                            <h3>{{ _('Payslips History') }}</h3>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Month') }}</th>
+                                        <th style="text-align:right;">{{ _('Gross') }}</th>
+                                        <th style="text-align:right;">{{ _('Net') }}</th>
+                                        <th>{{ _('Notes') }}</th>
+                                        <th style="text-align:center;">{{ _('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stip-history-table-body">
+                                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">{{ _('No data.') }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. GESTIONE PERSONE -->
+            <section class="stip-tab-content" id="stip-tab-persone">
+                <div class="card" style="padding:20px;">
+                    <div class="card-header-actions" style="margin-bottom:16px;">
+                        <h3>{{ _('People in the Group') }}</h3>
+                        <button class="btn btn-primary" onclick="window.openSalaryPersonModal()">+ {{ _('New Person') }}</button>
+                    </div>
+                    <div class="persons-grid" id="stip-persons-grid">
+                        <p style="color:var(--text-muted);">{{ _('No people added.') }}</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL: Nuova Persona -->
+    <div class="modal-overlay" id="stip-person-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="stip-person-modal-title">{{ _('New Person') }}</h2>
+                <button class="modal-close" onclick="window.closeSalaryPersonModal()">×</button>
+            </div>
+            <form class="modal-form" id="stip-person-form" onsubmit="window.handlePersonSubmit(event)">
+                <input type="hidden" id="stip-person-edit-name" value="">
+                <div class="form-group">
+                    <label for="stip-person-name">{{ _('Person Name *') }}</label>
+                    <input type="text" id="stip-person-name" placeholder="{{ _('e.g. John Doe') }}" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.closeSalaryPersonModal()">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Voci Busta Paga -->
+    <div class="modal-overlay" id="stip-items-modal">
+        <div class="modal-card" style="max-width:680px;">
+            <div class="modal-header">
+                <h2>{{ _('Payslip Items') }}</h2>
+                <button class="modal-close" onclick="window.closeStipItemsModal()">×</button>
+            </div>
+            <div style="padding:20px 24px;">
+                <div id="stip-items-current-info" style="margin-bottom:14px;font-size:0.9em;color:var(--text-muted);"></div>
+                <div style="overflow-x:auto;margin-bottom:16px;max-height:300px;overflow-y:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Item') }}</th>
+                                <th>{{ _('Type') }}</th>
+                                <th style="text-align:right;">{{ _('Amount') }}</th>
+                                <th style="text-align:center;">{{ _('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stip-items-table-body"></tbody>
+                    </table>
+                </div>
+                <h4 style="margin:0 0 12px;font-size:0.9em;">{{ _('Add Item') }}</h4>
+                <form id="stip-item-form" onsubmit="window.handleSalaryItemSubmit(event)" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;">
+                    <input type="hidden" id="stip-items-salary-id">
+                    <div class="form-group"><label>{{ _('Label') }}</label><input type="text" id="stip-item-label" placeholder="{{ _('e.g., Allowance') }}" required></div>
+                    <div class="form-group">
+                        <label>{{ _('Type') }}</label>
+                        <select id="stip-item-type">
+                            <option value="bonus">{{ _('Bonus / Allowance') }}</option>
+                            <option value="deduction">{{ _('Deduction') }}</option>
+                            <option value="allowance">{{ _('Expense Reimbursement') }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>{{ _('Amount (€)') }}</label><input type="number" step="0.01" id="stip-item-amount" placeholder="0.00" required></div>
+                    <button type="submit" class="btn btn-primary" style="margin-bottom:0;">+</button>
+                </form>
+            </div>
+            <div class="form-actions" style="padding:12px 24px;border-top:1px solid var(--border-color);">
+                <button class="btn btn-secondary" onclick="window.closeStipItemsModal()">{{ _('Close') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MAPPING STIPENDI CSV -->
+    <div id="stip-csv-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid #f1f3f5; padding-bottom:15px;">📊 {{ _('Map Salaries CSV Columns') }}</h3>
+            <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">{{ _('Select the corresponding column from your CSV file for each required field.') }}</p>
+            
+            <div id="stip-mapping-fields" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            
+            <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="document.getElementById('stip-csv-mapping-modal').style.display='none'; document.getElementById('stip-custom-csv-file').value='';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="window.confermaMappingStipendiCSV()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF SALARIES REVIEW MODAL -->
+    <div class="modal-overlay" id="stip-pdf-review-modal">
+        <div class="modal-card" style="max-width: 850px;">
+            <div class="modal-header">
+                <h2>{{ _('Review Detected Salaries') }}</h2>
+                <button class="modal-close" onclick="window.closeStipPdfReviewModal()">×</button>
+            </div>
+            <div style="padding: 24px; overflow-y: auto; max-height: 60vh;">
+                <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 15px;">{{ _('The following salaries and payslip details were detected in the PDF file. Select those you want to import.') }}</p>
+                <div style="overflow-x: auto;">
+                    <table class="table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: center; padding: 8px; width: 40px;"><input type="checkbox" id="stip-pdf-select-all-checkbox" onchange="window.toggleSelectAllStipContributions(this)" checked></th>
+                                <th style="text-align: left; padding: 8px;">{{ _('Month') }}</th>
+                                <th style="text-align: left; padding: 8px;">{{ _('Person') }}</th>
+                                <th style="text-align: right; padding: 8px;">{{ _('Gross') }}</th>
+                                <th style="text-align: right; padding: 8px;">{{ _('Net') }}</th>
+                                <th style="text-align: center; padding: 8px;">{{ _('Items') }}</th>
+                                <th style="text-align: left; padding: 8px;">{{ _('Notes') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stip-pdf-salaries-review-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="form-actions" style="padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="window.closeStipPdfReviewModal()" type="button">{{ _('Cancel') }}</button>
+                <button class="btn btn-primary" onclick="window.submitStipPdfImportedSalaries()" type="button">{{ _('Import Selected') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM PDF IMPORT MODAL -->
+    <div id="stip-custom-pdf-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:25px; border-radius:12px; max-width:900px; width:95%; max-height:90vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; color: #212529;">
+            <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid var(--border-color); padding-bottom:15px; display: flex; align-items: center; gap: 8px;">⚙️ {{ _('Custom PDF Import Workbench') }}</h3>
+            
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; min-height: 300px; max-height: 450px; overflow: hidden;">
+                <!-- Left side: PDF text preview -->
+                <div style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
+                    <label style="font-weight: bold; font-size: 0.9em;">📝 {{ _('Extracted PDF Text') }}</label>
+                    <textarea id="stip-custom-pdf-text" readonly style="flex-grow: 1; width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px; background: #f8f9fa; color: #212529; resize: none; overflow-y: auto; height: 100%;"></textarea>
+                </div>
+                
+                <!-- Right side: Extraction rules -->
+                <div style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 5px;">
+                    <label style="font-weight: bold; font-size: 0.9em;">🔍 {{ _('Extraction Pattern (Regex)') }}</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <textarea id="stip-custom-pdf-regex" placeholder="e.g. Busta\\s+(\\d{2}/\\d{2}/\\d{4}).*Imponibile\\s+([\\d.,]+)" style="width: 100%; height: 60px; font-family: monospace; font-size: 12px; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; background: white; color: #212529;"></textarea>
+                        <p style="font-size: 0.75em; color: var(--text-muted); margin: 0;">{{ _('Use capture groups () to capture fields from matching lines.') }}</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                        <label style="font-weight: bold; font-size: 0.85em;">📋 {{ _('Map Capture Groups to Fields') }}</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85em;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label>{{ _('Month (YYYY-MM) *') }}</label>
+                                <select id="stip-custom-pdf-map-month" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label>{{ _('Person Name *') }}</label>
+                                <select id="stip-custom-pdf-map-person" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label>{{ _('Gross Salary (€) *') }}</label>
+                                <select id="stip-custom-pdf-map-gross" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label>{{ _('Net Salary (€) *') }}</label>
+                                <select id="stip-custom-pdf-map-net" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; grid-column: span 2;">
+                                <label>{{ _('Notes') }}</label>
+                                <select id="stip-custom-pdf-map-notes" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="window.testStipCustomPdfRegex()" class="btn btn-primary" style="margin-top: 10px; width: 100%;">⚡ {{ _('Test & Parse') }}</button>
+                </div>
+            </div>
+            
+            <!-- Bottom: Preview table -->
+            <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <label style="font-weight: bold; font-size: 0.9em;">📊 {{ _('Parsed Results Preview') }}</label>
+                <div style="overflow-x: auto; max-height: 200px; overflow-y: auto;">
+                    <table class="table" style="font-size: 12px; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center;"><input type="checkbox" id="stip-custom-pdf-select-all" checked onchange="window.toggleAllStipCustomPdfRows(this)"></th>
+                                <th>{{ _('Month') }}</th>
+                                <th>{{ _('Person') }}</th>
+                                <th>{{ _('Gross') }}</th>
+                                <th>{{ _('Net') }}</th>
+                                <th>{{ _('Notes') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stip-custom-pdf-preview-body">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">{{ _('Enter a pattern and click Test to view results.') }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="text-align:right; border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="document.getElementById('stip-custom-pdf-modal').style.display='none';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="window.confirmStipCustomPdfImport()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
+</div>

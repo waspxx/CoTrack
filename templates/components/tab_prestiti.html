@@ -1,0 +1,505 @@
+<div id="tab-prestiti" class="tab-content">
+    <!-- SELETTORE GRUPPO PRESTITI -->
+    <div class="garage-selector-container" id="loan-group-selector-container" style="display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 10px 15px; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 20px; border: 1px solid var(--border-color); margin-top: 10px;">
+        <span style="font-size: 0.9em; font-weight: 600; color: var(--text-primary);">{{ _('Loan Group:') }}</span>
+        <select id="select-loan-group" onchange="cambiaGruppoPrestiti()" style="border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: var(--primary-color); cursor: pointer; background: var(--bg-card);"></select>
+        <button onclick="nuovoGruppoPrestiti()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Group') }}">+</button>
+        <button onclick="rinominaGruppoPrestiti()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Group') }}">✏️ {{ _('Rename') }}</button>
+        <button onclick="eliminaGruppoPrestiti()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Group') }}">🗑️ {{ _('Delete') }}</button>
+    </div>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <!-- Icon SVG for Loans/Finance -->
+                    <svg class="logo-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <span class="brand-name">{{ _('Loans') }}</span>
+            </div>
+            
+            <!-- Active Loan Selector -->
+            <div class="vehicle-selector-wrapper">
+                <label class="nav-label" for="active-loan-select">{{ _('Active Loan') }}</label>
+                <div class="custom-select-container">
+                    <select class="vehicle-select" id="active-loan-select" onchange="handleLoanChange(event)">
+                        <!-- Dynamically populated -->
+                    </select>
+                    <button class="icon-btn-small" id="add-loan-quick-btn" onclick="openLoanModal()" title="{{ _('Add loan') }}" style="display: flex; justify-content: center; align-items: center;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="12" x2="12" y1="5" y2="19"></line>
+                            <line x1="5" x2="19" y1="12" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <span class="nav-label">{{ _('Menu') }}</span>
+                <a class="nav-link active" data-loan-tab="dashboard" href="#" id="loan-nav-dashboard" onclick="switchLoanSubTab('dashboard', event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                    <span>{{ _('Progress Dashboard') }}</span>
+                </a>
+                <a class="nav-link" data-loan-tab="simulator" href="#" id="loan-nav-simulator" onclick="switchLoanSubTab('simulator', event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>{{ _('Savings Simulator') }}</span>
+                </a>
+                <a class="nav-link" data-loan-tab="payments" href="#" id="loan-nav-payments" onclick="switchLoanSubTab('payments', event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>{{ _('Record & History') }}</span>
+                </a>
+                <a class="nav-link" data-loan-tab="schedule" href="#" id="loan-nav-schedule" onclick="switchLoanSubTab('schedule', event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>{{ _('Amortization Schedule') }}</span>
+                </a>
+                <a class="nav-link" data-loan-tab="manage" href="#" id="loan-nav-manage" onclick="switchLoanSubTab('manage', event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>{{ _('Manage Loans') }}</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- 1. DASHBOARD TAB -->
+            <section class="loan-tab-content active" id="loan-tab-dashboard">
+                <div class="dashboard-header" style="margin-bottom: 24px;">
+                    <h1 id="active-loan-title-dashboard">Nome Prestito</h1>
+                    <p class="description" id="active-loan-desc-dashboard">{{ _('Loading loan details...') }}</p>
+                </div>
+                
+                <!-- KPI Grid -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="card stat-card">
+                        <span class="stat-label">{{ _('Remaining Capital') }}</span>
+                        <span class="stat-value" id="kpi-loan-remaining">€ 0,00</span>
+                    </div>
+                    <div class="card stat-card">
+                        <span class="stat-label">{{ _('Returned Capital') }}</span>
+                        <span class="stat-value" id="kpi-loan-paid">€ 0,00</span>
+                        <div class="progress-bar-container" style="background: var(--border-color); height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden;">
+                            <div id="kpi-loan-progress" style="background: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <span class="stat-label">{{ _('Paid Interest') }}</span>
+                        <span class="stat-value" id="kpi-loan-interest">€ 0,00</span>
+                    </div>
+                    <div class="card stat-card">
+                        <span class="stat-label">{{ _('Savings Achieved') }}</span>
+                        <span class="stat-value" id="kpi-loan-savings" style="color: #2e7d32;">€ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="reports-grid" style="margin-bottom: 24px;">
+                    <div class="card report-card">
+                        <h3>{{ _('Repayment Status Breakdown') }}</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="chart-loan-donut"></canvas>
+                        </div>
+                    </div>
+                    <div class="card report-card">
+                        <h3>{{ _('Debt Extinction Projection') }}</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="chart-loan-projection"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info Summary -->
+                <div class="card" style="padding: 20px;">
+                    <h3>{{ _('Loan Conditions Summary') }}</h3>
+                    <div class="vehicle-card-body" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); display: grid; gap: 16px; margin-top: 15px;">
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Original Amount') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-principal" style="font-size: 1.1em;">€ 0,00</span>
+                        </div>
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Nominal Rate (TAN)') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-rate" style="font-size: 1.1em;">0,00%</span>
+                        </div>
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Contractual Duration') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-term" style="font-size: 1.1em;">0 mesi</span>
+                        </div>
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Calculated Monthly Payment') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-payment" style="font-size: 1.1em;">€ 0,00</span>
+                        </div>
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Start Date') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-start" style="font-size: 1.1em;">N/A</span>
+                        </div>
+                        <div class="vehicle-card-info-item" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <span class="vehicle-card-info-label">{{ _('Expected Maturity') }}</span>
+                            <span class="vehicle-card-info-val" id="summary-loan-end" style="font-size: 1.1em;">N/A</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 2. SIMULATOR TAB -->
+            <section class="loan-tab-content" id="loan-tab-simulator">
+                <div class="dashboard-header" style="margin-bottom: 24px;">
+                    <h1>{{ _('Early Repayment Simulator') }}</h1>
+                    <p class="description">{{ _('Check the impact of extra repayments on the calculation of future interest and on term reduction.') }}</p>
+                </div>
+                
+                <div class="reports-grid" style="grid-template-columns: 1fr 2fr; display: grid; gap: 20px; align-items: start; margin-bottom: 24px;">
+                    <!-- Simulation Form -->
+                    <div class="card" style="padding: 20px;">
+                        <h3>{{ _('Set Simulation Parameters') }}</h3>
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+                            <div class="form-group">
+                                <label for="sim-extra-amount">{{ _('Extra Repayment Amount (€)') }}</label>
+                                <input type="number" id="sim-extra-amount" min="0" placeholder="{{ _('e.g., 5000') }}" oninput="runSimulation()" style="width:100%;" />
+                            </div>
+                            <div class="form-group">
+                                <label for="sim-extra-date">{{ _('Extra Repayment Date') }}</label>
+                                <input type="date" id="sim-extra-date" onchange="runSimulation()" style="width:100%;" />
+                            </div>
+                            <div class="form-group">
+                                <label for="sim-payment-increase">{{ _('Fixed Monthly Payment Increase (€)') }}</label>
+                                <input type="number" id="sim-payment-increase" min="0" placeholder="{{ _('e.g., 100') }}" oninput="runSimulation()" style="width:100%;" />
+                            </div>
+                            <div class="form-group">
+                                <label for="sim-strategy">{{ _('Simulation Strategy') }}</label>
+                                <select id="sim-strategy" onchange="runSimulation()" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                                    <option value="term">{{ _('Reduce Term (Keep payment unchanged)') }}</option>
+                                    <option value="payment">{{ _('Reduce Payment (Keep term unchanged)') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Simulation Results -->
+                    <div class="card" style="padding: 20px;">
+                        <h3>{{ _('Comparative Simulation Results') }}</h3>
+                        
+                        <!-- Mini KPIs -->
+                        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); display: grid; gap: 12px; margin-top: 15px; margin-bottom: 20px;">
+                            <div style="background: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <span class="stat-label" style="font-size: 11px;">{{ _('Interest Saved') }}</span>
+                                <span class="stat-value" id="sim-savings-interest" style="font-size: 1.5em; color: #2e7d32; display: block; font-weight: bold; margin-top: 4px;">€ 0,00</span>
+                            </div>
+                            <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <span class="stat-label" style="font-size: 11px;">{{ _('Months Saved') }}</span>
+                                <span class="stat-value" id="sim-savings-term" style="font-size: 1.5em; color: #2196f3; display: block; font-weight: bold; margin-top: 4px;">0 mesi</span>
+                            </div>
+                            <div style="background: rgba(255, 152, 0, 0.08); border: 1px solid rgba(255, 152, 0, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                <span class="stat-label" style="font-size: 11px;">{{ _('New Maturity Date') }}</span>
+                                <span class="stat-value" id="sim-new-end-date" style="font-size: 1.2em; color: #ff9800; display: block; font-weight: bold; margin-top: 8px;">N/A</span>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container" style="position: relative; height: 250px; margin-bottom: 15px;">
+                            <canvas id="chart-sim-comparison"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 3. PAYMENTS & HISTORY TAB -->
+            <section class="loan-tab-content" id="loan-tab-payments">
+                <div class="dashboard-header" style="margin-bottom: 24px;">
+                    <h1>{{ _('Recording & Payment History') }}</h1>
+                    <p class="description">{{ _('Record regular payments (monthly installments) or extraordinary repayments (partial early redemptions).') }}</p>
+                </div>
+                
+                <div class="reports-grid" style="grid-template-columns: 1fr 2fr; display: grid; gap: 20px; align-items: start;">
+                    <!-- Add payment Form & PDF Import -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="card" style="padding: 20px;">
+                            <h3>{{ _('Record Movement') }}</h3>
+                            <form id="loan-payment-form" onsubmit="handlePaymentSubmit(event)" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+                                <input type="hidden" id="loan-payment-edit-id" value="" />
+                                <div class="form-group">
+                                    <label for="p-date">{{ _('Payment Date *') }}</label>
+                                    <input type="date" id="p-date" required style="width:100%;" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-amount" id="p-amount-label" data-amount-label="{{ _('Amount (€) *') }}" data-rate-label="{{ _('New Rate (TAN %%) *') }}">{{ _('Amount (€) *') }}</label>
+                                    <input type="number" id="p-amount" min="0.01" step="0.01" placeholder="{{ _('e.g., 620.50') }}" required style="width:100%;" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-type">{{ _('Transaction Type *') }}</label>
+                                    <select id="p-type" required onchange="window.updatePaymentAmountLabel()" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                                        <option value="regular">{{ _('Regular Monthly Installment') }}</option>
+                                        <option value="extra">{{ _('Extraordinary Early Repayment') }}</option>
+                                        <option value="rate_change">{{ _('Interest Rate Change (TAN)') }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-notes">{{ _('Notes (optional)') }}</label>
+                                    <input type="text" id="p-notes" placeholder="{{ _('e.g., End-of-year extra repayment') }}" style="width:100%;" />
+                                </div>
+                                <div class="form-actions" style="margin-top: 10px;">
+                                    <button type="button" class="btn btn-secondary" id="payment-cancel-btn" onclick="resetPaymentForm()">{{ _('Cancel') }}</button>
+                                    <button type="submit" class="btn btn-primary">{{ _('Record') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="card" style="padding: 20px;">
+                            <h3>{{ _('Detect from Bank Statement (PDF)') }}</h3>
+                            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">{{ _('Upload the bank statement in PDF from the intermediary to automatically detect and import payments.') }}</p>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <input type="file" id="loan-statement-pdf-input" accept=".pdf" style="display: none;" onchange="handleStatementPdfUpload(event)">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('loan-statement-pdf-input').click()" style="width: 100%;">{{ _('Select PDF and Analyze') }}</button>
+                                <input type="file" id="loan-custom-pdf-input" accept=".pdf" style="display: none;" onchange="window.handleLoanCustomPdfUpload(event)">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('loan-custom-pdf-input').click()" style="width: 100%; margin-top: 6px;">⚙️ {{ _('Custom PDF Import') }}</button>
+                                <div id="pdf-import-loading" style="display: none; text-align: center; font-size: 0.9em; color: var(--primary-color); margin-top: 5px; font-weight: 600;">
+                                    {{ _('Analysis in progress with Gemini... ⏳') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payments History Table -->
+                    <div class="card" style="padding: 20px;">
+                        <h3>{{ _('Registered Transactions History') }}</h3>
+                        <div style="overflow-x: auto; margin-top: 15px;">
+                            <table class="table" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">Data</th>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">Tipo</th>
+                                        <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">Importo</th>
+                                        <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">Note</th>
+                                        <th style="text-align: center; padding: 10px; border-bottom: 2px solid var(--border-color);">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="loan-payments-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 4. AMORTIZATION SCHEDULE TAB -->
+            <section class="loan-tab-content" id="loan-tab-schedule">
+                <div class="dashboard-header" style="margin-bottom: 24px;">
+                    <h1>{{ _('Detailed Amortization Schedule') }}</h1>
+                    <p class="description">{{ _('View the calculated monthly amortization schedule for the loan, integrating the registered extra repayments.') }}</p>
+                </div>
+                
+                <div class="card" style="padding: 20px;">
+                    <div class="card-header-actions" style="margin-bottom: 15px;">
+                        <h3>{{ _('List of Projected Monthly Installments') }}</h3>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 600px;">
+                        <table class="table" style="width: 100%; border-collapse: collapse;">
+                            <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                                <tr>
+                                    <th style="text-align: center; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Month') }}</th>
+                                    <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Maturity') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Rate (TAN)') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Interest Share') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Capital Share') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Extra Repayment') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Total Installment') }}</th>
+                                    <th style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color);">{{ _('Remaining Debt') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loan-schedule-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 5. MANAGE LOANS TAB -->
+            <section class="loan-tab-content" id="loan-tab-manage">
+                <div class="card" style="padding: 20px;">
+                    <div class="card-header-actions" style="margin-bottom: 20px;">
+                        <h3>{{ _('My Loans & Financed Capital') }}</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="openImportLoansBackup()" title="{{ _('Import loans backup') }}">{{ _('Import') }}</button>
+                            <button class="btn btn-secondary" onclick="exportLoansBackup()" title="{{ _('Export loans backup') }}">{{ _('Export') }}</button>
+                            <button class="btn btn-primary" onclick="openLoanModal()">{{ _('New Loan') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="vehicles-grid" id="loans-list-container">
+                        <!-- Dynamic list of loan cards -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<!-- LOAN FORM MODAL (Add/Edit Loan) -->
+<div class="modal-overlay" id="loan-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="loan-modal-title">{{ _('New Loan') }}</h2>
+            <button class="modal-close" onclick="closeLoanModal()">×</button>
+        </div>
+        <form class="modal-form" id="loan-form" onsubmit="handleLoanSubmit(event)">
+            <input id="loan-edit-id" type="hidden" value=""/>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="l-name">{{ _('Loan Name *') }}</label>
+                    <input id="l-name" placeholder="{{ _('e.g., Home Mortgage, Auto Loan...') }}" required type="text" style="width:100%;" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="l-principal">{{ _('Financed Capital (€) *') }}</label>
+                    <input id="l-principal" min="1" placeholder="{{ _('e.g., 15000') }}" required type="number" style="width:100%;" />
+                </div>
+                <div class="form-group">
+                    <label for="l-rate">{{ _('Nominal Annual Rate - TAN (%%) *') }}</label>
+                    <input id="l-rate" min="0" max="100" step="0.01" placeholder="{{ _('e.g., 3.5') }}" required type="number" style="width:100%;" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="l-term">{{ _('Loan Duration (Months) *') }}</label>
+                    <input id="l-term" min="1" max="1200" placeholder="{{ _('e.g., 120') }}" required type="number" style="width:100%;" />
+                </div>
+                <div class="form-group">
+                    <label for="l-start">{{ _('Start Date') }} Prestito *</label>
+                    <input id="l-start" required type="date" style="width:100%;" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="l-rate-type">{{ _('Rate Type *') }}</label>
+                    <select id="l-rate-type" required style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                        <option value="fixed">{{ _('Fixed Rate') }}</option>
+                        <option value="variable">{{ _('Variable Rate') }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="l-payment">{{ _('Contractual Monthly Installment (€ - optional)') }}</label>
+                    <input id="l-payment" min="0" step="0.01" placeholder="{{ _('Leave blank for automatic calculation') }}" type="number" style="width:100%;" />
+                </div>
+            </div>
+            <div id="l-rate-type-help" style="display: none; font-size: 0.85em; color: var(--text-muted); margin-top: -8px; margin-bottom: 12px; padding: 0 5px; line-height: 1.4;">
+                💡 {{ _("For variable rate loans, you can record interest rate updates in the 'Record & History' tab using 'Interest Rate Change (TAN)'.") }}
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeLoanModal()" type="button">{{ _('Cancel') }}</button>
+                <button class="btn btn-primary" type="submit">{{ _('Save Loan') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- PDF TRANSACTIONS REVIEW MODAL -->
+<div class="modal-overlay" id="pdf-review-modal">
+    <div class="modal-card" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2>{{ _('Review Detected Transactions') }}</h2>
+            <button class="modal-close" onclick="closePdfReviewModal()">×</button>
+        </div>
+        <div style="padding: 24px; overflow-y: auto; max-height: 60vh;">
+            <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 15px;">{{ _('The following transactions were detected in the PDF file. Select those you want to import into the active loan.') }}</p>
+            <div style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="text-align: center; padding: 8px; width: 40px;"><input type="checkbox" id="pdf-select-all-checkbox" onchange="toggleSelectAllPdfTransactions(this)" checked></th>
+                            <th style="text-align: left; padding: 8px;">{{ _('Date') }}</th>
+                            <th style="text-align: left; padding: 8px;">{{ _('Type') }}</th>
+                            <th style="text-align: right; padding: 8px;">{{ _('Amount') }}</th>
+                            <th style="text-align: left; padding: 8px;">{{ _('Notes') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pdf-transactions-review-body">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="form-actions" style="padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="btn btn-secondary" onclick="closePdfReviewModal()" type="button">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary" onclick="submitPdfImportedTransactions()" type="button">{{ _('Import Selected') }}</button>
+        </div>
+    </div>
+</div>
+
+<!-- CUSTOM PDF IMPORT MODAL -->
+<div id="loan-custom-pdf-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+    <div style="background:white; padding:25px; border-radius:12px; max-width:900px; width:95%; max-height:90vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; color: #212529;">
+        <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid var(--border-color); padding-bottom:15px; display: flex; align-items: center; gap: 8px;">⚙️ {{ _('Custom PDF Import Workbench') }}</h3>
+        
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; min-height: 300px; max-height: 450px; overflow: hidden;">
+            <!-- Left side: PDF text preview -->
+            <div style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
+                <label style="font-weight: bold; font-size: 0.9em;">📝 {{ _('Extracted PDF Text') }}</label>
+                <textarea id="loan-custom-pdf-text" readonly style="flex-grow: 1; width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px; background: #f8f9fa; color: #212529; resize: none; overflow-y: auto; height: 100%;"></textarea>
+            </div>
+            
+            <!-- Right side: Extraction rules -->
+            <div style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 5px;">
+                <label style="font-weight: bold; font-size: 0.9em;">🔍 {{ _('Extraction Pattern (Regex)') }}</label>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <textarea id="loan-custom-pdf-regex" placeholder="e.g. (\\d{2}/\\d{2}/\\d{4})\\s+([\\d.,]+)" style="width: 100%; height: 60px; font-family: monospace; font-size: 12px; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; background: white; color: #212529;"></textarea>
+                    <p style="font-size: 0.75em; color: var(--text-muted); margin: 0;">{{ _('Use capture groups () to capture fields from matching lines.') }}</p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <label style="font-weight: bold; font-size: 0.85em;">📋 {{ _('Map Capture Groups to Fields') }}</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85em;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label>{{ _('Date (YYYY-MM-DD or DD/MM/YYYY) *') }}</label>
+                            <select id="loan-custom-pdf-map-date" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label>{{ _('Amount (€) *') }}</label>
+                            <select id="loan-custom-pdf-map-amount" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label>{{ _('Type *') }}</label>
+                            <select id="loan-custom-pdf-map-type" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label>{{ _('Notes') }}</label>
+                            <select id="loan-custom-pdf-map-notes" class="form-select" style="padding: 4px; font-size: 13px;"></select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" onclick="window.testLoanCustomPdfRegex()" class="btn btn-primary" style="margin-top: 10px; width: 100%;">⚡ {{ _('Test & Parse') }}</button>
+            </div>
+        </div>
+        
+        <!-- Bottom: Preview table -->
+        <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <label style="font-weight: bold; font-size: 0.9em;">📊 {{ _('Parsed Results Preview') }}</label>
+            <div style="overflow-x: auto; max-height: 200px; overflow-y: auto;">
+                <table class="table" style="font-size: 12px; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="loan-custom-pdf-select-all" checked onchange="window.toggleAllLoanCustomPdfRows(this)"></th>
+                            <th>{{ _('Date') }}</th>
+                            <th>{{ _('Type') }}</th>
+                            <th>{{ _('Amount') }}</th>
+                            <th>{{ _('Notes') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loan-custom-pdf-preview-body">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">{{ _('Enter a pattern and click Test to view results.') }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="text-align:right; border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="document.getElementById('loan-custom-pdf-modal').style.display='none';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
+            <button onclick="window.confirmLoanCustomPdfImport()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
+        </div>
+    </div>
+</div>
+
+<!-- HIDDEN FILE INPUT FOR LOANS IMPORT -->
+<input type="file" id="loans-backup-import-file" onchange="importLoansBackup(this)" accept=".json" style="display:none;">
+</div>

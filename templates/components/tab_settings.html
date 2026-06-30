@@ -1,0 +1,78 @@
+<div id="tab-settings" class="tab-content" style="padding: 28px 32px; background-color: var(--bg-app); min-height: calc(100vh - 120px);">
+    <div class="dashboard-header" style="margin-bottom: 24px;">
+        <h1 style="font-size: 1.65em; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); margin: 0 0 4px;">{{ _('Settings') }}</h1>
+        <p class="description" style="color: var(--text-muted); font-size: 0.9em; margin: 0;">{{ _('Manage application general preferences and dashboard visibility.') }}</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 24px; max-width: 800px;">
+        <!-- Card 1: Tab Visibility -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                    <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                    <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+                </svg>
+                <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('Tab Visibility') }}</h3>
+            </div>
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">{{ _('Select which tabs you want to show in the navigation bar.') }}</p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-investimenti" onchange="window.toggleTabSetting('tab_investimenti_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Investments') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-wallet" onchange="window.toggleTabSetting('tab_wallet_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Income/Expenses (Wallet)') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-bollette" onchange="window.toggleTabSetting('tab_bollette_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Bills') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-veicoli" onchange="window.toggleTabSetting('tab_veicoli_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Vehicles') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-prestiti" onchange="window.toggleTabSetting('tab_prestiti_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Loans') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-stipendi" onchange="window.toggleTabSetting('tab_stipendi_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Salaries') }}
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; font-size: 0.95em;">
+                    <input type="checkbox" id="setting-tab-fondopensione" onchange="window.toggleTabSetting('tab_fondopensione_active', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                    {{ _('Pension Fund') }}
+                </label>
+            </div>
+        </div>
+
+        <!-- Card 2: General Preferences -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('General Preferences') }}</h3>
+            </div>
+
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="setting-default-tab" style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.05em;">{{ _('Landing Tab') }}</label>
+                <select id="setting-default-tab" onchange="window.saveDefaultTabSetting(this.value)" style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-app); color: var(--text-primary); outline: none; cursor: pointer; font-size: 0.95em;">
+                    <option value="tab-investimenti">{{ _('Investments') }}</option>
+                    <option value="tab-wallet">{{ _('Income/Expenses (Wallet)') }}</option>
+                    <option value="tab-bollette">{{ _('Bills') }}</option>
+                    <option value="tab-veicoli">{{ _('Vehicles') }}</option>
+                    <option value="tab-prestiti">{{ _('Loans') }}</option>
+                    <option value="tab-stipendi">{{ _('Salaries') }}</option>
+                    <option value="tab-fondopensione">{{ _('Pension Fund') }}</option>
+                </select>
+                <p style="font-size: 0.8em; color: var(--text-muted); margin: 4px 0 0;">{{ _('Choose which tab is displayed by default when you open CoTrack.') }}</p>
+            </div>
+        </div>
+    </div>
+</div>

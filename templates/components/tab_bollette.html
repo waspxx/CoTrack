@@ -1,0 +1,208 @@
+<div id="tab-bollette" class="tab-content">
+    <!-- SELETTORE BOLLETTE -->
+    <div class="bills-selector-container" style="display: flex; align-items: center; gap: 10px; background: white; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #dee2e6; margin-top: 10px;">
+        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Bills Group:') }}</span>
+        <select id="select-bills" onchange="cambiaBills()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: #0ea5e9; cursor: pointer; background: white;"></select>
+        <button onclick="nuovoBills()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Bills Group') }}">+</button>
+        <button onclick="rinominaBills()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Bills Group') }}">✏️ {{ _('Rename') }}</button>
+        <button onclick="eliminaBills()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Bills Group') }}">🗑️ {{ _('Delete') }}</button>
+    </div>
+    <!-- Dashboard header & settings -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; text-align: left;">{{ _('Bills & Consumption Dashboard') }}</h2>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="apriModalSettingsBollette()" class="btn-filter" style="background-color: #6c757d; color: white; display: flex; align-items: center; gap: 5px;">
+                ⚙️ {{ _('Settings') }}
+            </button>
+            <button onclick="apriModalBolletta()" class="btn-filter" style="background-color: #28a745; color: white; display: flex; align-items: center; gap: 5px;">
+                ➕ {{ _('Add Bill') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary KPI cards -->
+    <div class="kpi-grid" style="margin-bottom: 25px;">
+        <div class="kpi-card" style="border-left: 5px solid #0ea5e9;">
+            <div class="kpi-titolo" style="color: #0ea5e9;">💧 {{ _('Water') }}</div>
+            <div class="kpi-valore" id="kpi-acqua-costo">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-acqua-consumo">-</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #f59e0b;">
+            <div class="kpi-titolo" style="color: #f59e0b;">⚡ {{ _('Electricity') }}</div>
+            <div class="kpi-valore" id="kpi-luce-costo">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-luce-consumo">-</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #a855f7;">
+            <div class="kpi-titolo" style="color: #a855f7;">🔥 {{ _('Gas') }}</div>
+            <div class="kpi-valore" id="kpi-gas-costo">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-gas-consumo">-</div>
+        </div>
+    </div>
+
+    <!-- Chart container -->
+    <div class="andamento-container">
+        <div class="andamento-header-row">
+            <div>
+                <div class="andamento-title">{{ _('Consumption & Cost History') }}</div>
+            </div>
+            <div class="filters-container">
+                <div class="filter-group">
+                    <span class="filter-label">{{ _('Show') }}</span>
+                    <div class="filter-buttons">
+                        <button id="btn-bollette-view-price" class="btn-filter active" onclick="cambiaVisualizzazioneBollette('price')">{{ _('Costs (€)') }}</button>
+                        <button id="btn-bollette-view-consumption" class="btn-filter" onclick="cambiaVisualizzazioneBollette('consumption')">{{ _('Consumptions') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="line-chart-wrapper" style="position: relative; height: 350px;">
+            <canvas id="graficoBollette"></canvas>
+        </div>
+    </div>
+
+    <!-- History list table & CSV Management -->
+    <div class="contenitore-dati">
+        <div class="sezione-tabella" style="flex: 1; overflow-x: auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div class="andamento-title" style="margin-bottom: 15px; text-align: left;">{{ _('Bills History') }}</div>
+            <table class="tabella-pmc" id="tabella-bollette" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>{{ _('Month/Year') }}</th>
+                        <th>💧 {{ _('Water') }}</th>
+                        <th>⚡ {{ _('Electricity') }}</th>
+                        <th>🔥 {{ _('Gas') }}</th>
+                        <th>💰 {{ _('Total Cost') }}</th>
+                        <th>{{ _('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-bollette-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #6c757d;">{{ _('No bills added yet.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modulo-inserimento" style="width: 280px; flex-shrink: 0; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); align-self: flex-start; box-sizing: border-box;">
+            <div class="modulo-header"><p>{{ _('Bills Management') }}</p></div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-filter" onclick="document.getElementById('file-bollette-csv').click()" style="background-color: #17a2b8; color: white; display: block; width: 100%; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center;">📤 {{ _('Import CSV') }}</button>
+                <button class="btn-filter" onclick="esportaBolletteCSV()" style="background-color: #6c757d; color: white; display: block; width: 100%; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center;">📥 {{ _('Export CSV') }}</button>
+                <input type="file" id="file-bollette-csv" accept=".csv" style="display: none;" onchange="importaBolletteCSV(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal bolletta (Add / Edit) -->
+    <div id="modal-bolletta" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; margin: auto;">
+            <span onclick="chiudiModalBolletta()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
+            <h3 id="modal-bolletta-title" style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Add Bill') }}</h3>
+            
+            <form id="form-bolletta" onsubmit="salvaBolletta(event)">
+                <input type="hidden" id="bolletta-id">
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="filter-label" for="bolletta-year">{{ _('Year') }}</label>
+                        <select id="bolletta-year" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required></select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="filter-label" for="bolletta-month">{{ _('Month') }}</label>
+                        <select id="bolletta-month" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                            <option value="1">{{ _('January') }}</option>
+                            <option value="2">{{ _('February') }}</option>
+                            <option value="3">{{ _('March') }}</option>
+                            <option value="4">{{ _('April') }}</option>
+                            <option value="5">{{ _('May') }}</option>
+                            <option value="6">{{ _('June') }}</option>
+                            <option value="7">{{ _('July') }}</option>
+                            <option value="8">{{ _('August') }}</option>
+                            <option value="9">{{ _('September') }}</option>
+                            <option value="10">{{ _('October') }}</option>
+                            <option value="11">{{ _('November') }}</option>
+                            <option value="12">{{ _('December') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #0ea5e9;">💧 {{ _('Water') }}</h4>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-water-price">{{ _('Price (€)') }}</label>
+                            <input type="number" step="0.01" id="bolletta-water-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-water-consumption">{{ _('Consumption') }} (<span class="unit-water-lbl">m³</span>)</label>
+                            <input type="number" step="0.01" id="bolletta-water-consumption" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #f59e0b;">⚡ {{ _('Electricity') }}</h4>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-electricity-price">{{ _('Price (€)') }}</label>
+                            <input type="number" step="0.01" id="bolletta-electricity-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-electricity-consumption">{{ _('Consumption') }} (<span class="unit-electricity-lbl">kWh</span>)</label>
+                            <input type="number" step="0.01" id="bolletta-electricity-consumption" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #a855f7;">🔥 {{ _('Gas') }}</h4>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-gas-price">{{ _('Price (€)') }}</label>
+                            <input type="number" step="0.01" id="bolletta-gas-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-gas-consumption">{{ _('Consumption') }} (<span class="unit-gas-lbl">Smc</span>)</label>
+                            <input type="number" step="0.01" id="bolletta-gas-consumption" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="chiudiModalBolletta()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn-filter" style="background-color: #0d6efd; color: white; border-radius: 6px;">{{ _('Save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal settings bollette -->
+    <div id="modal-settings-bollette" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; margin: auto;">
+            <span onclick="chiudiModalSettingsBollette()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Bills Units Settings') }}</h3>
+            
+            <form id="form-settings-bollette" onsubmit="salvaSettingsBollette(event)">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="setting-water-unit">{{ _('Water Consumption Unit') }}</label>
+                    <input type="text" id="setting-water-unit" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" default="m³" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="setting-electricity-unit">{{ _('Electricity Consumption Unit') }}</label>
+                    <input type="text" id="setting-electricity-unit" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" default="kWh" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="filter-label" for="setting-gas-unit">{{ _('Gas Consumption Unit') }}</label>
+                    <input type="text" id="setting-gas-unit" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" default="Smc" required>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="chiudiModalSettingsBollette()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn-filter" style="background-color: #0d6efd; color: white; border-radius: 6px;">{{ _('Save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

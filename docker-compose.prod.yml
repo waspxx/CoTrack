@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  cotrack:
+    image: ghcr.io/waspxx/cotrack:latest
+    container_name: cotrack
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    volumes:
+      # Mappa la cartella 'data' locale per la persistenza del database SQLite
+      - ./data:/app/data
+    restart: always

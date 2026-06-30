@@ -1,0 +1,205 @@
+/* CSS per il Tab Prestiti (Loans) */
+
+#tab-prestiti *, #tab-prestiti *::before, #tab-prestiti *::after {
+    box-sizing: border-box;
+}
+
+#tab-prestiti {
+    /* Font Families */
+    --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-heading: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Common Theme Variables */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 24px;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Cool Gray Theme Palette (formerly Dark Theme) */
+#tab-prestiti.dark-theme {
+    --bg-app: #eef2f7;
+    --bg-sidebar: #1e293b;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --border-color: #cbd5e1;
+    --border-color-focus: #3b82f6;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-light: rgba(59, 130, 246, 0.1);
+    --danger-color: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-light: rgba(239, 68, 68, 0.1);
+    --bg-modal: #ffffff;
+    --scrollbar-thumb: rgba(15, 23, 42, 0.15);
+    --scrollbar-track: rgba(15, 23, 42, 0.05);
+}
+
+/* Light Theme Palette */
+#tab-prestiti.light-theme {
+    --bg-app: #f4f6f9;
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8f9fa;
+    --border-color: #dee2e6;
+    --border-color-focus: #86b7fe;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #6c757d;
+    --primary-color: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --primary-light: rgba(13, 110, 253, 0.1);
+    --danger-color: #dc3545;
+    --danger-hover: #bb2d3b;
+    --danger-light: rgba(220, 53, 69, 0.1);
+    --bg-modal: #ffffff;
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-track: rgba(0, 0, 0, 0.05);
+}
+
+/* Base Tab Styles */
+#tab-prestiti {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* --- COTRACK INTEGRATION OVERRIDES --- */
+#tab-prestiti {
+    display: none; /* Hidden by default in CoTrack tabs */
+}
+#tab-prestiti.active {
+    display: flex !important; /* Shown when active */
+    flex-direction: column;
+}
+#tab-prestiti .app-container {
+    display: flex;
+    width: 100%;
+    min-height: calc(100vh - 120px);
+}
+#tab-prestiti .sidebar {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    height: auto;
+    min-height: 100%;
+    z-index: 10;
+}
+#tab-prestiti .main-content {
+    margin-left: 0;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+#tab-prestiti .modal {
+    position: fixed;
+    z-index: 2000;
+}
+
+.loan-tab-content {
+    display: none !important;
+}
+
+.loan-tab-content.active {
+    display: block !important;
+}
+
+/* Progress Bar Customizations */
+.progress-bar-container {
+    background-color: var(--border-color);
+    height: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+/* Simulation Results Highlight Boxes */
+.sim-highlight-box {
+    padding: 16px;
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sim-highlight-box:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Scrollable Amortization Schedule Table */
+#loan-schedule-table-body td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#loan-schedule-table-body tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Extra Repayment Row Styling in Table */
+.schedule-row-extra {
+    background-color: rgba(46, 125, 50, 0.06) !important;
+    font-weight: 600;
+}
+
+.schedule-row-extra td {
+    color: #2e7d32 !important;
+}
+
+/* Dynamic styling for active and archived cards in list */
+.loan-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    transition: all var(--transition-fast);
+}
+
+.loan-card.active-card {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px var(--primary-light);
+}
+
+.loan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.loan-card-name {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.loan-card-rate {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.loan-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+}

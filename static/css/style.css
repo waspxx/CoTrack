@@ -1,0 +1,248 @@
+/* --- STILI GENERALI --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        h2 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin: 0; /* Rimosso per allineamento flex */
+        }
+        h3 { color: #2c3e50; text-align: center; }
+
+        #reload-button {
+            font-size: 1.6em;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.2s;
+            padding: 0 5px;
+            line-height: 1;
+            font-weight: bold;
+        }
+        #reload-button:hover { color: #0d6efd; }
+        #reload-button.loading { animation: spin 1s linear infinite; cursor: not-allowed; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- STILI DASHBOARD --- */
+        .dashboard-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .kpi-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px;
+        }
+
+        .kpi-card {
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kpi-titolo { font-size: 0.85em; color: #6c757d; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; }
+        .kpi-valore { font-size: 1.6em; font-weight: bold; color: #212529; }
+        
+        /* Colori dinamici per guadagni/perdite */
+        .kpi-verde { color: #28a745; }
+        .kpi-rosso { color: #dc3545; }
+        .kpi-neutro { color: #212529; }
+
+        /* Stili Spiegazione a Scomparsa */
+        .spiegazione-metriche {
+            background-color: #fcfcfc;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            color: #495057;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .spiegazione-metriche summary { font-weight: 600; cursor: pointer; color: #6c757d; outline: none; user-select: none; }
+        .spiegazione-metriche summary:hover { color: #495057; }
+        .spiegazione-contenuto { margin-top: 15px; font-size: 0.85em; line-height: 1.6; border-top: 1px solid #dee2e6; padding-top: 15px; }
+        .spiegazione-contenuto h4 { margin: 15px 0 8px 0; color: #2c3e50; font-size: 1.1em; }
+        .spiegazione-contenuto h4:first-child { margin-top: 0; }
+        .spiegazione-contenuto p, .spiegazione-contenuto ul, .spiegazione-contenuto ol { margin: 0 0 10px 0; }
+        .spiegazione-contenuto ul, .spiegazione-contenuto ol { padding-left: 20px; }
+
+        .chart-section { flex: 1; display: flex; justify-content: center; align-items: center; height: 300px; }
+
+        /* --- STILI SEZIONE ANDAMENTO (Grafico a Linee) --- */
+        .andamento-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .andamento-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .andamento-title { font-weight: 600; font-size: 1.1em; color: #212529; margin-bottom: 15px; }
+        .filters-container { display: flex; gap: 40px; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-label { font-size: 0.75em; color: #6c757d; text-transform: uppercase; font-weight: 600; }
+        .filter-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-filter { background-color: #f1f3f5; border: none; border-radius: 20px; padding: 6px 14px; font-size: 0.85em; color: #495057; cursor: pointer; transition: all 0.2s; }
+        .btn-filter:hover { background-color: #e9ecef; }
+        .btn-filter.active { background-color: #0d6efd; color: white; font-weight: 600; }
+        .andamento-kpi-box { background-color: #fcfcfc; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px 25px; text-align: right; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .andamento-kpi-label { font-size: 0.85em; color: #6c757d; margin-bottom: 5px; }
+        .andamento-kpi-value { font-size: 1.8em; font-weight: bold; color: #212529; transition: color 0.3s; }
+        .line-chart-wrapper { height: 400px; width: 100%; margin-top: 20px; cursor: crosshair; } /* crosshair per far capire la selezione orizzontale */
+
+        /* --- STILI TABELLA PREZZI MEDI DI CARICO (PMC) --- */
+        .pmc-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+        .tabella-pmc { width: 100%; border-collapse: collapse; }
+        .tabella-pmc th, .tabella-pmc td { padding: 12px; text-align: center; border-bottom: 1px solid #e9ecef; font-size: 0.9em; }
+        .tabella-pmc th:first-child, .tabella-pmc td:first-child { text-align: left; }
+        .tabella-pmc th { color: #495057; font-weight: 600; border-bottom: 2px solid #dee2e6; background-color: transparent; }
+        .tabella-pmc tfoot td { font-weight: bold; background-color: #f8f9fa; border-top: 2px solid #dee2e6; }
+
+        /* --- STILI TABELLA TRANSAZIONI E INSERIMENTO --- */
+        .contenitore-dati { display: flex; gap: 20px; }
+        
+        .modulo-inserimento { 
+            background-color: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            width: 320px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            flex-shrink: 0;
+        }
+        .modulo-header { text-align: center; margin-bottom: 20px; }
+        .modulo-header h3 { font-size: 1.2em; margin: 0 0 10px 0; }
+        .modulo-header p { font-size: 0.9em; color: #495057; margin: 0; font-weight: 600; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 18px; }
+        .form-row .form-group { margin-bottom: 0; flex: 1; }
+
+        label { display: block; font-size: 0.85em; font-weight: 600; color: #212529; margin-bottom: 6px; }
+        input[type="text"], input[type="date"], input[type="number"] { 
+            width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid #ced4da; 
+            border-radius: 8px; font-size: 0.9em; outline: none; transition: border-color 0.2s;
+        }
+        input:focus { border-color: #0d6efd; }
+
+        .radio-group { display: flex; gap: 15px; align-items: center; margin-top: 5px; }
+        .radio-group label { font-size: 0.9em; font-weight: normal; margin-bottom: 0; display: flex; align-items: center; gap: 5px; cursor: pointer;}
+        
+        button.btn-primary { 
+            background-color: #e63946; color: white; padding: 12px; border: none; 
+            width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; 
+            font-size: 1em; margin-top: 10px; transition: background-color 0.2s;
+        }
+        button.btn-primary:hover { background-color: #d62828; }
+
+        button.btn-secondary { 
+            background-color: #6c757d; color: white; padding: 10px; border: none; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; 
+            font-size: 0.9em; transition: background-color 0.2s;
+        }
+        button.btn-secondary:hover { background-color: #5a6268; }
+
+        .sezione-tabella { 
+            background-color: white; padding: 25px; border-radius: 12px; 
+            flex-grow: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-x: auto;
+        }
+        .tabella-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .tabella-header h3 { margin: 0; font-size: 1.2em; color: #2c3e50; }
+        .tabella-hint { font-size: 0.8em; color: #6c757d; }
+
+        table.tabella-transazioni { width: 100%; border-collapse: collapse; }
+        .tabella-transazioni th, .tabella-transazioni td { border-bottom: 1px solid #e9ecef; padding: 12px; text-align: left; font-size: 0.9em; }
+        .tabella-transazioni th { background-color: transparent; color: #495057; font-weight: 600; border-bottom: 2px solid #dee2e6; }
+        .tabella-transazioni td { color: #212529; }
+        .btn-elimina { background-color: transparent; padding: 4px 8px; font-size: 1.2em; border: none; color: #adb5bd; border-radius: 3px; cursor: pointer; transition: color 0.2s; }
+        .btn-elimina:hover { color: #dc3545; }
+
+        /* --- STILI ANALISI AVANZATA --- */
+        .analisi-avanzata-container {
+            display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;
+        }
+        .chart-box {
+            flex: 1; min-width: 400px; background-color: white; padding: 25px; 
+            border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .bar-chart-wrapper { height: 300px; width: 100%; margin-top: 20px; }
+        .drawdown-chart-wrapper { height: 260px; width: 100%; margin-top: 20px; }
+        .drawdown-stats-box {
+            margin-top: 15px; font-size: 0.9em; display: flex; 
+            justify-content: space-around; color: #6c757d; 
+            background-color: #f8f9fa; padding: 12px; border-radius: 8px;
+        }
+
+        /* --- STILI AUTH / LOGIN --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f4f6f9; z-index: 1000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .auth-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 320px; text-align: center; }
+        .auth-box h3 { margin-top: 0; margin-bottom: 20px; color: #2c3e50; font-size: 1.5em; }
+        .auth-box input { width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 8px; border: 1px solid #ced4da; box-sizing: border-box; outline: none; transition: border-color 0.2s;}
+        .auth-box input:focus { border-color: #0d6efd; }
+        .password-container { position: relative; width: 100%; margin-bottom: 15px; }
+        .password-container input { margin-bottom: 0; padding-right: 40px; }
+        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; opacity: 0.6; transition: opacity 0.2s; font-size: 1.1em; }
+        .toggle-password:hover { opacity: 1; }
+        .auth-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #0d6efd; color: white; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: background 0.2s; font-size: 1em; }
+        .auth-box button:hover { background: #0b5ed7; }
+        .auth-box .toggle-auth { color: #6c757d; cursor: pointer; font-size: 0.9em; text-decoration: underline; }
+        .auth-box .toggle-auth:hover { color: #495057; }
+
+        /* --- TABS --- */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6; padding-bottom: 0;
+        }
+        .tab-button {
+            background: none; border: none; padding: 10px 20px; font-size: 1.1em;
+            font-weight: 600; color: #6c757d; cursor: pointer;
+            border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+            text-decoration: none;
+        }
+        .tab-button:hover { color: #495057; }
+        .tab-button.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        #tab-settings {
+            display: none !important;
+        }
+        #tab-settings.active {
+            display: block !important;
+        }

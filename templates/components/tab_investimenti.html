@@ -1,0 +1,554 @@
+<!-- TAB INVESTIMENTI -->
+    <div id="tab-investimenti" class="tab-content active">
+    <!-- SELETTORE PORTFOLIO (INVESTIMENTI) -->
+    <div class="portfolio-selector-container" style="display: flex; align-items: center; gap: 10px; background: white; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #dee2e6; flex-wrap: wrap;">
+        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Portfolio:') }}</span>
+        <select id="select-portafoglio" onchange="cambiaPortafoglio()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: #0d6efd; cursor: pointer; background: white;"></select>
+        <button onclick="nuovoPortafoglio()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Portfolio') }}">+</button>
+        <button onclick="rinominaPortafoglio()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Portfolio') }}">✏️ {{ _('Rename') }}</button>
+        <button onclick="eliminaPortafoglio()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Portfolio') }}">🗑️ {{ _('Delete') }}</button>
+        
+        <div style="width: 1px; height: 20px; background-color: #dee2e6; margin: 0 10px;"></div>
+        
+        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Default Exchange:') }}</span>
+        <select id="select-default-exchange" onchange="cambiaExchangeDefault(this.value)" title="{{ _('Default exchange for ISIN resolution') }}" style="padding: 5px 10px; border-radius: 6px; border: 1px solid #ced4da; outline: none; background-color: white; cursor: pointer;">
+            <option value=".MI">🇮🇹 Borsa Italiana (.MI)</option>
+            <option value=".AS">🇳🇱 Euronext Amsterdam (.AS)</option>
+            <option value=".DE">🇩🇪 Xetra (.DE)</option>
+            <option value=".PA">🇫🇷 Euronext Parigi (.PA)</option>
+            <option value=".L">🇬🇧 London Stock Exchange (.L)</option>
+            <option value=".SW">🇨🇭 SIX Swiss Exchange (.SW)</option>
+            <option value=".MC">🇪🇸 Bolsa Madrid (.MC)</option>
+            <option value=".BR">🇧🇪 Euronext Bruxelles (.BR)</option>
+        </select>
+    </div>
+    <!-- BANNER ERRORE API -->
+    <div id="api-error-banner" style="display: none; background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #ffeeba;">
+        <strong>⚠️ {{ _('Warning:') }}</strong> {{ _('Connection issues with data sources') }} (<span id="api-error-sources"></span>). {{ _('Showing prices from the latest local backup or carrying values.') }}
+    </div>
+
+    <!-- SEZIONE DASHBOARD RIASSUNTIVA -->
+    <div class="dashboard-container">
+        <div class="kpi-wrapper">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Real Return') }}</div>
+                    <div class="kpi-valore kpi-neutro" id="kpi-rendimento">0.00%</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Market performance') }})</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Annualized Return') }}</div>
+                    <div class="kpi-valore kpi-neutro" id="kpi-annualizzato">0.0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Current Value') }}</div>
+                    <div class="kpi-valore" id="kpi-valore">€0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Invested Capital') }}</div>
+                    <div class="kpi-valore" id="kpi-investito">€0,00</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Avg Price × Shares') }})</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Total Gain') }}</div>
+                    <div class="kpi-valore kpi-neutro" id="kpi-guadagno">€0,00</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Capital Gain + Dividends') }})</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Capital Gain Tax') }}</div>
+                    <div class="kpi-valore kpi-rosso" id="kpi-tassa-gain">€0,00</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Estimated on capital gains') }})</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Dividends') }}</div>
+                    <div class="kpi-valore" id="kpi-dividendi">€0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Volatility (Annual)') }}</div>
+                    <div class="kpi-valore kpi-neutro" id="kpi-volatilita">0.00%</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Portfolio risk') }})</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-titolo">{{ _('Sharpe Ratio') }}</div>
+                    <div class="kpi-valore kpi-neutro" id="kpi-sharpe">0.00</div>
+                    <div style="font-size: 0.75em; color: #adb5bd; margin-top: 5px;">({{ _('Return / Risk') }})</div>
+                </div>
+            </div>
+
+            <!-- SPIEGAZIONE DELLE METRICHE -->
+            <details class="spiegazione-metriche">
+                <summary>ℹ️ {{ _('Metrics Explanation and Full Example') }}</summary>
+                <div class="spiegazione-contenuto">
+                    <h4>{{ _('Performance Metrics') }}</h4>
+                    <p><strong>{{ _('Real Return:') }}</strong> {{ _('Portfolio return calculated as (Current Value - Total Cost) / Total Cost, where Total Cost = Avg Price × Shares for each ETF. Uses the same formula as the Average Carrying Price table and represents the performance of currently held positions compared to their average carrying cost.') }}</p>
+                    <p><strong>{{ _('Annualized Return:') }}</strong> {{ _('Compound Annual Growth Rate (CAGR). Represents the average annual growth rate of the portfolio over the entire period considered. Shows what constant annual return you would have achieved if the portfolio had grown evenly each year.') }}</p>
+
+                    <h4>{{ _('Capital Metrics') }}</h4>
+                    <p><strong>{{ _('Value:') }}</strong> {{ _('Current value of the portfolio based on current market prices.') }}</p>
+                    <p><strong>{{ _('Net Invested Capital (Carrying Value):') }}</strong> {{ _('Total invested calculated as Avg Price × Shares for each ETF in the portfolio, then summed. Represents the total cost of currently held positions. Can be greater than net cash flow (Purchases - Sales) if you reinvested profits from previous sales.') }}</p>
+                    <p><strong>{{ _('Total Gain:') }}</strong> {{ _('Calculated as (Current Value - Total Cost) + Dividends. Represents the overall gain of the portfolio: capital gain on currently held positions plus dividends received.') }}</p>
+                    <p><strong>{{ _('Dividends:') }}</strong> {{ _('Total dividends and coupons received during the period.') }}</p>
+
+                    <h4>{{ _('Risk Metrics') }}</h4>
+                    <p><strong>{{ _('Volatility (Annual):') }}</strong> {{ _('Measures the intensity of the portfolio value fluctuations. Calculated as the standard deviation of daily returns, annualized (assuming 365 calendar days).') }}</p>
+                    <p><strong>{{ _('Sharpe Ratio:') }}</strong> {{ _('Measures the risk-adjusted return. Calculated as the ratio between the average return and volatility, indicating how much extra return is obtained for each unit of risk. A value above 1 is generally considered good.') }}</p>
+
+                    <h4>{{ _('Tax Metrics (Estimate)') }}</h4>
+                    <p><strong>{{ _('Capital Gain Tax:') }}</strong> {{ _('Estimated taxes due on accrued and unrealized capital gains. The calculation applies a 26&#37; rate for ETFs and 12.5&#37; for government bonds (e.g., BTPs). This is only an estimate and does not constitute tax advice.') }}</p>
+
+                    <h4>{{ _('Key Formulas') }}</h4>
+                    <p><strong>1. {{ _('Total Cost (Net Invested Capital):') }}</strong></p>
+                    <ul>
+                        <li>{{ _('Cost = Avg Price × Shares for each ETF') }}</li>
+                        <li>{{ _('Total Cost = Sum of all Costs') }}</li>
+                        <li>{{ _('Total Avg Price = Total Cost / Total Shares') }}</li>
+                    </ul>
+
+                    <p><strong>2. {{ _('Return') }}</strong> = {{ _('(Current Value - Total Cost) / Total Cost') }}<br>
+                    {{ _('Uses the same formula for each ETF and for the total portfolio.') }}</p>
+
+                    <p><strong>3. {{ _('Total Gain') }}</strong> = {{ _('(Current Value - Total Cost) + Dividends') }}<br>
+                    {{ _('Represents the overall performance: capital gain + dividends.') }}</p>
+
+                    <h4>{{ _('Full Example') }}</h4>
+                    <p><strong>{{ _('Scenario:') }}</strong></p>
+                    <ul>
+                        <li>{{ _('Invest €10,000 buying 100 shares at €100') }}</li>
+                        <li>{{ _('Avg Price = €100, Shares = 100, Cost = €10,000') }}</li>
+                        <li>{{ _('Price rises to €150 (Value: €15,000)') }}</li>
+                        <li>{{ _('Return: (€15,000 - €10,000) / €10,000 = 50&#37;') }}</li>
+                        <li>{{ _('Total Gain: €15,000 - €10,000 = €5,000') }}</li>
+                    </ul>
+                    <p><strong>{{ _('If you sell 50 shares at €150 and reinvest:') }}</strong></p>
+                    <ul>
+                        <li>{{ _('Sell 50 shares: Avg Price remains €100, Shares = 50, Cost = €5,000') }}</li>
+                        <li>{{ _('Reinvest €7,500 buying 50 new shares at €150') }}</li>
+                        <li>{{ _('New Avg Price = (€5,000 + €7,500) / 100 = €125') }}</li>
+                        <li>{{ _('Total Cost: €125 × 100 = €12,500') }}</li>
+                        <li>{{ _('Value: 100 × €150 = €15,000') }}</li>
+                        <li>{{ _('Return: (€15,000 - €12,500) / €12,500 = 20&#37;') }}</li>
+                        <li>{{ _('Total Gain: €15,000 - €12,500 = €2,500') }}</li>
+                    </ul>
+                </div>
+            </details>
+
+            <div style="margin-top: 15px; text-align: center;">
+                <button onclick="chiediAnalisiGemini()" class="btn-secondary" style="background-color: #6f42c1; border: none; font-size: 1em; padding: 10px 20px; border-radius: 8px; width: 100%; transition: background 0.2s; cursor: pointer; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ✨ {{ _('Ask Gemini to analyze your portfolio') }}
+                </button>
+            </div>
+        </div>
+
+        <div class="chart-section" style="flex: 1.5;">
+            <canvas id="graficoAllocazione"></canvas>
+        </div>
+        <div class="chart-section" style="flex: 1.5;">
+            <canvas id="graficoAssetType"></canvas>
+        </div>
+    </div>
+
+    <!-- SEZIONE: ANDAMENTO DURANTE IL TEMPO -->
+    <div class="andamento-container">
+        <div class="andamento-title">{{ _('Performance over time') }}</div>
+        <div class="andamento-header-row">
+            <div class="filters-container">
+                <div class="filter-group" id="filter-periodo">
+                    <div class="filter-label">{{ _('Period') }}</div>
+                    <div class="filter-buttons">
+                        <button class="btn-filter active">All</button>
+                        <button class="btn-filter">5y</button>
+                        <button class="btn-filter">2y</button>
+                        <button class="btn-filter">1y</button>
+                        <button class="btn-filter">6m</button>
+                        <button class="btn-filter">3m</button>
+                        <button class="btn-filter">2m</button>
+                        <button class="btn-filter">1m</button>
+                    </div>
+                </div>
+                <div class="filter-group" id="filter-metrica">
+                    <div class="filter-label">{{ _('Metric') }}</div>
+                    <div class="filter-buttons">
+                        <button class="btn-filter active">{{ _('Value') }}</button>
+                        <button class="btn-filter">{{ _('Gain') }}</button>
+                        <button class="btn-filter">TWR</button>
+                    </div>
+                </div>
+
+                <!-- Nuova sezione filtri per Ticker -->
+                <div class="filter-group" id="filter-ticker" style="display: none;">
+                    <div class="filter-label">{{ _('Ticker Contribution') }}</div>
+                    <div class="filter-buttons" id="ticker-buttons-container">
+                        <!-- Bottoni aggiunti dinamicamente -->
+                    </div>
+                </div>
+
+                <div class="filter-group" id="filter-dividendi">
+                    <div class="filter-label">{{ _('Options') }}</div>
+                    <div class="filter-buttons">
+                        <button class="btn-filter" id="btn-toggle-dividendi">{{ _('Show Dividends') }}</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="andamento-kpi-box">
+                <div class="andamento-kpi-label" id="andamento-kpi-label">{{ _('Value') }} (All)</div>
+                <div class="andamento-kpi-value" id="andamento-valore-top">€0</div>
+            </div>
+        </div>
+
+        <!-- Messaggio di caricamento per il grafico storico -->
+        <div id="loading-grafico" style="text-align: center; color: #6c757d; margin: 50px 0;">{{ _('Downloading historical market data. It might take a few seconds...') }}</div>
+        
+        <div class="line-chart-wrapper">
+            <div id="selection-stats" style="display: none; background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 15px; border-radius: 8px; font-size: 0.9em; margin-bottom: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <strong>{{ _('Period') }}:</strong> <span id="sel-period"></span> <span style="margin: 0 10px; color: #adb5bd;">|</span> 
+                <strong>{{ _('Return (TWR):') }}</strong> <span id="sel-rendimento" style="font-weight: bold;"></span> <span style="margin: 0 10px; color: #adb5bd;">|</span> 
+                <strong>CAGR:</strong> <span id="sel-cagr" style="font-weight: bold;"></span>
+                <button onclick="resetZoomAndamento()" style="margin-left: 15px; padding: 4px 10px; font-size: 0.85em; cursor: pointer; background-color: #6c757d; color: white; border: none; border-radius: 4px; transition: background-color 0.2s;">{{ _('Reset Zoom') }}</button>
+            </div>
+
+            <canvas id="graficoAndamento" style="display: none;"></canvas>
+        </div>
+
+        <!-- Spiegazione TWR -->
+        <details class="spiegazione-metriche" style="margin-top: 30px;">
+            <summary>ℹ️ {{ _("What is TWR and why is it different from real gain?") }}</summary>
+            <div class="spiegazione-contenuto">
+                <h4>{{ _('What is TWR?') }}</h4>
+                <p>{{ _('TWR (Time-Weighted Return) measures the portfolio performance ignoring when you deposited or withdrew money. It calculates the return as if every euro had been invested from the beginning.') }}</p>
+                <h4>{{ _('Why is TWR higher than real gain in a savings plan (PAC)?') }}</h4>
+                <p>{{ _('In a savings plan you invest gradually over time, but TWR calculates as if everything was invested from the start. Your real gain is lower because part of the capital entered later, when prices had already risen. So TWR shows the portfolio performance, while the real gain shows how much you actually earned.') }}</p>
+                <h4>{{ _('Why is it useful?') }}</h4>
+                <p>{{ _('It allows you to compare the portfolio performance with benchmarks or other investors, without being influenced by the timing of your investments.') }}</p>
+            </div>
+        </details>
+    </div>
+
+    <!-- SEZIONE: ANALISI AVANZATA (Rendimenti Annuali e Drawdown) -->
+    <div class="analisi-avanzata-container">
+        <div class="chart-box">
+            <div class="andamento-title">{{ _('Annual Returns (TWR)') }}</div>
+            <div class="bar-chart-wrapper">
+                <canvas id="graficoRendimentiAnnuali"></canvas>
+            </div>
+        </div>
+        <div class="chart-box">
+            <div class="andamento-title">{{ _('Drawdown Analysis') }}</div>
+            <div class="drawdown-chart-wrapper">
+                <canvas id="graficoDrawdown"></canvas>
+            </div>
+            <div class="drawdown-stats-box" id="drawdown-stats">
+                <div><strong>{{ _('Max DD:') }}</strong> <span>0.00%</span></div>
+                <div><strong>{{ _('Avg DD:') }}</strong> <span>0.00%</span></div>
+                <div><strong>{{ _('Max Duration:') }}</strong> <span>0 gg</span></div>
+            </div>
+        </div>
+
+        <div class="chart-box" style="flex-basis: 100%;">
+            <div class="andamento-title">{{ _('Performance vs Benchmark (TWR)') }}</div>
+            <div class="filters-container" style="margin-bottom: 15px;">
+                <div class="filter-group">
+                    <div class="filter-label">{{ _('Select Benchmark') }}</div>
+                    <select id="select-benchmark" onchange="aggiornaGraficoBenchmark()" style="padding: 6px; border-radius: 8px; border: 1px solid #ced4da; outline: none; font-size: 0.9em; background-color: #fff; cursor: pointer;">
+                        <option value="VWCE.MI">VWCE.MI (Vanguard FTSE All-World)</option>
+                        <option value="VNGA80.MI">VNGA80.MI (Vanguard LifeStrategy 80%)</option>
+                        <option value="VNGA60.MI">VNGA60.MI (Vanguard LifeStrategy 60%)</option>
+                        <option value="VNGA40.MI">VNGA40.MI (Vanguard LifeStrategy 40%)</option>
+                        <option value="VNGA20.MI">VNGA20.MI (Vanguard LifeStrategy 20%)</option>
+                        <option value="AGGH.MI">AGGH.MI (iShares Global Aggregate Bond)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="bar-chart-wrapper" style="height: 350px;">
+                <canvas id="graficoBenchmark"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUOVA SEZIONE: PREZZI MEDI DI CARICO (PMC) -->
+    <div class="pmc-container">
+        <div class="tabella-header" style="justify-content: center; margin-bottom: 20px;">
+            <h3>{{ _('Average Carrying Prices') }}</h3>
+        </div>
+        <table class="tabella-pmc">
+            <thead>
+                <tr>
+                    <th>{{ _('ETF / Ticker') }}</th>
+                    <th>{{ _('Avg Price') }}</th>
+                    <th>{{ _('Shares') }}</th>
+                    <th>{{ _('Cost') }}</th>
+                    <th>{{ _('Current Price') }}</th>
+                    <th>{{ _('Price Date') }}</th>
+                    <th>{{ _('Total Current Value') }}</th>
+                    <th>{{ _('Return') }}</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-tabella-pmc"></tbody>
+            <tfoot id="piede-tabella-pmc"></tfoot>
+        </table>
+    </div>
+
+    <!-- 
+    SEZIONE: SALDI CONTO WALLET (Temporaneamente disabilitata)
+    -->
+    <!-- SEZIONE INSERIMENTO E TABELLA -->
+    <div class="contenitore-dati">
+        
+        <!-- MODULO A SINISTRA -->
+        <div class="modulo-inserimento">
+            <div class="modulo-header">
+                <h3>{{ _('Portfolio Management') }}</h3>
+                <p>{{ _('Add Transaction to Portfolio') }}</p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label>{{ _('Import Transaction from PDF:') }}</label>
+                <select id="fonte-pdf" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; outline: none; background-color: white; cursor: pointer; margin-bottom: 10px;">
+                    <option value="Directa">Directa</option>
+                    <option value="Custom">{{ _('Custom (Text Preview)') }}</option>
+                </select>
+                <button class="btn-secondary" onclick="document.getElementById('file-pdf').click()" style="width: 100%; background-color: #17a2b8;">{{ _('Upload PDF Statement') }}</button>
+                <input type="file" id="file-pdf" accept=".pdf" style="display: none;" onchange="importaPDF(event)">
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e9ecef;">
+            
+            <div class="form-group">
+                <label>{{ _('ISIN (e.g., IE00B3RBWM25, IT0005436693):') }}</label>
+                <input type="text" id="asset_name" placeholder="Codice ISIN dello strumento" oninput="onIsinInput(this.value)">
+            </div>
+
+            <div class="form-group" id="ticker-override-group" style="display:none; margin-top:-8px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.88em; color:#495057;">
+                    {{ _('Yahoo Ticker') }}
+                    <span id="ticker-resolve-status" style="font-size:0.85em; color:#6c757d;"></span>
+                </label>
+                <input type="text" id="ticker_override" placeholder="es. VWCE.MI, AAPL, IWDA.L" style="font-family: monospace;">
+                <div style="font-size:0.78em; color:#6c757d; margin-top:4px;">
+                    {{ _('Auto-resolved from ISIN. Edit only to use a different exchange (e.g. .AS, .L, .DE).') }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('Asset Type:') }}</label>
+                <select id="asset_type" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; outline: none; background-color: white; cursor: pointer;">
+                    <option value="ETF">ETF</option>
+                    <option value="Single Stocks">{{ _('Single Stocks') }}</option>
+                    <option value="Single Bonds">{{ _('Single Bonds') }}</option>
+                    <option value="Gold">{{ _('Gold') }}</option>
+                    <option value="Bitcoin">Bitcoin</option>
+                    <option value="Cash">{{ _('Cash') }}</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('Date:') }}</label>
+                <input type="date" id="date">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{{ _('Price per Share (€):') }}</label>
+                    <input type="number" id="price_per_share" step="0.01" placeholder="Prezzo per quota">
+                </div>
+                <div class="form-group">
+                    <label>{{ _('Fees (€):') }}</label>
+                    <input type="number" id="fees" step="0.01" value="0" placeholder="Totali">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('Number of Shares:') }}</label>
+                <input type="number" id="quantity" step="0.01" value="1" placeholder="es. 10.5">
+            </div>
+            
+            <div class="form-group">
+                <label>{{ _('Type:') }}</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="type" value="Buy" checked> {{ _('Purchase') }}</label>
+                    <label><input type="radio" name="type" value="Sell"> {{ _('Sale') }}</label>
+                    <label><input type="radio" name="type" value="Dividend"> {{ _('Div.') }}</label>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="aggiungiTransazione()">{{ _('Add Transaction') }}</button>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e9ecef;">
+            
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label>{{ _('CSV Data Source:') }}</label>
+                <select id="fonte-csv" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; outline: none; background-color: white; cursor: pointer;">
+                    <option value="Custom">{{ _('Custom Mapping') }}</option>
+                    <option value="CoTrack">CoTrack</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" onclick="document.getElementById('file-csv').click()" style="flex: 1;">{{ _('Import CSV') }}</button>
+                <button class="btn-secondary" onclick="esportaCSV()" style="flex: 1;">{{ _('Export CSV') }}</button>
+                <input type="file" id="file-csv" accept=".csv" style="display: none;" onchange="importaCSV(event)">
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e9ecef;">
+            
+            <div style="margin-bottom: 20px;">
+                <button class="btn-secondary" onclick="esportaDB()" style="width: 100%; background-color: #28a745;" title="Scarica una copia dell'intero database (inclusi utenti e portafogli)">⬇️ {{ _('Full Database Backup') }}</button>
+            </div>
+            
+            <div style="margin-top: 40px; text-align: center;">
+                <button onclick="svuotaPortafoglio()" style="background: none; border: none; color: #dc3545; text-decoration: underline; font-size: 0.75em; cursor: pointer;" title="Elimina tutto lo storico transazioni">{{ _('Empty Portfolio') }}</button>
+            </div>
+        </div>
+
+        <!-- TABELLA STORICO TRANSAZIONI A DESTRA -->
+        <div class="sezione-tabella">
+            <div class="tabella-header" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">{{ _('Transaction History') }}</h3>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; width: 100%;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 2; min-width: 200px;">
+                        <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Instrument (Ticker/ISIN)') }}</span>
+                        <div id="filtroInvStrumento" style="display: flex; flex-wrap: wrap; gap: 5px; max-height: 75px; overflow-y: auto;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px;">
+                        <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Asset Type:') }}</span>
+                        <div id="filtroInvTipoAsset" style="display: flex; flex-wrap: wrap; gap: 5px; max-height: 75px; overflow-y: auto;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px;">
+                        <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Type:') }}</span>
+                        <div id="filtroInvTipoOp" style="display: flex; flex-wrap: wrap; gap: 5px; max-height: 75px; overflow-y: auto;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px; justify-content: flex-end;">
+                        <input type="text" id="filtroInvestimentiTesto" placeholder="{{ _('Search transactions...') }}" onkeyup="applicaFiltriInvestimenti()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ced4da; font-size: 0.9em; width: 220px; outline: none;">
+                    </div>
+                </div>
+            </div>
+            <table class="tabella-transazioni">
+                <thead>
+                    <tr>
+                        <th></th> 
+                        <th>{{ _('Date') }}</th>
+                        <th>{{ _('Instrument (Ticker/ISIN)') }}</th>
+                        <th>{{ _('Asset Type:') }}</th>
+                        <th>{{ _('Type:') }}</th>
+                        <th>{{ _('Price per Share (€)') }}</th>
+                        <th>{{ _('Fees (€):') }}</th>
+                        <th>{{ _('N Shares') }}</th>
+                        <th>{{ _('Total Purchased (€)') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabella"></tbody>
+            </table>
+            <div id="paginazione-investimenti-container"></div>
+        </div>
+    </div>
+
+    <!-- MODALE ANALISI GEMINI -->
+    <div id="gemini-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:700px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#6f42c1; border-bottom:2px solid #f1f3f5; padding-bottom:15px;">🤖 {{ _('AI Portfolio Analysis') }}</h3>
+            <div id="gemini-content" style="line-height:1.6; color:#495057; font-size: 0.95em; padding: 10px 0;"></div>
+            <div style="text-align:right; margin-top:20px; padding-top: 15px; border-top: 1px solid #f1f3f5;">
+                <button onclick="document.getElementById('gemini-modal').style.display='none'" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Close') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MAPPING CSV -->
+    <div id="csv-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#0d6efd; border-bottom:2px solid #f1f3f5; padding-bottom:15px;">📊 {{ _('Map CSV Columns') }}</h3>
+            <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">{{ _('Select the corresponding column from your CSV file for each required field.') }}</p>
+            
+            <div id="mapping-fields" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            
+            <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="document.getElementById('csv-mapping-modal').style.display='none'; document.getElementById('file-csv').value='';" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="confermaMappingCSV()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #28a745;">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MAPPING PDF -->
+    <div id="pdf-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:900px; width:95%; height:85vh; display:flex; flex-direction:column; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#0d6efd; border-bottom:2px solid #f1f3f5; padding-bottom:15px;">📄 {{ _('Import Custom PDF') }}</h3>
+            
+            <div style="display:flex; flex:1; gap:20px; overflow:hidden;">
+                <!-- Left side: Text Preview -->
+                <div style="flex:1; display:flex; flex-direction:column; border:1px solid #ced4da; border-radius:8px; overflow:hidden;">
+                    <div style="background:#f8f9fa; padding:10px; font-weight:bold; border-bottom:1px solid #ced4da;">{{ _('1. Select Text in Preview') }}</div>
+                    <div id="pdf-preview-content" style="flex:1; padding:15px; overflow-y:auto; font-family:monospace; white-space:pre-wrap; font-size:0.9em; background:#fff;"></div>
+                </div>
+                
+                <!-- Right side: Mapping Form -->
+                <div style="flex:1; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:10px;">
+                    <div style="font-weight:bold; margin-bottom:10px; color:#495057;">{{ _('2. Assign to Fields') }}</div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Date') }} * <span style="font-size:0.8em; color:#6c757d;">(es. DD/MM/YYYY)</span></label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_date" placeholder="Seleziona e clicca Assegna ➔" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_date')" class="btn-secondary" style="padding:8px;" title="Assegna testo selezionato">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Instrument (Ticker/ISIN)') }} *</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_asset_name" placeholder="es. IE00B3RBWM25" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_asset_name')" class="btn-secondary" style="padding:8px;">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Operation Type') }} *</label>
+                        <select id="pdf_map_operation_type" style="width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; cursor: pointer; outline:none;">
+                            <option value="Buy">{{ _('Purchase') }}</option>
+                            <option value="Sell">{{ _('Sale') }}</option>
+                            <option value="Dividend">{{ _('Div.') }}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Price per Share') }} *</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_price_per_share" placeholder="es. 120.50" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_price_per_share')" class="btn-secondary" style="padding:8px;">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Quantity') }} *</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_quantity" placeholder="es. 10" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_quantity')" class="btn-secondary" style="padding:8px;">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Fees') }}</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_fees" value="0" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_fees')" class="btn-secondary" style="padding:8px;">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label>{{ _('Total Value') }} <span style="font-size:0.8em; color:#6c757d;">(Opzionale)</span></label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="pdf_map_total_value" placeholder="es. 1205.00" style="flex:1; margin-bottom:0;">
+                            <button onclick="assignSelectedTextToInput('pdf_map_total_value')" class="btn-secondary" style="padding:8px;">⬅️ {{ _('Assign') }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align:right; margin-top:20px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="document.getElementById('pdf-mapping-modal').style.display='none'; document.getElementById('file-pdf').value='';" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="confermaPdfMapping()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #28a745;">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+    </div> <!-- FINE TAB INVESTIMENTI -->

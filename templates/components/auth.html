@@ -1,0 +1,30 @@
+<!-- SCHERMATA LOGIN/REGISTRAZIONE -->
+ <div id="auth-screen">
+    <!-- Modulo di Login -->
+    <div class="auth-box" id="login-box">
+        <h3>Login</h3>
+        <input type="email" id="login-email" placeholder="Email" onkeypress="handleLoginKeyPress(event)">
+        <div class="password-container">
+            <input type="password" id="login-password" placeholder="Password" onkeypress="handleLoginKeyPress(event)">
+            <span class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">👁️</span>
+        </div>
+        <button onclick="eseguiLogin()">Accedi</button>
+        <div class="toggle-auth" onclick="toggleAuthMode()">Non hai un account? Registrati</div>
+    </div>
+
+    <!-- Modulo di Registrazione -->
+    <div class="auth-box" id="register-box" style="display: none;">
+        <h3>Registrazione</h3>
+        <input type="email" id="register-email" placeholder="Email" onkeypress="handleRegisterKeyPress(event)">
+        <div class="password-container">
+            <input type="password" id="register-password" placeholder="Password" onkeypress="handleRegisterKeyPress(event)">
+            <span class="toggle-password" onclick="togglePasswordVisibility('register-password', this)">👁️</span>
+        </div>
+        <div class="password-container">
+            <input type="password" id="register-password-confirm" placeholder="Conferma Password" onkeypress="handleRegisterKeyPress(event)">
+            <span class="toggle-password" onclick="togglePasswordVisibility('register-password-confirm', this)">👁️</span>
+        </div>
+        <button onclick="eseguiRegistrazione()">Registrati</button>
+        <div class="toggle-auth" onclick="toggleAuthMode()">Hai già un account? Accedi</div>
+    </div>
+</div>

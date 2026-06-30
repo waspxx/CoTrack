@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# Databases & local configs
+data/*.db
+data/*.sqlite
+data/*.migrated
+data/*.csv
+.env
+*.pdf
+
+# OS
+.DS_Store

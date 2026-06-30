@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ _('Portfolio Management - Dashboard') }}</title>
+    <!-- Importiamo Chart.js e i plugin per lo zoom (Hammer.js è necessario per i comandi touch/mouse) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/veicoli.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prestiti.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stipendi.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fondopensione.css') }}">
+</head>
+<body>
+
+        {% include 'components/auth.html' %}
+
+
+        {% include 'components/header.html' %}
+
+
+        {% include 'components/tabs.html' %}
+
+
+        {% include 'components/tab_investimenti.html' %}
+
+
+        {% include 'components/tab_wallet.html' %}
+        {% include 'components/tab_bollette.html' %}
+        {% include 'components/tab_veicoli.html' %}
+        {% include 'components/tab_prestiti.html' %}
+        {% include 'components/tab_stipendi.html' %}
+        {% include 'components/tab_fondopensione.html' %}
+        {% include 'components/tab_settings.html' %}
+
+
+    <!-- TRANSAZIONI GLOBALI JS -->
+    <script>
+        window.Translations = {
+            purchase: {{ _('Purchase') | tojson }},
+            sale: {{ _('Sale') | tojson }},
+            dividend: {{ _('Div.') | tojson }},
+            singleStocks: {{ _('Single Stocks') | tojson }},
+            singleBonds: {{ _('Single Bonds') | tojson }},
+            gold: {{ _('Gold') | tojson }},
+            cash: {{ _('Cash') | tojson }},
+            undefinedAsset: {{ _('Undefined') | tojson }},
+            deleteTransaction: {{ _('Delete transaction') | tojson }},
+            liveUpdate: {{ _('Live update...') | tojson }},
+            total: {{ _('TOTAL') | tojson }},
+            assetTypeAllocation: {{ _('Asset Type Allocation') | tojson }},
+            analyzingPortfolio: {{ _('Analyzing portfolio...') | tojson }},
+            importError: {{ _('Error during import.') | tojson }},
+            networkImportError: {{ _('Network error during Wallet import.') | tojson }},
+            deleteWalletConfirm: {{ _('WARNING! Are you sure you want to delete ALL imported Wallet transactions?\n\nDo you really want to continue and delete everything?') | tojson }},
+            walletDeleted: {{ _('All Wallet transactions have been deleted.') | tojson }},
+            deleteError: {{ _('Error during deletion.') | tojson }},
+            networkError: {{ _('Network error.') | tojson }},
+            water: {{ _('Water') | tojson }},
+            electricity: {{ _('Electricity') | tojson }},
+            gas: {{ _('Gas') | tojson }},
+            noPortfolioData: {{ _('No portfolio data available.') | tojson }},
+            noBills: {{ _('No bills inserted.') | tojson }},
+            noContributions: {{ _('No contributions.') | tojson }},
+            noPensionFunds: {{ _('No pension funds. Add one with the button above.') | tojson }},
+            noLoansOption: {{ _('-- No Loans --') | tojson }},
+            noLoansTitle: {{ _('No Loans') | tojson }},
+            noPayments: {{ _('No payments registered.') | tojson }},
+            noLoansRegistered: {{ _('No loans registered. Click on "New Loan" to start!') | tojson }},
+            noLoansActiveAlert: {{ _('No active loan selected.') | tojson }},
+            noLoansExportAlert: {{ _('No loans to export.') | tojson }},
+            noLoansPdfAlert: {{ _('No payment or repayment detected in the PDF file.') | tojson }},
+            noPayslips: {{ _('No payslips.') | tojson }},
+            noPeopleRegistered: {{ _('No people. Add a payslip to create a person.') | tojson }},
+            noItems: {{ _('No items.') | tojson }},
+            noActivitiesRegistered: {{ _('No activities registered. Click on "Add" to start.') | tojson }},
+            noActiveReminders: {{ _('No active reminders.') | tojson }},
+            noActivitiesFound: {{ _('No activities found for selected filters.') | tojson }},
+            noRefuelings: {{ _('No refuelings registered.') | tojson }},
+            noExpenses: {{ _('No expenses registered.') | tojson }},
+            noIncomes: {{ _('No incomes registered.') | tojson }},
+            noMaintenances: {{ _('No maintenances registered.') | tojson }},
+            noRemindersRegistered: {{ _('No reminders registered.') | tojson }},
+            noOdoData: {{ _('No odometer data available.') | tojson }},
+            noExpensesChart: {{ _('No expenses registered to generate chart.') | tojson }},
+            noConsecutiveFills: {{ _('No consecutive fills registered.') | tojson }},
+            noData: {{ _('No data available.') | tojson }},
+            loading: {{ _('Loading...') | tojson }},
+            noAmortizationPlan: {{ _('No amortization plan available.') | tojson }},
+            noTransactionsFound: {{ _('No transactions found.') | tojson }},
+            noAssetsInPortfolio: {{ _('No assets in portfolio.') | tojson }},
+            interestRateChange: {{ _('Interest Rate Change (TAN)') | tojson }},
+            rateChange: {{ _('Interest Rate Change') | tojson }},
+            fixedRateLabel: {{ _('Fixed') | tojson }},
+            variableRateLabel: {{ _('Variable') | tojson }}
+        };
+    </script>
+    <!-- JAVASCRIPT -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/veicoli.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/prestiti.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stipendi.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fondopensione.js') }}"></script>
+</body>
+</html>

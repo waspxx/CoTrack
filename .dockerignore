@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Environment variables
+.env
+.env.example
+
+# Python cache & virtualenv
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# Data and SQLite databases
+data/
+*.db
+*.sqlite
+*.csv
+*.pdf
+
+# Docker configuration files
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# OS files
+.DS_Store

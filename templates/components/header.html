@@ -1,0 +1,17 @@
+<div class="header-container">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h2 style="margin: 0;">CoTrack</h2>
+            <a href="https://paypal.me/mattiacorrente" target="_blank" style="font-size: 0.85em; color: #6c757d; text-decoration: none; border: 1px solid #dee2e6; padding: 4px 10px; border-radius: 15px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" title="{{ _('Make a donation to support the project') }}">💖 {{ _('Support') }}</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-left: auto;">
+            <span id="user-display" style="font-size: 0.9em; font-weight: 600; color: #495057;"></span>
+            <div style="width: 1px; height: 20px; background-color: #dee2e6; margin: 0 5px;"></div>
+            <select onchange="cambiaLingua(this.value)" style="padding: 6px; border-radius: 8px; border: 1px solid #ced4da; outline: none; background-color: white; cursor: pointer; margin-left: 5px;">
+                <option value="en" {% if get_locale() == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                <option value="it" {% if get_locale() == 'it' %}selected{% endif %}>🇮🇹 Italiano</option>
+            </select>
+            <div style="width: 1px; height: 20px; background-color: #dee2e6; margin: 0 5px;"></div>
+            <button onclick="eseguiLogout()" style="background: none; border: none; font-size: 0.85em; cursor: pointer; color: #dc3545; font-weight: 600; text-decoration: underline;">{{ _('Logout') }}</button>
+        </div>
+        <button id="reload-button" onclick="handleReload()" title="Ricarica tutti i dati">↻</button>
+    </div>

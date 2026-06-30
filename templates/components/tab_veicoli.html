@@ -1,0 +1,920 @@
+<div id="tab-veicoli" class="tab-content light-theme">
+    <!-- SELETTORE GARAGE (VEICOLI) -->
+    <div class="garage-selector-container" style="display: flex; align-items: center; gap: 10px; background: white; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #dee2e6; margin-top: 10px;">
+        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Garage:') }}</span>
+        <select id="select-garage" onchange="cambiaGarage()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: #5c6bc0; cursor: pointer; background: white;"></select>
+        <button onclick="nuovoGarage()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Garage') }}">+</button>
+        <button onclick="rinominaGarage()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Garage') }}">✏️ {{ _('Rename') }}</button>
+        <button onclick="eliminaGarage()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Garage') }}">🗑️ {{ _('Delete') }}</button>
+    </div>
+<div class="app-container">
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+<div class="sidebar-brand">
+<div class="brand-logo">
+<svg class="logo-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+</div>
+<span class="brand-name">{{ _('Vehicles') }}</span>
+</div>
+<!-- Active Vehicle Selector inside Sidebar -->
+<div class="vehicle-selector-wrapper">
+<label class="nav-label" for="active-vehicle-select">{{ _('Active Vehicle') }}</label>
+<div class="custom-select-container">
+<select class="vehicle-select" id="active-vehicle-select">
+<!-- Dynamically populated -->
+</select>
+<button class="icon-btn-small" id="add-vehicle-quick-btn" title="{{ _('Add vehicle') }}">
+<svg width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="5" y2="19"></line><line x1="5" x2="19" y1="12" y2="12"></line></svg>
+</button>
+</div>
+
+<!-- Filtro Periodo -->
+<div class="period-filter-container" style="margin-top: 16px;">
+<label class="nav-label" for="period-filter-select">{{ _('Periodo') }}</label>
+<div class="custom-select-container" style="margin-top: 8px;">
+<select class="vehicle-select" id="period-filter-select">
+<option value="current-month">{{ _('Mese corrente') }}</option>
+<option value="previous-month">{{ _('Mese precedente') }}</option>
+<option value="last-month">{{ _('Ultimo mese') }}</option>
+<option value="last-3-months">{{ _('Ultimi 3 mesi') }}</option>
+<option value="last-6-months">{{ _('Ultimi 6 mesi') }}</option>
+<option value="last-year">{{ _('Ultimo anno') }}</option>
+<option value="all-time" selected>{{ _('Tutto il periodo') }}</option>
+<option value="custom">{{ _('Personalizza') }}</option>
+</select>
+</div>
+<div id="custom-date-inputs" class="hidden" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<label class="nav-label" for="filter-date-from" style="font-size: 10px;">{{ _('Dal') }}</label>
+<input type="date" id="filter-date-from" class="vehicle-select" style="font-size: 13px; padding: 6px 10px;" />
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<label class="nav-label" for="filter-date-to" style="font-size: 10px;">{{ _('Al') }}</label>
+<input type="date" id="filter-date-to" class="vehicle-select" style="font-size: 13px; padding: 6px 10px;" />
+</div>
+</div>
+</div>
+</div>
+<nav class="sidebar-nav">
+<span class="nav-label">{{ _('Menu') }}</span>
+<a class="nav-link active" data-tab="dashboard" href="#dashboard" id="nav-dashboard">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect height="9" rx="1" width="7" x="3" y="3"></rect><rect height="5" rx="1" width="7" x="14" y="3"></rect><rect height="9" rx="1" width="7" x="14" y="12"></rect><rect height="5" rx="1" width="7" x="3" y="16"></rect></svg>
+<span>{{ _('Dashboard') }}</span>
+</a>
+<a class="nav-link" data-tab="timeline" href="#timeline" id="nav-timeline">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+<span>{{ _('Timeline') }}</span>
+</a>
+<span class="nav-label">{{ _('Activities') }}</span>
+<a class="nav-link" data-tab="refuel" href="#refuel" id="nav-refuel">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="3" x2="15" y1="22" y2="22"></line><line x1="4" x2="14" y1="9" y2="9"></line><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"></path><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"></path></svg>
+<span>{{ _('Refuelings') }}</span>
+</a>
+<a class="nav-link" data-tab="expenses" href="#expenses" id="nav-expenses">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+<span>{{ _('Expenses') }}</span>
+</a>
+<a class="nav-link" data-tab="income" href="#income" id="nav-income">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+<span>{{ _('Incomes') }}</span>
+</a>
+<a class="nav-link" data-tab="services" href="#services" id="nav-services">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+<span>{{ _('Maintenances') }}</span>
+</a>
+<a class="nav-link" data-tab="reminders" href="#reminders" id="nav-reminders">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+<span>{{ _('Reminders') }}</span>
+<span class="badge badge-warning hidden" id="reminders-count-badge">0</span>
+</a>
+<span class="nav-label">{{ _('Configurations') }}</span>
+<a class="nav-link" data-tab="config-maint" href="#config-maint" id="nav-config-maint">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+<span>{{ _('Parts and Works') }}</span>
+</a>
+<a class="nav-link" data-tab="config-expense" href="#config-expense" id="nav-config-expense">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+<span>{{ _('Expense Categories') }}</span>
+</a>
+<a class="nav-link" data-tab="config-income" href="#config-income" id="nav-config-income">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+<span>{{ _('Income Categories') }}</span>
+</a>
+<span class="nav-label">{{ _('Data') }}</span>
+<a class="nav-link" data-tab="reports" href="#reports" id="nav-reports">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+<span>{{ _('Charts and Reports') }}</span>
+</a>
+<a class="nav-link" data-tab="garage" href="#garage" id="nav-garage">
+<svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+<span>{{ _('Manage Vehicles') }}</span>
+</a>
+</nav>
+
+</aside>
+<!-- Bottom Navigation for Mobile -->
+<nav class="bottom-nav">
+<a class="bottom-nav-link active" data-tab="dashboard" href="#dashboard">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect height="9" rx="1" width="7" x="3" y="3"></rect><rect height="5" rx="1" width="7" x="14" y="3"></rect><rect height="9" rx="1" width="7" x="14" y="12"></rect><rect height="5" rx="1" width="7" x="3" y="16"></rect></svg>
+<span>{{ _('Home') }}</span>
+</a>
+<a class="bottom-nav-link" data-tab="timeline" href="#timeline">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+<span>{{ _('History') }}</span>
+</a>
+<button aria-label="Aggiungi" class="mobile-action-btn" id="mobile-add-btn">
+<svg fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="5" y2="19"></line><line x1="5" x2="19" y1="12" y2="12"></line></svg>
+</button>
+<a class="bottom-nav-link" data-tab="reports" href="#reports">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+<span>{{ _('Charts') }}</span>
+</a>
+<a class="bottom-nav-link" data-tab="reminders" href="#reminders">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+<span>{{ _('Reminders') }}</span>
+<span class="mobile-badge badge-warning hidden" id="reminders-count-badge-mobile">0</span>
+</a>
+</nav>
+<!-- Main Content Area -->
+<main class="main-content">
+<!-- Header bar -->
+<header class="content-header">
+<div class="header-left">
+<h1 id="page-title">{{ _('Dashboard') }}</h1>
+<p class="header-subtitle" id="page-subtitle">{{ _('Statistics and summary of your vehicle.') }}</p>
+</div>
+<div class="header-right">
+<!-- Top Bar Vehicle Selector for Mobile (synced) -->
+<div class="mobile-vehicle-selector">
+<select class="vehicle-select" id="active-vehicle-select-mobile">
+<!-- Dynamically populated -->
+</select>
+</div>
+<!-- Quick Add Floating / Header Button -->
+<button class="btn btn-primary btn-with-icon" id="header-add-btn">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="5" y2="19"></line><line x1="5" x2="19" y1="12" y2="12"></line></svg>
+<span>{{ _('Add Activity') }}</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Tab -->
+<section class="tab-content active-tab" id="tab-dashboard">
+<!-- Vehicle Card Summary -->
+<div class="vehicle-summary-card">
+<div class="vehicle-card-info">
+<div class="vehicle-card-badge" id="dash-veh-type-badge">AUTO</div>
+<h2 class="vehicle-card-title" id="dash-veh-name">Fiat Panda</h2>
+<p class="vehicle-card-plate" id="dash-veh-plate">AB 123 CD</p>
+<div class="vehicle-card-odometer">
+<span class="odometer-label">{{ _('Odometer:') }}</span>
+<strong id="dash-veh-odometer">45.200 km</strong>
+</div>
+</div>
+<div class="vehicle-card-visual">
+<svg class="visual-car-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+</div>
+</div>
+<!-- Stats Grid -->
+<div class="stats-grid">
+<div class="stat-card total-spent">
+<div class="stat-icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="1" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+</div>
+<div class="stat-content">
+<span class="stat-label">{{ _('Total Spent') }}</span>
+<h3 class="stat-value" id="dash-stat-total-spent">€ 0.00</h3>
+<span class="stat-trend" id="dash-stat-spent-details">{{ _('Refuelings + Expenses + Maintenances') }}</span>
+</div>
+</div>
+<div class="stat-card cost-per-km">
+<div class="stat-icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+</div>
+<div class="stat-content">
+<span class="stat-label">{{ _('Cost per Km') }}</span>
+<h3 class="stat-value" id="dash-stat-cost-km">€ 0.00 / km</h3>
+<span class="stat-trend" id="dash-stat-total-dist">{{ _('Distance: 0 km') }}</span>
+</div>
+</div>
+<div class="stat-card fuel-consumption">
+<div class="stat-icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="3" x2="15" y1="22" y2="22"></line><line x1="4" x2="14" y1="9" y2="9"></line><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"></path><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"></path></svg>
+</div>
+<div class="stat-content">
+<span class="stat-label">{{ _('Average Consumption') }}</span>
+<h3 class="stat-value" id="dash-stat-fuel-avg">0.0 km / L</h3>
+<span class="stat-trend" id="dash-stat-fuel-avg-alt">0.0 L/100km</span>
+</div>
+</div>
+<div class="stat-card net-profit">
+<div class="stat-icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+</div>
+<div class="stat-content">
+<span class="stat-label">{{ _('Net Profit / Balance') }}</span>
+<h3 class="stat-value" id="dash-stat-balance">€ 0.00</h3>
+<span class="stat-trend" id="dash-stat-income-total">{{ _('Incomes:') }} € 0.00</span>
+</div>
+</div>
+</div>
+<div class="dashboard-details-grid">
+<!-- Recent Activity Summary -->
+<div class="card recent-activity-card">
+<div class="card-header">
+<h3>{{ _('Recent Activities') }}</h3>
+<a class="btn-text" href="#timeline" onclick="showTab('timeline')">{{ _('See all') }}</a>
+</div>
+<div class="activity-list" id="dash-activity-list">
+<!-- Populate dynamically -->
+<div class="no-data">{{ _('No activities registered. Click on "Add" to start.') }}</div>
+</div>
+</div>
+<!-- Upcoming Reminders Summary -->
+<div class="card upcoming-reminders-card">
+<div class="card-header">
+<h3>{{ _('Deadlines &amp; Reminders') }}</h3>
+<a class="btn-text" href="#reminders" onclick="showTab('reminders')">{{ _('Manage') }}</a>
+</div>
+<div class="reminders-summary-list" id="dash-reminders-list">
+<!-- Populate dynamically -->
+<div class="no-data">{{ _('No active reminders.') }}</div>
+</div>
+</div>
+</div>
+<!-- Fast Add Box -->
+<div class="card quick-actions-card">
+<h3>{{ _('Quick Add') }}</h3>
+<div class="quick-action-buttons">
+<button class="quick-action-btn r-fuel" onclick="openAddModal('refuel')">
+<span class="btn-icon bg-fuel"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"></path><line x1="4" x2="14" y1="9" y2="9"></line><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"></path></svg></span>
+<span class="btn-label">{{ _('Refueling') }}</span>
+</button>
+<button class="quick-action-btn r-expense" onclick="openAddModal('expense')">
+<span class="btn-icon bg-expense"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
+<span class="btn-label">{{ _('Expense') }}</span>
+</button>
+<button class="quick-action-btn r-service" onclick="openAddModal('service')">
+<span class="btn-icon bg-service"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
+<span class="btn-label">{{ _('Maintenance') }}</span>
+</button>
+<button class="quick-action-btn r-income" onclick="openAddModal('income')">
+<span class="btn-icon bg-income"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
+<span class="btn-label">{{ _('Income') }}</span>
+</button>
+<button class="quick-action-btn r-reminder" onclick="openAddModal('reminder')">
+<span class="btn-icon bg-reminder"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+<span class="btn-label">{{ _('Reminder') }}</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Timeline/Cronologia Tab -->
+<section class="tab-content" id="tab-timeline">
+<div class="card">
+<div class="filters-bar">
+<div class="search-box">
+<input id="timeline-search" placeholder="{{ _('Search notes, workshops, descriptions...') }}" type="text"/>
+</div>
+<div class="select-filters">
+<select class="filter-select" id="timeline-filter-type">
+<option value="all">{{ _('All activities') }}</option>
+<option value="refuel">{{ _('Refuelings') }}</option>
+<option value="expense">{{ _('Expenses') }}</option>
+<option value="service">{{ _('Maintenances') }}</option>
+<option value="income">{{ _('Incomes') }}</option>
+</select>
+</div>
+</div>
+<div class="timeline-container" id="timeline-list">
+<!-- Populate dynamically -->
+</div>
+</div>
+</section>
+<!-- Rifornimenti Tab -->
+<section class="tab-content" id="tab-refuel">
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Refuelings Register') }}</h3>
+<button class="btn btn-primary" onclick="openAddModal('refuel')">{{ _('New Refueling') }}</button>
+</div>
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr>
+<th>{{ _('Date') }}</th>
+<th>{{ _('Odometer (km)') }}</th>
+<th>{{ _('Distance') }}</th>
+<th>{{ _('Fuel') }}</th>
+<th id="th-refuel-volume">{{ _('Liters') }}</th>
+<th id="th-refuel-price">{{ _('Price/L') }}</th>
+<th>{{ _('Total') }}</th>
+<th>{{ _('Consumption') }}</th>
+<th>{{ _('Full?') }}</th>
+<th>{{ _('Actions') }}</th>
+</tr>
+</thead>
+<tbody id="refuel-table-body">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Spese Tab -->
+<section class="tab-content" id="tab-expenses">
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Expenses Register') }}</h3>
+<button class="btn btn-primary" onclick="openAddModal('expense')">{{ _('New Expense') }}</button>
+</div>
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr>
+<th>{{ _('Date') }}</th>
+<th>{{ _('Category') }}</th>
+<th>{{ _('Cost') }}</th>
+<th>{{ _('Kilometers') }}</th>
+<th>{{ _('Notes') }}</th>
+<th>{{ _('Actions') }}</th>
+</tr>
+</thead>
+<tbody id="expenses-table-body">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Entrate Tab -->
+<section class="tab-content" id="tab-income">
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Incomes Register') }}</h3>
+<button class="btn btn-primary" onclick="openAddModal('income')">{{ _('New Income') }}</button>
+</div>
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr>
+<th>{{ _('Date') }}</th>
+<th>{{ _('Category') }}</th>
+<th>{{ _('Amount') }}</th>
+<th>{{ _('Kilometers') }}</th>
+<th>{{ _('Notes') }}</th>
+<th>{{ _('Actions') }}</th>
+</tr>
+</thead>
+<tbody id="income-table-body">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Servizi/Manutenzione Tab -->
+<section class="tab-content" id="tab-services">
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Maintenances Register') }}</h3>
+<button class="btn btn-primary" onclick="openAddModal('service')">{{ _('New Maintenance') }}</button>
+</div>
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr>
+<th>{{ _('Date') }}</th>
+<th>{{ _('Odometer (km)') }}</th>
+<th>{{ _('Maintenance') }}</th>
+<th>{{ _('Cost') }}</th>
+<th>{{ _('Provider') }}</th>
+<th>{{ _('Notes') }}</th>
+<th>{{ _('Actions') }}</th>
+</tr>
+</thead>
+<tbody id="services-table-body">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Configurazione Ricambi e Lavori -->
+<section class="tab-content" id="tab-config-maint">
+    <div class="card">
+        <h3>{{ _('Manage Parts and Works') }}</h3>
+        <p class="description">{{ _('Manage the list of parts and works types available for maintenance.') }}</p>
+        <div style="margin-top: 15px;">
+            <div class="category-input-row">
+                <input type="text" id="config-maint-input" placeholder="{{ _('New part/work (e.g. Brake Pads)') }}" />
+                <button class="btn btn-primary" onclick="addConfigItem('maint')">{{ _('Add') }}</button>
+            </div>
+            <ul id="config-maint-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;"></ul>
+        </div>
+    </div>
+</section>
+
+<!-- Configurazione Categorie Spese -->
+<section class="tab-content" id="tab-config-expense">
+    <div class="card">
+        <h3>{{ _('Manage Expense Categories') }}</h3>
+        <p class="description">{{ _('Manage the list of categories available for recording expenses.') }}</p>
+        <div style="margin-top: 15px;">
+            <div class="category-input-row">
+                <input type="text" id="config-expense-input" placeholder="{{ _('New expense category (e.g. Parking)') }}" />
+                <button class="btn btn-primary" onclick="addConfigItem('expense')">{{ _('Add') }}</button>
+            </div>
+            <ul id="config-expense-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;"></ul>
+        </div>
+    </div>
+</section>
+
+<!-- Configurazione Categorie Entrate -->
+<section class="tab-content" id="tab-config-income">
+    <div class="card">
+        <h3>{{ _('Manage Income Categories') }}</h3>
+        <p class="description">{{ _('Manage the list of categories available for recording income.') }}</p>
+        <div style="margin-top: 15px;">
+            <div class="category-input-row">
+                <input type="text" id="config-income-input" placeholder="{{ _('New income category (e.g. Deliveries)') }}" />
+                <button class="btn btn-primary" onclick="addConfigItem('income')">{{ _('Add') }}</button>
+            </div>
+            <ul id="config-income-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;"></ul>
+        </div>
+    </div>
+</section>
+<!-- Promemoria Tab -->
+<section class="tab-content" id="tab-reminders">
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Reminders and Deadlines') }}</h3>
+<button class="btn btn-primary" onclick="openAddModal('reminder')">{{ _('New Reminder') }}</button>
+</div>
+<div class="reminders-grid" id="reminders-list-container">
+<!-- Dynamic grid of cards -->
+</div>
+</div>
+</section>
+<!-- Report e Grafici Tab -->
+<section class="tab-content" id="tab-reports">
+<div class="reports-grid">
+<!-- Total Cost Breakdown (Chart) -->
+<div class="card report-card">
+<h3>{{ _('Total Expenses Distribution') }}</h3>
+<div class="chart-container">
+<canvas id="chart-expenses-breakdown"></canvas>
+</div>
+</div>
+<!-- Consumption trend (Chart) -->
+<div class="card report-card" id="report-card-fuel-consumption">
+<h3>{{ _('Fuel Consumption Trend') }}</h3>
+<div class="chart-container">
+<canvas id="chart-fuel-consumption"></canvas>
+</div>
+</div>
+<!-- Cost per Km (Line Chart) -->
+<div class="card report-card">
+<h3>{{ _('Annual Cost per Kilometer (€/km)') }}</h3>
+<div class="chart-container">
+<canvas id="chart-cost-per-km"></canvas>
+</div>
+</div>
+<!-- Annual Km (Bar Chart) -->
+<div class="card report-card">
+<h3>{{ _('Annual Mileage') }}</h3>
+<div class="chart-container">
+<canvas id="chart-annual-km"></canvas>
+</div>
+</div>
+<!-- Monthly/Annual expenses by category (Stacked Bar Chart) - full width -->
+<div class="card report-card report-card-wide">
+<div class="report-card-header-row">
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <h3 id="chart-catbar-title">{{ _('Expenses by Category') }}</h3>
+    <div class="chart-period-toggle">
+      <button class="period-toggle-btn active" id="toggle-monthly" onclick="setCategoryChartPeriod('monthly')">{{ _('Monthly') }}</button>
+      <button class="period-toggle-btn" id="toggle-annual" onclick="setCategoryChartPeriod('annual')">{{ _('Annual') }}</button>
+    </div>
+  </div>
+  <div class="chart-category-filters" id="chart-category-filters">
+    <!-- Populated dynamically by JS -->
+  </div>
+</div>
+<div class="chart-container chart-container-tall">
+<canvas id="chart-monthly-by-category"></canvas>
+</div>
+</div>
+<!-- Expense type pie & Maintenance type pie (side by side) -->
+<div class="card report-card">
+<h3>{{ _('Expense Types') }}</h3>
+<div class="chart-container">
+<canvas id="chart-expense-types"></canvas>
+</div>
+</div>
+<div class="card report-card">
+<h3>{{ _('Maintenance Types') }}</h3>
+<div class="chart-container">
+<canvas id="chart-maintenance-types"></canvas>
+</div>
+</div>
+</div>
+</section>
+<!-- Gestione Veicoli Tab -->
+<section class="tab-content" id="tab-garage">
+<!-- Fleet overview charts -->
+<div class="reports-grid garage-fleet-charts" style="margin-bottom:24px;">
+  <div class="card report-card">
+    <h3>{{ _('Total Annual Kilometers (all vehicles)') }}</h3>
+    <div class="chart-container">
+      <canvas id="chart-fleet-annual-km"></canvas>
+    </div>
+  </div>
+  <div class="card report-card">
+    <h3>{{ _('Annual Expense by Category (all vehicles)') }}</h3>
+    <div class="chart-container">
+      <canvas id="chart-fleet-annual-expenses"></canvas>
+    </div>
+  </div>
+</div>
+<!-- Vehicle cards -->
+<div class="card">
+<div class="card-header-actions">
+<h3>{{ _('Manage Vehicles') }}</h3>
+<button class="btn btn-primary" id="add-vehicle-btn">{{ _('New Vehicle') }}</button>
+</div>
+<div class="vehicles-grid" id="vehicles-list-container">
+<!-- Dynamic list of vehicles -->
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- GLOBAL MODAL FOR FORMS (Quick action modal) -->
+<div class="modal-overlay" id="activity-modal">
+<div class="modal-card">
+<div class="modal-header">
+<h2 id="modal-title">{{ _('Add Activity') }}</h2>
+<button class="modal-close" id="modal-close-btn">×</button>
+</div>
+<!-- Type Selector inside Modal -->
+<div class="modal-type-selector-wrapper" id="modal-type-selector-container">
+<label class="form-label">{{ _('Activity Type') }}</label>
+<div class="modal-type-selector">
+<button class="type-sel-btn active" data-type="refuel">{{ _('Refueling') }}</button>
+<button class="type-sel-btn" data-type="expense">{{ _('Expense') }}</button>
+<button class="type-sel-btn" data-type="service">{{ _('Maintenance') }}</button>
+<button class="type-sel-btn" data-type="income">{{ _('Income') }}</button>
+<button class="type-sel-btn" data-type="reminder">{{ _('Reminder') }}</button>
+</div>
+</div>
+<!-- Dynamic Form Shell -->
+<form class="modal-form" id="activity-form">
+<!-- HIDDEN FIELDS FOR EDIT MODE -->
+<input id="entry-id" type="hidden" value=""/>
+<input id="entry-type" type="hidden" value="refuel"/>
+<!-- Refueling Fields -->
+<div class="form-section active-section" id="section-refuel">
+<div class="form-row">
+<div class="form-group">
+<label for="f-date">{{ _('Date *') }}</label>
+<input id="f-date" required="" type="date"/>
+</div>
+<div class="form-group">
+<label for="f-odometer">{{ _('Odometer (km) *') }} <span id="f-odometer-last" style="font-size: 0.85em; color: #666; font-weight: normal; margin-left: 5px;">(Ultima: -- km)</span></label>
+<input id="f-odometer" min="0" placeholder="{{ _('e.g., 45000') }}" type="number" required/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="f-fuel-type">{{ _('Fuel Type *') }}</label>
+<select id="f-fuel-type">
+<option value="Benzina">Benzina</option>
+<option value="Diesel">Diesel</option>
+<option value="GPL">GPL</option>
+<option value="Metano">Metano</option>
+<option value="Elettrico">Elettrico</option>
+</select>
+</div>
+<div class="form-group">
+<label for="f-liters" id="lbl-f-liters">{{ _('Volume (Liters)') }}</label>
+<input id="f-liters" min="0.01" placeholder="{{ _('Automatically calculated') }}" step="0.01" type="number" readonly/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="f-price-unit" id="lbl-f-price">{{ _('Price per Liter (€) *') }}</label>
+<input id="f-price-unit" min="0.001" placeholder="{{ _('e.g., 1.849') }}" step="0.001" type="number" required/>
+</div>
+<div class="form-group">
+<label for="f-total-cost">{{ _('Total Cost (€) *') }}</label>
+<input id="f-total-cost" min="0.01" placeholder="{{ _('e.g., 50.00') }}" step="0.01" type="number" required/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group checkbox-group">
+<input checked="" id="f-is-full" type="checkbox"/>
+<label for="f-is-full">{{ _('Full Tank (recommended for consumption calculation)') }}</label>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group checkbox-group">
+<input id="f-missed-previous" type="checkbox"/>
+<label for="f-missed-previous">{{ _('Missed previous refueling? (avoids efficiency calculation for this tank)') }}</label>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="f-gas-station">{{ _('Gas station (optional)') }}</label>
+<input id="f-gas-station" placeholder="{{ _('e.g., Eni, Q8') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="f-driver">{{ _('Driver (optional)') }}</label>
+<input id="f-driver" placeholder="{{ _('Driver name') }}" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="f-reason">{{ _('Reason (optional)') }}</label>
+<input id="f-reason" placeholder="{{ _('e.g., Work trip') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="f-payment-method">{{ _('Payment method (optional)') }}</label>
+<input id="f-payment-method" placeholder="{{ _('e.g., Card, Cash') }}" type="text"/>
+</div>
+</div>
+</div>
+<!-- Expense Fields -->
+<div class="form-section" id="section-expense">
+<div class="form-row">
+<div class="form-group">
+<label for="e-date">{{ _('Date *') }}</label>
+<input id="e-date" type="date"/>
+</div>
+<div class="form-group">
+<label for="e-category">{{ _('Expense Category *') }}</label>
+<select id="e-category">
+<option value="Assicurazione">{{ _('Insurance') }}</option>
+<option value="Bollo">{{ _('Tax / Stamp Duty') }}</option>
+<option value="Parcheggio">{{ _('Parking') }}</option>
+<option value="Pedaggio">{{ _('Toll') }}</option>
+<option value="Lavaggio">{{ _('Car Wash') }}</option>
+<option value="Multa">{{ _('Fine') }}</option>
+<option value="Finanziamento">{{ _('Loan / Lease') }}</option>
+<option value="Pneumatici">{{ _('Tires') }}</option>
+<option value="Altro">{{ _('Other') }}</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="e-cost">{{ _('Expense Cost (€) *') }}</label>
+<input id="e-cost" min="0.01" placeholder="{{ _('e.g., 12.50') }}" step="0.01" type="number"/>
+</div>
+<div class="form-group">
+<label for="e-odometer">{{ _('Odometer (km, optional)') }} <span id="e-odometer-last" style="font-size: 0.85em; color: #666; font-weight: normal; margin-left: 5px;">(Ultima: -- km)</span></label>
+<input id="e-odometer" min="0" placeholder="{{ _('e.g., 45200') }}" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="e-location">{{ _('Local expense (optional)') }}</label>
+<input id="e-location" placeholder="{{ _('e.g., Rome Car Wash') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="e-driver">{{ _('Driver (optional)') }}</label>
+<input id="e-driver" placeholder="{{ _('Driver name') }}" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="e-reason">{{ _('Reason (optional)') }}</label>
+<input id="e-reason" placeholder="{{ _('Reason for expense') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="e-payment-method">{{ _('Payment method (optional)') }}</label>
+<input id="e-payment-method" placeholder="{{ _('e.g., Card, Cash') }}" type="text"/>
+</div>
+</div>
+</div>
+<!-- Service/Maintenance Fields -->
+<div class="form-section" id="section-service">
+<div class="form-row">
+<div class="form-group">
+<label for="s-date">{{ _('Date *') }}</label>
+<input id="s-date" type="date"/>
+</div>
+<div class="form-group">
+<label for="s-odometer">{{ _('Odometer (km) *') }} <span id="s-odometer-last" style="font-size: 0.85em; color: #666; font-weight: normal; margin-left: 5px;">(Ultima: -- km)</span></label>
+<input id="s-odometer" min="0" placeholder="{{ _('Odometer at time of maintenance') }}" type="number" required/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group" style="grid-column: span 2;">
+<label>{{ _('Maintenance Detail (Select parts/works and specify cost) *') }}</label>
+<div id="maint-multiselect-container" style="display: flex; flex-direction: column; gap: 8px; border: 1px solid #ced4da; border-radius: 6px; padding: 12px; background: #f8f9fa; max-height: 200px; overflow-y: auto; margin-top: 5px;">
+<!-- Dynamically populated checkboxes -->
+</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="s-cost">{{ _('Maintenance Cost (€) *') }}</label>
+<input id="s-cost" min="0" placeholder="{{ _('Automatically calculated') }}" step="0.01" type="number" readonly />
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="s-provider">{{ _('Workshop / Provider (optional)') }}</label>
+<input id="s-provider" placeholder="{{ _('Workshop or dealership name') }}" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="s-driver">{{ _('Driver (optional)') }}</label>
+<input id="s-driver" placeholder="{{ _('Driver name') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="s-payment-method">{{ _('Payment method (optional)') }}</label>
+<input id="s-payment-method" placeholder="{{ _('e.g., Card, Cash') }}" type="text"/>
+</div>
+</div>
+</div>
+<!-- Income Fields -->
+<div class="form-section" id="section-income">
+<div class="form-row">
+<div class="form-group">
+<label for="i-date">{{ _('Date *') }}</label>
+<input id="i-date" type="date"/>
+</div>
+<div class="form-group">
+<label for="i-category">{{ _('Income Category *') }}</label>
+<select id="i-category">
+<option value="Servizio Passeggeri">{{ _('Passenger Service (Taxi/Uber)') }}</option>
+<option value="Consegne">{{ _('Deliveries (Glovo, UberEats, etc.)') }}</option>
+<option value="Rimborso Spese">{{ _('Mileage Reimbursement') }}</option>
+<option value="Noleggio">{{ _('Rental') }}</option>
+<option value="Altro">{{ _('Other') }}</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="i-amount">{{ _('Amount (€) *') }}</label>
+<input id="i-amount" min="0.01" placeholder="{{ _('Gross income realized') }}" step="0.01" type="number"/>
+</div>
+<div class="form-group">
+<label for="i-odometer">{{ _('Odometer (km, optional)') }} <span id="i-odometer-last" style="font-size: 0.85em; color: #666; font-weight: normal; margin-left: 5px;">(Ultima: -- km)</span></label>
+<input id="i-odometer" min="0" placeholder="{{ _('e.g., 45350') }}" type="number"/>
+</div>
+</div>
+</div>
+<!-- Route Fields -->
+
+<!-- Reminder Fields -->
+<div class="form-section" id="section-reminder">
+<div class="form-row">
+<div class="form-group">
+<label for="rem-description">{{ _('Reminder Description *') }}</label>
+<select id="rem-description" required>
+<option value="" disabled selected>{{ _('-- Select an item --') }}</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="rem-is-recurring">{{ _('Reminder Frequency *') }}</label>
+<select id="rem-is-recurring">
+<option value="0">{{ _('Single (one time)') }}</option>
+<option value="1">{{ _('Repeated (recurring)') }}</option>
+</select>
+</div>
+<div class="form-group">
+<label for="rem-trigger-type">{{ _('Alert Type *') }}</label>
+<select id="rem-trigger-type">
+<option value="date">{{ _('Due by Date') }}</option>
+<option value="odometer">{{ _('Due by Odometer (Odo)') }}</option>
+<option value="both">{{ _('Both (whichever comes first)') }}</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group id-date-group">
+<label for="rem-date">{{ _('Due Date') }}</label>
+<input id="rem-date" type="date"/>
+</div>
+<div class="form-group id-odo-group">
+<label for="rem-odometer">{{ _('Due Odometer (km)') }}</label>
+<input id="rem-odometer" min="0" placeholder="{{ _('e.g., 60000') }}" type="number"/>
+</div>
+</div>
+<div class="form-row" id="rem-recurrence-container" style="display: none; gap: 15px;">
+<div class="form-group" id="rem-recurrence-time-group" style="display: none; flex: 1;">
+<label for="rem-recurrence-val">{{ _('Repeat every (Time)') }}</label>
+<div style="display: flex; gap: 8px;">
+<input id="rem-recurrence-val" min="1" placeholder="{{ _('e.g. 12') }}" type="number" style="flex: 1;"/>
+<select id="rem-recurrence-unit" style="flex: 1;">
+<option value="days">{{ _('Days') }}</option>
+<option value="months" selected>{{ _('Months') }}</option>
+<option value="years">{{ _('Years') }}</option>
+</select>
+</div>
+</div>
+<div class="form-group" id="rem-recurrence-km-group" style="display: none; flex: 1;">
+<label for="rem-recurrence-km">{{ _('Repeat every (Kilometers)') }}</label>
+<input id="rem-recurrence-km" min="100" placeholder="{{ _('e.g. 15000') }}" type="number"/>
+</div>
+</div>
+</div>
+<!-- Shared Notes Field -->
+<div class="form-row form-group-notes">
+<div class="form-group">
+<label for="shared-notes">{{ _('Notes / Additional details') }}</label>
+<textarea id="shared-notes" placeholder="{{ _('Write any additional notes here...') }}" rows="2"></textarea>
+</div>
+</div>
+<!-- Form Actions -->
+<div class="form-actions">
+<button class="btn btn-secondary" id="modal-cancel-btn" type="button">{{ _('Cancel') }}</button>
+<button class="btn btn-primary" id="modal-submit-btn" type="submit">{{ _('Save') }}</button>
+</div>
+</form>
+</div>
+</div>
+<!-- VEHICLE MANAGER MODAL (Add/Edit vehicle) -->
+<div class="modal-overlay" id="vehicle-modal">
+<div class="modal-card">
+<div class="modal-header">
+<h2 id="vehicle-modal-title">{{ _('New Vehicle') }}</h2>
+<button class="modal-close" id="vehicle-modal-close-btn">×</button>
+</div>
+<form class="modal-form" id="vehicle-form">
+<input id="vehicle-edit-id" type="hidden" value=""/>
+<div class="form-row">
+<div class="form-group">
+<label for="v-brand">{{ _('Brand *') }}</label>
+<input id="v-brand" placeholder="{{ _('e.g., Fiat, Ford, Honda...') }}" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="v-model">{{ _('Model *') }}</label>
+<input id="v-model" placeholder="{{ _('e.g., Panda, Fiesta, Civic...') }}" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="v-type">{{ _('Vehicle Type *') }}</label>
+<select id="v-type" required="">
+<option value="Auto">{{ _('Car') }}</option>
+<option value="Moto">Moto</option>
+<option value="Camion">{{ _('Truck') }}</option>
+<option value="Furgone">{{ _('Van') }}</option>
+<option value="Bicicletta">{{ _('Bicycle') }}</option>
+<option value="Altro">{{ _('Other') }}</option>
+</select>
+</div>
+<div class="form-group">
+<label for="v-fuel">{{ _('Main Fuel *') }}</label>
+<select id="v-fuel" required="">
+<option value="Benzina">Benzina</option>
+<option value="Diesel">Diesel</option>
+<option value="GPL">GPL</option>
+<option value="Metano">Metano</option>
+<option value="Elettrico">Elettrico / Ibrido plug-in</option>
+<option value="Nessuno">{{ _('None (Manual Bicycles)') }}</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="v-plate">{{ _('Plate (optional)') }}</label>
+<input id="v-plate" placeholder="{{ _('e.g., AB 123 CD') }}" type="text"/>
+</div>
+<div class="form-group">
+<label for="v-year">{{ _('Year of Manufacture (optional)') }}</label>
+<input id="v-year" max="2100" min="1900" placeholder="{{ _('e.g., 2020') }}" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="v-odometer">{{ _('Initial Odometer (km) *') }}</label>
+<input id="v-odometer" min="0" placeholder="{{ _('e.g., 15000') }}" required="" type="number"/>
+</div>
+<div class="form-group">
+<label for="v-tank-size">{{ _('Tank Capacity (Liters / kWh / kg - optional)') }}</label>
+<input id="v-tank-size" min="0" placeholder="{{ _('e.g., 45') }}" step="0.5" type="number"/>
+</div>
+</div>
+<div class="form-row" id="v-archived-row" style="display: none;">
+<div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+<input id="v-archived" type="checkbox" style="width: auto; margin-bottom: 0; cursor: pointer;"/>
+<label for="v-archived" style="margin-bottom: 0; cursor: pointer; font-weight: normal; font-size: 13px;">{{ _('Archive this vehicle (hide it from lists and main dashboard)') }}</label>
+</div>
+</div>
+<div class="form-actions">
+<button class="btn btn-secondary" id="vehicle-modal-cancel-btn" type="button">{{ _('Cancel') }}</button>
+<button class="btn btn-primary" id="vehicle-modal-submit-btn" type="submit">{{ _('Save Vehicle') }}</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Scripts -->
+</div>
