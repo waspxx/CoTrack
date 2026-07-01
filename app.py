@@ -2927,7 +2927,7 @@ def import_custom_wallet_csv():
             if not date_val or not account: continue
             
             data_op = ""
-            date_str_clean = date_val.split(' ')[0]
+            date_str_clean = date_val.replace('T', ' ').split(' ')[0]
             for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y'):
                 try:
                     data_op = datetime.strptime(date_str_clean, fmt).strftime('%Y-%m-%d')
@@ -4254,6 +4254,135 @@ def loan_payment_detail_route(payment_id):
     row = conn.execute("SELECT * FROM loan_payments WHERE id = ?", (payment_id,)).fetchone()
     conn.close()
     return jsonify(dict(row))
+
+@app.route('/api/loans/<loan_id>/import_custom_csv', methods=['POST'])
+def import_custom_loan_csv(loan_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    loan = conn.execute("SELECT * FROM loans WHERE id = ? AND user_id = ?", (loan_id, session['user_id'])).fetchone()
+    if not loan:
+        conn.close()
+        return jsonify({"errore": _("Loan not found or unauthorized")}), 404
+        
+    if 'file' not in request.files:
+        conn.close()
+        return jsonify({"errore": _("No file uploaded")}), 400
+
+    file = request.files['file']
+    mapping_str = request.form.get('mapping')
+    if not mapping_str:
+        conn.close()
+        return jsonify({"errore": _("Missing column mapping")}), 400
+        
+    try:
+        mapping = json.loads(mapping_str)
+    except json.JSONDecodeError:
+        conn.close()
+        return jsonify({"errore": _("Invalid mapping format")}), 400
+
+    raw_content = file.stream.read()
+    try:
+        content = raw_content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        content = raw_content.decode("latin1")
+    
+    lines = [line for line in content.splitlines() if line.strip()]
+    if not lines:
+        conn.close()
+        return jsonify({"errore": _("The uploaded file is empty.")}), 400
+        
+    header_line = lines[0]
+    delimiter = ';' if header_line.count(';') >= header_line.count(',') else ','
+    
+    try:
+        stream = StringIO('\n'.join(lines), newline=None)
+        csv_reader = csv.DictReader(stream, delimiter=delimiter)
+        import random
+        imported = 0
+        skipped = 0
+        
+        for row in csv_reader:
+            col_date = mapping.get('date')
+            col_amount = mapping.get('amount')
+            col_type = mapping.get('type')
+            col_notes = mapping.get('notes')
+            
+            if not col_date or not col_amount:
+                continue
+                
+            date_val = (row.get(col_date) or '').strip()
+            if not date_val:
+                continue
+                
+            date_op = ""
+            date_str_clean = date_val.replace('T', ' ').split(' ')[0]
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y'):
+                try:
+                    date_op = datetime.strptime(date_str_clean, fmt).strftime('%Y-%m-%d')
+                    break
+                except ValueError:
+                    pass
+            if not date_op:
+                continue
+                
+            val_str = str(row.get(col_amount, '0')).replace('€', '').replace('$', '').replace('+', '').replace(' ', '').strip()
+            if not val_str:
+                val_str = '0'
+            if ',' in val_str and '.' in val_str:
+                if val_str.rfind(',') > val_str.rfind('.'):
+                    val_str = val_str.replace('.', '').replace(',', '.')
+                else:
+                    val_str = val_str.replace(',', '')
+            else:
+                val_str = val_str.replace(',', '.')
+                
+            try:
+                amount = float(val_str)
+            except ValueError:
+                continue
+                
+            if amount <= 0:
+                continue
+                
+            p_type = 'regular'
+            if col_type:
+                raw_type = (row.get(col_type) or '').strip().lower()
+                if 'extra' in raw_type or 'rimb' in raw_type or 'straordinari' in raw_type:
+                    p_type = 'extra'
+                elif 'rate_change' in raw_type or 'tasso' in raw_type or 'tan' in raw_type or 'tass' in raw_type:
+                    p_type = 'rate_change'
+                elif 'regular' in raw_type or 'rata' in raw_type:
+                    p_type = 'regular'
+                    
+            notes = ''
+            if col_notes:
+                notes = (row.get(col_notes) or '').strip()
+                
+            duplicato = conn.execute('''
+                SELECT id FROM loan_payments
+                WHERE loan_id = ? AND date = ? AND type = ? AND amount = ?
+            ''', (loan_id, date_op, p_type, amount)).fetchone()
+            
+            if duplicato:
+                skipped += 1
+                continue
+                
+            payment_id = f"pay-{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
+            conn.execute('''
+                INSERT INTO loan_payments (id, loan_id, date, amount, type, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (payment_id, loan_id, date_op, amount, p_type, notes))
+            imported += 1
+            
+        conn.commit()
+        return jsonify({"messaggio": _("Import completed: %(imported)d payments imported, %(skipped)d skipped as duplicates.", imported=imported, skipped=skipped)})
+    except Exception as e:
+        print(f"Error in import_custom_loan_csv: {e}")
+        return jsonify({"errore": f"Errore durante l'importazione: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/loans/parse_statement_pdf', methods=['POST'])
 def parse_statement_pdf():

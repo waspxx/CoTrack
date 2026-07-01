@@ -410,6 +410,7 @@ function clearDashboard() {
     document.getElementById('kpi-loan-paid').textContent = "€ 0,00";
     document.getElementById('kpi-loan-progress').style.width = "0%";
     document.getElementById('kpi-loan-interest').textContent = "€ 0,00";
+    document.getElementById('kpi-loan-remaining-interest').textContent = "€ 0,00";
     document.getElementById('kpi-loan-savings').textContent = "€ 0,00";
     
     // Summary
@@ -466,11 +467,14 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     // Progress
     const progressPercent = loan.principal > 0 ? (totalPaidPrincipal / loan.principal) * 100 : 0;
     
+    const remainingInterest = Math.max(0, actualTotalInterest - totalPaidInterest);
+    
     // Update KPIs
     document.getElementById('kpi-loan-remaining').textContent = formatEuro(remainingPrincipal);
     document.getElementById('kpi-loan-paid').textContent = `${formatEuro(totalPaidPrincipal)} (${progressPercent.toFixed(1)}%)`;
     document.getElementById('kpi-loan-progress').style.width = `${progressPercent}%`;
     document.getElementById('kpi-loan-interest').textContent = formatEuro(totalPaidInterest);
+    document.getElementById('kpi-loan-remaining-interest').textContent = formatEuro(remainingInterest);
     document.getElementById('kpi-loan-savings').textContent = formatEuro(savings);
     
     // Summary conditions
@@ -716,7 +720,14 @@ function renderPaymentsTable() {
         return;
     }
     
-    loanState.payments.forEach(p => {
+    const sortedPayments = [...loanState.payments].sort((a, b) => {
+        if (a.date !== b.date) {
+            return new Date(b.date) - new Date(a.date);
+        }
+        return b.id.localeCompare(a.id);
+    });
+    
+    sortedPayments.forEach(p => {
         const tr = document.createElement('tr');
         
         let typeText = window.Translations.regularInstallment || 'Rata Mensile';
@@ -1520,6 +1531,124 @@ window.handleModalRateTypeChange = function() {
     const helpEl = document.getElementById('l-rate-type-help');
     if (typeSel && helpEl) {
         helpEl.style.display = typeSel.value === 'variable' ? 'block' : 'none';
+    }
+};
+
+// ── CUSTOM CSV IMPORT ─────────────────────────────────────────────────────────
+let currentLoanCsvFile = null;
+
+window.handleLoanCSVUpload = async function(event) {
+    let file = event.target.files[0];
+    if (!file) return;
+    if (!loanState.activeLoanId) {
+        alert("Seleziona un prestito prima di caricare.");
+        event.target.value = '';
+        return;
+    }
+    
+    let formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+        let res = await fetch('/api/preview_csv', { method: 'POST', body: formData });
+        if (!res.ok) {
+            let err = await res.json();
+            alert(err.errore || "Errore nella lettura del file");
+            event.target.value = '';
+            return;
+        }
+        let data = await res.json();
+        openLoanMappingModal(file, data.headers, data.sample);
+    } catch (e) {
+        alert("Errore di rete");
+        event.target.value = '';
+    }
+};
+
+function openLoanMappingModal(file, headers, sample) {
+    currentLoanCsvFile = file;
+    let container = document.getElementById('loan-mapping-fields');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const isIt = document.documentElement.lang === 'it';
+    const dbFields = [
+        { id: 'date', label: isIt ? 'Data *' : 'Date *', required: true },
+        { id: 'amount', label: isIt ? 'Importo / Valore *' : 'Amount / Value *', required: true },
+        { id: 'type', label: isIt ? 'Tipo Transazione' : 'Transaction Type', required: false },
+        { id: 'notes', label: isIt ? 'Note' : 'Notes', required: false }
+    ];
+
+    let optionsHtml = '<option value="">-- Ignora / Non presente --</option>';
+    headers.forEach((h, i) => {
+        let sampleText = sample[i] ? ` (es., ${sample[i]})` : '';
+        optionsHtml += `<option value="${h}">${h}${sampleText}</option>`;
+    });
+
+    dbFields.forEach(field => {
+        let row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+        row.style.marginBottom = '10px';
+        let reqStar = field.required ? '<span style="color:red;">*</span>' : '';
+        row.innerHTML = `<label style="margin: 0; width: 45%; font-size: 0.9em; font-weight: 600; color: #212529;">${field.label} ${reqStar}</label><select id="loanmap_${field.id}" style="width: 50%; padding: 8px; border-radius: 6px; border: 1px solid #ced4da; color: #212529; background: white;">${optionsHtml}</select>`;
+        container.appendChild(row);
+
+        let select = row.querySelector('select');
+        let bestMatch = '';
+        let labelLower = field.id.toLowerCase();
+        for (let i = 0; i < headers.length; i++) {
+            let hLower = headers[i].toLowerCase();
+            if (hLower.includes(labelLower) || labelLower.includes(hLower) ||
+                (labelLower === 'date' && (hLower.includes('data') || hLower.includes('date') || hLower.includes('giorno') || hLower.includes('day'))) ||
+                (labelLower === 'amount' && (hLower.includes('importo') || hLower.includes('amount') || hLower.includes('valore') || hLower.includes('valuta') || hLower.includes('totale'))) ||
+                (labelLower === 'type' && (hLower.includes('tipo') || hLower.includes('type') || hLower.includes('causale') || hLower.includes('categoria'))) ||
+                (labelLower === 'notes' && (hLower.includes('note') || hLower.includes('descrizione') || hLower.includes('info') || hLower.includes('details')))
+            ) {
+                bestMatch = headers[i];
+                break;
+            }
+        }
+        if (bestMatch) select.value = bestMatch;
+    });
+
+    document.getElementById('loan-csv-mapping-modal').style.display = 'flex';
+}
+
+window.confermaMappingPrestitiCSV = async function() {
+    let mapping = {
+        date: document.getElementById('loanmap_date').value,
+        amount: document.getElementById('loanmap_amount').value,
+        type: document.getElementById('loanmap_type').value,
+        notes: document.getElementById('loanmap_notes').value
+    };
+
+    if (!mapping.date || !mapping.amount) {
+        alert("I campi Data (*) e Importo (*) sono obbligatori.");
+        return;
+    }
+
+    document.getElementById('loan-csv-mapping-modal').style.display = 'none';
+
+    let formData = new FormData();
+    formData.append("file", currentLoanCsvFile);
+    formData.append("mapping", JSON.stringify(mapping));
+
+    try {
+        let risposta = await fetch('/api/loans/' + loanState.activeLoanId + '/import_custom_csv', { method: 'POST', body: formData });
+        let result = await risposta.json();
+        if (risposta.ok) {
+            alert(result.messaggio);
+            await window.caricaDatiPrestiti();
+        } else {
+            alert(result.errore || "Errore durante l'importazione.");
+        }
+    } catch (error) {
+        alert("Errore di rete durante l'importazione.");
+    } finally {
+        currentLoanCsvFile = null;
+        document.getElementById('loan-custom-csv-file').value = '';
     }
 };
 

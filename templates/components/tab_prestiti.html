@@ -89,6 +89,10 @@
                         <span class="stat-value" id="kpi-loan-interest">€ 0,00</span>
                     </div>
                     <div class="card stat-card">
+                        <span class="stat-label">{{ _('Remaining Interest') }}</span>
+                        <span class="stat-value" id="kpi-loan-remaining-interest">€ 0,00</span>
+                    </div>
+                    <div class="card stat-card">
                         <span class="stat-label">{{ _('Savings Achieved') }}</span>
                         <span class="stat-value" id="kpi-loan-savings" style="color: #2e7d32;">€ 0,00</span>
                     </div>
@@ -242,7 +246,7 @@
                                 </div>
                             </form>
                         </div>
-                        
+
                         <div class="card" style="padding: 20px;">
                             <h3>{{ _('Detect from Bank Statement (PDF)') }}</h3>
                             <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">{{ _('Upload the bank statement in PDF from the intermediary to automatically detect and import payments.') }}</p>
@@ -254,6 +258,15 @@
                                 <div id="pdf-import-loading" style="display: none; text-align: center; font-size: 0.9em; color: var(--primary-color); margin-top: 5px; font-weight: 600;">
                                     {{ _('Analysis in progress with Gemini... ⏳') }}
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="padding: 20px;">
+                            <h3>{{ _('Import from CSV') }}</h3>
+                            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">{{ _('Upload a CSV file containing your payment history to import them.') }}</p>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <input type="file" id="loan-custom-csv-file" accept=".csv" style="display: none;" onchange="window.handleLoanCSVUpload(event)">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('loan-custom-csv-file').click()" style="width: 100%;">⚙️ {{ _('Custom CSV Import') }}</button>
                             </div>
                         </div>
                     </div>
@@ -496,6 +509,21 @@
         <div style="text-align:right; border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
             <button onclick="document.getElementById('loan-custom-pdf-modal').style.display='none';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
             <button onclick="window.confirmLoanCustomPdfImport()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE MAPPING PRESTITI CSV -->
+<div id="loan-csv-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+    <div style="background:white; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); color: #212529;">
+        <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid #f1f3f5; padding-bottom:15px;">📊 {{ _('Map Loan CSV Columns') }}</h3>
+        <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">{{ _('Select the corresponding column from your CSV file for each required field.') }}</p>
+        
+        <div id="loan-mapping-fields" style="display: flex; flex-direction: column; gap: 15px;"></div>
+        
+        <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="document.getElementById('loan-csv-mapping-modal').style.display='none'; document.getElementById('loan-custom-csv-file').value='';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
+            <button onclick="window.confermaMappingPrestitiCSV()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
         </div>
     </div>
 </div>
