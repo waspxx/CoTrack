@@ -33,6 +33,33 @@
                 </div>
             </div>
 
+            <!-- Filtro Periodo -->
+            <div class="period-filter-container" style="margin-top: 16px; width: 100%;">
+                <label class="nav-label" for="stip-period-filter-select">{{ _('Periodo') }}</label>
+                <div class="custom-select-container" style="margin-top: 8px;">
+                    <select class="vehicle-select" id="stip-period-filter-select" style="width: 100%;">
+                        <option value="current-month">{{ _('Mese corrente') }}</option>
+                        <option value="previous-month">{{ _('Mese precedente') }}</option>
+                        <option value="last-month">{{ _('Ultimo mese') }}</option>
+                        <option value="last-3-months">{{ _('Ultimi 3 mesi') }}</option>
+                        <option value="last-6-months">{{ _('Ultimi 6 mesi') }}</option>
+                        <option value="last-year">{{ _('Ultimo anno') }}</option>
+                        <option value="all-time" selected>{{ _('Tutto il periodo') }}</option>
+                        <option value="custom">{{ _('Personalizza') }}</option>
+                    </select>
+                </div>
+                <div id="stip-custom-date-inputs" class="hidden" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label class="nav-label" for="stip-filter-date-from" style="font-size: 10px;">{{ _('Dal') }}</label>
+                        <input type="date" id="stip-filter-date-from" class="vehicle-select" style="font-size: 13px; padding: 6px 10px; width: 100%;" />
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label class="nav-label" for="stip-filter-date-to" style="font-size: 10px;">{{ _('Al') }}</label>
+                        <input type="date" id="stip-filter-date-to" class="vehicle-select" style="font-size: 13px; padding: 6px 10px; width: 100%;" />
+                    </div>
+                </div>
+            </div>
+
             <nav class="sidebar-nav">
                 <span class="nav-label">{{ _('Menu') }}</span>
                 <a class="nav-link active" data-stip-tab="dashboard" href="#" id="stip-nav-dashboard" onclick="window.switchStipSubTab('dashboard',event)">
@@ -197,14 +224,62 @@
                                     <label for="stip-month">{{ _('Month *') }}</label>
                                     <input type="month" id="stip-month" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="stip-gross">{{ _('Gross (€) *') }}</label>
-                                    <input type="number" id="stip-gross" step="0.01" min="0" placeholder="{{ _('e.g., 2800.00') }}" required>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                    <div class="form-group">
+                                        <label for="stip-gross">{{ _('Gross (€) *') }}</label>
+                                        <input type="number" id="stip-gross" step="0.01" min="0" placeholder="es. 2800.00" required oninput="window.updateStipPreview()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stip-net">{{ _('Net (€) *') }}</label>
+                                        <input type="number" id="stip-net" step="0.01" min="0" placeholder="es. 1980.00" required oninput="window.updateStipPreview()">
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="stip-net">{{ _('Net (€) *') }}</label>
-                                    <input type="number" id="stip-net" step="0.01" min="0" placeholder="{{ _('e.g., 1980.00') }}" required>
-                                </div>
+
+                                <!-- Sezione dettagli aggiuntivi collassabile -->
+                                <details id="stip-extra-details" style="border:1px solid var(--border-color); border-radius:8px; padding:12px; background:var(--bg-app);">
+                                    <summary style="cursor:pointer; font-weight:600; font-size:0.9em; color:var(--text-secondary); user-select:none;">
+                                        ⚙️ {{ _('Dettagli Aggiuntivi (Scorporo)') }}
+                                    </summary>
+                                    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+                                        <p style="font-size:0.78em;color:var(--text-muted);margin:0;line-height:1.4;">
+                                            {{ _('Inserisci solo i valori presenti in busta. Lordo e netto da lavoro vengono calcolati automaticamente.') }}
+                                        </p>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                            <div class="form-group">
+                                                <label for="stip-rimborso-spese" style="font-size:0.82em;">{{ _('Rimborso Spese (€)') }}</label>
+                                                <input type="number" id="stip-rimborso-spese" step="0.01" min="0" value="0" placeholder="0.00" oninput="window.updateStipPreview()">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="stip-conguaglio-fiscale" style="font-size:0.82em;">{{ _('Conguaglio 730 (€)') }} <span style="color:var(--text-muted);font-size:0.85em;">+/−</span></label>
+                                                <input type="number" id="stip-conguaglio-fiscale" step="0.01" value="0" placeholder="0.00" oninput="window.updateStipPreview()">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="stip-premio-lordo" style="font-size:0.82em;">{{ _('Premio Produzione Lordo (€)') }}</label>
+                                                <input type="number" id="stip-premio-lordo" step="0.01" min="0" value="0" placeholder="0.00" oninput="window.updateStipPreview()">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="stip-premio-netto" style="font-size:0.82em;">{{ _('Premio Produzione Netto (€)') }}</label>
+                                                <input type="number" id="stip-premio-netto" step="0.01" min="0" value="0" placeholder="0.00" oninput="window.updateStipPreview()">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="stip-tfr-liquidato" style="font-size:0.82em;">{{ _('TFR Liquidato (€)') }}</label>
+                                                <input type="number" id="stip-tfr-liquidato" step="0.01" min="0" value="0" placeholder="0.00" oninput="window.updateStipPreview()">
+                                            </div>
+                                            <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                                                <label style="font-size:0.82em;display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:auto;padding-bottom:6px;">
+                                                    <input type="checkbox" id="stip-tredicesima" style="width:16px;height:16px;accent-color:var(--primary-color);">
+                                                    {{ _('Contiene 13ª / 14ª') }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <!-- Anteprima lordo/netto da lavoro -->
+                                        <div id="stip-lavoro-preview" style="background:var(--bg-card);border-radius:6px;padding:10px 14px;display:flex;gap:24px;font-size:0.83em;">
+                                            <span>💼 <strong>{{ _('Lordo lavoro') }}:</strong> <span id="stip-preview-lordo" style="color:var(--primary-color);font-weight:700;">€ 0,00</span></span>
+                                            <span>💵 <strong>{{ _('Netto lavoro') }}:</strong> <span id="stip-preview-netto" style="color:var(--success-color);font-weight:700;">€ 0,00</span></span>
+                                        </div>
+                                    </div>
+                                </details>
+
                                 <div class="form-group">
                                     <label for="stip-notes">{{ _('Notes') }}</label>
                                     <input type="text" id="stip-notes" placeholder="{{ _('e.g., with 13th month') }}">
@@ -215,6 +290,7 @@
                                 </div>
                             </form>
                         </div>
+
 
                         <!-- PDF Import -->
                         <div class="card" style="padding:20px;">
@@ -240,6 +316,7 @@
                     <div class="card" style="padding:20px;">
                         <div class="card-header-actions" style="margin-bottom:12px;">
                             <h3>{{ _('Payslips History') }}</h3>
+                            <button class="btn btn-secondary btn-delete" onclick="window.clearSalaryHistory()" style="background:#ffebee; border:1px solid #ffcdd2; color:#c62828; font-weight:bold; font-size: 0.85em; padding: 6px 12px; border-radius: 6px; cursor:pointer;" type="button">🗑️ {{ _('Svuota Cronologia') }}</button>
                         </div>
                         <div style="overflow-x:auto;">
                             <table class="table">

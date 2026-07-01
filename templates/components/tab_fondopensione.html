@@ -32,6 +32,33 @@
                 </div>
             </div>
 
+            <!-- Filtro Periodo -->
+            <div class="period-filter-container" style="margin-top: 16px; width: 100%;">
+                <label class="nav-label" for="fp-period-filter-select">{{ _('Periodo') }}</label>
+                <div class="custom-select-container" style="margin-top: 8px;">
+                    <select class="vehicle-select" id="fp-period-filter-select" style="width: 100%;">
+                        <option value="current-month">{{ _('Mese corrente') }}</option>
+                        <option value="previous-month">{{ _('Mese precedente') }}</option>
+                        <option value="last-month">{{ _('Ultimo mese') }}</option>
+                        <option value="last-3-months">{{ _('Ultimi 3 mesi') }}</option>
+                        <option value="last-6-months">{{ _('Ultimi 6 mesi') }}</option>
+                        <option value="last-year">{{ _('Ultimo anno') }}</option>
+                        <option value="all-time" selected>{{ _('Tutto il periodo') }}</option>
+                        <option value="custom">{{ _('Personalizza') }}</option>
+                    </select>
+                </div>
+                <div id="fp-custom-date-inputs" class="hidden" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label class="nav-label" for="fp-filter-date-from" style="font-size: 10px;">{{ _('Dal') }}</label>
+                        <input type="date" id="fp-filter-date-from" class="vehicle-select" style="font-size: 13px; padding: 6px 10px; width: 100%;" />
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label class="nav-label" for="fp-filter-date-to" style="font-size: 10px;">{{ _('Al') }}</label>
+                        <input type="date" id="fp-filter-date-to" class="vehicle-select" style="font-size: 13px; padding: 6px 10px; width: 100%;" />
+                    </div>
+                </div>
+            </div>
+
             <nav class="sidebar-nav">
                 <span class="nav-label">{{ _('Menu') }}</span>
                 <a class="nav-link active" data-fp-tab="dashboard" href="#" id="fp-nav-dashboard" onclick="window.switchFPSubTab('dashboard',event)">
@@ -217,6 +244,7 @@
                     <div class="card" style="padding:20px;">
                         <div class="card-header-actions" style="margin-bottom:12px;">
                             <h3>{{ _('Contributions History') }}</h3>
+                            <button class="btn btn-secondary btn-delete" onclick="window.clearFPHistory()" style="background:#ffebee; border:1px solid #ffcdd2; color:#c62828; font-weight:bold; font-size: 0.85em; padding: 6px 12px; border-radius: 6px; cursor:pointer;" type="button">🗑️ {{ _('Svuota Cronologia') }}</button>
                         </div>
                         <div style="overflow-x:auto;">
                             <table class="table">

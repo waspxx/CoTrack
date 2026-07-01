@@ -3,7 +3,10 @@ const loanState = {
     loans: [],
     payments: [],
     activeLoanId: null,
-    activeSubTab: 'dashboard'
+    activeSubTab: 'dashboard',
+    dateFilter: 'all-time',
+    customDateFrom: '',
+    customDateTo: ''
 };
 
 // Groups state
@@ -124,6 +127,7 @@ window.eliminaGruppoPrestiti = async function() {
 // --- INITIALIZATION ---
 window.caricaDatiPrestiti = async function() {
     try {
+        initLoanPeriodFilterListeners();
         if (!activeLoanGroupId) {
             await caricaGruppiPrestiti();
         }
@@ -364,6 +368,148 @@ function calculateAmortization(principal, annualRate, termMonths, startDate, cus
 }
 
 // --- RENDERERS ---
+function getPeriodDateRangeLocal(period, customFrom, customTo) {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
+    
+    let startDate = null;
+    let endDate = null;
+    
+    switch (period) {
+        case 'current-month': {
+            const start = new Date(y, m, 1);
+            const end = new Date(y, m + 1, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'previous-month': {
+            const start = new Date(y, m - 1, 1);
+            const end = new Date(y, m, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-month': {
+            const start = new Date(y, m, d - 30);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-3-months': {
+            const start = new Date(y, m - 3, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-6-months': {
+            const start = new Date(y, m - 6, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-year': {
+            const start = new Date(y - 1, m, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'custom': {
+            startDate = customFrom || null;
+            endDate = customTo || null;
+            break;
+        }
+        case 'all-time':
+        default:
+            startDate = null;
+            endDate = null;
+            break;
+    }
+    return { startDate, endDate };
+}
+
+function formatDateLocal(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getFilteredPayments() {
+    const filter = loanState.dateFilter || 'all-time';
+    if (filter === 'all-time') {
+        return loanState.payments;
+    }
+    const { startDate, endDate } = getPeriodDateRangeLocal(filter, loanState.customDateFrom, loanState.customDateTo);
+    return loanState.payments.filter(p => {
+        if (!p.date) return true;
+        if (startDate && p.date < startDate) return false;
+        if (endDate && p.date > endDate) return false;
+        return true;
+    });
+}
+
+function getFilteredSchedule(schedule) {
+    const filter = loanState.dateFilter || 'all-time';
+    if (filter === 'all-time') {
+        return schedule;
+    }
+    const { startDate, endDate } = getPeriodDateRangeLocal(filter, loanState.customDateFrom, loanState.customDateTo);
+    return schedule.filter(s => {
+        if (!s.date) return true;
+        if (startDate && s.date < startDate) return false;
+        if (endDate && s.date > endDate) return false;
+        return true;
+    });
+}
+
+function initLoanPeriodFilterListeners() {
+    const elPeriodFilterSelect = document.getElementById('pres-period-filter-select');
+    const elCustomDateInputs = document.getElementById('pres-custom-date-inputs');
+    const elFilterDateFrom = document.getElementById('pres-filter-date-from');
+    const elFilterDateTo = document.getElementById('pres-filter-date-to');
+
+    if (elPeriodFilterSelect) {
+        elPeriodFilterSelect.value = loanState.dateFilter || 'all-time';
+        if (loanState.dateFilter === 'custom') {
+            elCustomDateInputs.classList.remove('hidden');
+        } else {
+            elCustomDateInputs.classList.add('hidden');
+        }
+        elPeriodFilterSelect.onchange = (e) => {
+            const val = e.target.value;
+            loanState.dateFilter = val;
+            if (val === 'custom') {
+                elCustomDateInputs.classList.remove('hidden');
+            } else {
+                elCustomDateInputs.classList.add('hidden');
+            }
+            refreshLoanUI();
+        };
+    }
+    if (elFilterDateFrom) {
+        elFilterDateFrom.value = loanState.customDateFrom || '';
+        elFilterDateFrom.onchange = (e) => {
+            loanState.customDateFrom = e.target.value;
+            refreshLoanUI();
+        };
+    }
+    if (elFilterDateTo) {
+        elFilterDateTo.value = loanState.customDateTo || '';
+        elFilterDateTo.onchange = (e) => {
+            loanState.customDateTo = e.target.value;
+            refreshLoanUI();
+        };
+    }
+}
+
+// --- RENDERERS ---
 function refreshLoanUI() {
     if (!loanState.activeLoanId) {
         clearDashboard();
@@ -397,7 +543,7 @@ function refreshLoanUI() {
     } else if (loanState.activeSubTab === 'payments') {
         renderPaymentsTable();
     } else if (loanState.activeSubTab === 'schedule') {
-        renderAmortizationTable(actualSchedule);
+        renderAmortizationTable(getFilteredSchedule(actualSchedule));
     } else if (loanState.activeSubTab === 'manage') {
         renderLoansGrid();
     }
@@ -412,6 +558,10 @@ function clearDashboard() {
     document.getElementById('kpi-loan-interest').textContent = "€ 0,00";
     document.getElementById('kpi-loan-remaining-interest').textContent = "€ 0,00";
     document.getElementById('kpi-loan-savings').textContent = "€ 0,00";
+    const elMR = document.getElementById('kpi-loan-months-remaining');
+    if (elMR) { elMR.textContent = '–'; elMR.style.color = 'var(--primary-color)'; }
+    const elEL = document.getElementById('kpi-loan-end-date-label');
+    if (elEL) elEL.textContent = '';
     
     // Summary
     document.getElementById('summary-loan-principal').textContent = "€ 0,00";
@@ -431,31 +581,51 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     const textColor = isDark ? '#90A0C0' : '#5C6F84';
     const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
     
-    const regularPayments = loanState.payments.filter(p => p.type === 'regular');
-    const extraPayments = loanState.payments.filter(p => p.type === 'extra');
-    
-    const monthsElapsed = Math.min(actualSchedule.length, regularPayments.length);
+    const isAllTime = (loanState.dateFilter || 'all-time') === 'all-time';
+    const filteredPayments = getFilteredPayments();
+    const extraPaymentsInPeriod = filteredPayments.filter(p => p.type === 'extra');
+    const filteredSchedule = getFilteredSchedule(actualSchedule);
     
     let totalPaidPrincipal = 0;
     let totalPaidInterest = 0;
     let remainingPrincipal = loan.principal;
     
-    if (actualSchedule.length > 0) {
-        if (monthsElapsed > 0) {
-            const paidRegularPrincipal = actualSchedule.slice(0, monthsElapsed).reduce((sum, s) => sum + s.principal, 0);
-            const paidExtraPrincipal = extraPayments.reduce((sum, p) => sum + p.amount, 0);
-            
-            totalPaidPrincipal = paidRegularPrincipal + paidExtraPrincipal;
-            totalPaidInterest = actualSchedule.slice(0, monthsElapsed).reduce((sum, s) => sum + s.interest, 0);
-            remainingPrincipal = Math.max(0, loan.principal - totalPaidPrincipal);
-        } else {
-            const paidExtraPrincipal = extraPayments.reduce((sum, p) => sum + p.amount, 0);
-            totalPaidPrincipal = paidExtraPrincipal;
-            remainingPrincipal = Math.max(0, loan.principal - totalPaidPrincipal);
-        }
+    if (isAllTime) {
+        const regularPayments = loanState.payments.filter(p => p.type === 'regular');
+        const extraPayments = loanState.payments.filter(p => p.type === 'extra');
+        const monthsElapsed = Math.min(actualSchedule.length, regularPayments.length);
         
-        if (totalPaidPrincipal > loan.principal) {
-            totalPaidPrincipal = loan.principal;
+        if (actualSchedule.length > 0) {
+            if (monthsElapsed > 0) {
+                const paidRegularPrincipal = actualSchedule.slice(0, monthsElapsed).reduce((sum, s) => sum + s.principal, 0);
+                const paidExtraPrincipal = extraPayments.reduce((sum, p) => sum + p.amount, 0);
+                
+                totalPaidPrincipal = paidRegularPrincipal + paidExtraPrincipal;
+                totalPaidInterest = actualSchedule.slice(0, monthsElapsed).reduce((sum, s) => sum + s.interest, 0);
+                remainingPrincipal = Math.max(0, loan.principal - totalPaidPrincipal);
+            } else {
+                const paidExtraPrincipal = extraPayments.reduce((sum, p) => sum + p.amount, 0);
+                totalPaidPrincipal = paidExtraPrincipal;
+                remainingPrincipal = Math.max(0, loan.principal - totalPaidPrincipal);
+            }
+            
+            if (totalPaidPrincipal > loan.principal) {
+                totalPaidPrincipal = loan.principal;
+            }
+        }
+    } else {
+        totalPaidPrincipal = filteredSchedule.reduce((sum, s) => sum + s.principal, 0) + extraPaymentsInPeriod.reduce((sum, p) => sum + p.amount, 0);
+        totalPaidInterest = filteredSchedule.reduce((sum, s) => sum + s.interest, 0);
+        
+        if (filteredSchedule.length > 0) {
+            remainingPrincipal = filteredSchedule[filteredSchedule.length - 1].remaining;
+        } else {
+            const filterRange = getPeriodDateRangeLocal(loanState.dateFilter, loanState.customDateFrom, loanState.customDateTo);
+            if (filterRange.startDate && filterRange.startDate > loan.start_date) {
+                remainingPrincipal = actualSchedule.length > 0 ? actualSchedule[actualSchedule.length - 1].remaining : 0;
+            } else {
+                remainingPrincipal = loan.principal;
+            }
         }
     }
     
@@ -467,7 +637,11 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     // Progress
     const progressPercent = loan.principal > 0 ? (totalPaidPrincipal / loan.principal) * 100 : 0;
     
-    const remainingInterest = Math.max(0, actualTotalInterest - totalPaidInterest);
+    let remainingInterest = Math.max(0, actualTotalInterest - totalPaidInterest);
+    if (!isAllTime && filteredSchedule.length > 0) {
+        const lastDateInPeriod = filteredSchedule[filteredSchedule.length - 1].date;
+        remainingInterest = actualSchedule.filter(s => s.date > lastDateInPeriod).reduce((sum, s) => sum + s.interest, 0);
+    }
     
     // Update KPIs
     document.getElementById('kpi-loan-remaining').textContent = formatEuro(remainingPrincipal);
@@ -476,7 +650,28 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     document.getElementById('kpi-loan-interest').textContent = formatEuro(totalPaidInterest);
     document.getElementById('kpi-loan-remaining-interest').textContent = formatEuro(remainingInterest);
     document.getElementById('kpi-loan-savings').textContent = formatEuro(savings);
-    
+
+    // Remaining months KPI
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const futureInstallments = actualSchedule.filter(s => s.date >= todayStr && s.remaining > 0.01);
+    const monthsLeft = futureInstallments.length;
+    const elMonthsRem = document.getElementById('kpi-loan-months-remaining');
+    const elEndLabel = document.getElementById('kpi-loan-end-date-label');
+    if (elMonthsRem) {
+        if (monthsLeft === 0 && remainingPrincipal <= 0.01) {
+            elMonthsRem.textContent = '✅ Estinto';
+            elMonthsRem.style.color = '#2e7d32';
+            if (elEndLabel) elEndLabel.textContent = '';
+        } else {
+            elMonthsRem.textContent = `${monthsLeft} mes${monthsLeft === 1 ? 'e' : 'i'}`;
+            elMonthsRem.style.color = monthsLeft <= 12 ? '#e65100' : 'var(--primary-color)';
+            if (elEndLabel) {
+                const lastDate = futureInstallments.length > 0 ? futureInstallments[futureInstallments.length - 1].date : (actualSchedule.length > 0 ? actualSchedule[actualSchedule.length - 1].date : null);
+                elEndLabel.textContent = lastDate ? `Fine: ${lastDate}` : '';
+            }
+        }
+    }
+
     // Summary conditions
     const rateChanges = loanState.payments.filter(p => p.type === 'rate_change');
     let displayRate = loan.interest_rate;
@@ -493,6 +688,7 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     document.getElementById('summary-loan-payment').textContent = formatEuro(loan.monthly_payment || calculatedPayment);
     document.getElementById('summary-loan-start').textContent = loan.start_date;
     document.getElementById('summary-loan-end').textContent = originalSchedule.length > 0 ? originalSchedule[originalSchedule.length - 1].date : 'N/A';
+
     
     // ---- CHART 1: Donut Stato Rimborso ----
     if (chartLoanDonut) { chartLoanDonut.destroy(); chartLoanDonut = null; }
@@ -715,12 +911,13 @@ function renderPaymentsTable() {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    if (loanState.payments.length === 0) {
+    const filtered = getFilteredPayments();
+    if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; color:var(--text-muted);">${window.Translations.noPayments || 'No payments registered.'}</td></tr>`;
         return;
     }
     
-    const sortedPayments = [...loanState.payments].sort((a, b) => {
+    const sortedPayments = [...filtered].sort((a, b) => {
         if (a.date !== b.date) {
             return new Date(b.date) - new Date(a.date);
         }
@@ -1649,6 +1846,26 @@ window.confermaMappingPrestitiCSV = async function() {
     } finally {
         currentLoanCsvFile = null;
         document.getElementById('loan-custom-csv-file').value = '';
+    }
+};
+
+window.clearLoanHistory = async function() {
+    const lId = loanState.activeLoanId;
+    if (!lId) return;
+    const confirmation = confirm("Sei sicuro di voler eliminare TUTTE le transazioni registrate per questo prestito? Questa azione non può essere annullata.");
+    if (!confirmation) return;
+    
+    try {
+        const res = await fetch(`/api/loans/${lId}/payments/clear`, { method: 'DELETE' });
+        if (res.ok) {
+            alert("Cronologia transazioni svuotata con successo.");
+            await fetchPaymentsForActiveLoan();
+            refreshLoanUI();
+        } else {
+            alert("Errore durante l'eliminazione della cronologia.");
+        }
+    } catch (e) {
+        alert("Errore di connessione.");
     }
 };
 

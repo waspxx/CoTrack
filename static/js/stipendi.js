@@ -7,7 +7,10 @@ const stipState = {
     salaries: [],     // all salaries for active group
     activeSalaryId: null,
     items: [],
-    subTab: 'dashboard'
+    subTab: 'dashboard',
+    dateFilter: 'all-time',
+    customDateFrom: '',
+    customDateTo: ''
 };
 
 let chartStipDonut = null;
@@ -94,6 +97,7 @@ window.eliminaGruppoStipendi = async function() {
 window.caricaDatiStipendi = async function() {
     syncStipTheme();
     initStipSettingsTags();
+    initStipPeriodFilterListeners();
     if (!stipState.activeGroupId) await loadSalaryGroups();
     if (!stipState.activeGroupId) return;
 
@@ -248,46 +252,213 @@ window.switchStipSubTab = function(tab, event) {
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function fmtEur(v) { return '€ ' + (v || 0).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
+function getPeriodDateRangeLocal(period, customFrom, customTo) {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
+    
+    let startDate = null;
+    let endDate = null;
+    
+    switch (period) {
+        case 'current-month': {
+            const start = new Date(y, m, 1);
+            const end = new Date(y, m + 1, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'previous-month': {
+            const start = new Date(y, m - 1, 1);
+            const end = new Date(y, m, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-month': {
+            const start = new Date(y, m, d - 30);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-3-months': {
+            const start = new Date(y, m - 3, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-6-months': {
+            const start = new Date(y, m - 6, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-year': {
+            const start = new Date(y - 1, m, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'custom': {
+            startDate = customFrom || null;
+            endDate = customTo || null;
+            break;
+        }
+        case 'all-time':
+        default:
+            startDate = null;
+            endDate = null;
+            break;
+    }
+    return { startDate, endDate };
+}
+
+function formatDateLocal(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 function personSalaries() {
     if (!stipState.activePersonName) return [];
     return stipState.salaries.filter(s => s.person_name === stipState.activePersonName);
 }
 
-function renderStipDashboard() {
+function getFilteredSalaries() {
     const ps = personSalaries();
-    const now = new Date();
-    const last12 = ps.filter(s => {
-        const d = new Date(s.month + '-01');
-        const diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
-        return diff >= 0 && diff < 12;
+    const filter = stipState.dateFilter || 'all-time';
+    if (filter === 'all-time') {
+        return ps;
+    }
+    const { startDate, endDate } = getPeriodDateRangeLocal(filter, stipState.customDateFrom, stipState.customDateTo);
+    return ps.filter(s => {
+        const sDate = s.month + '-01';
+        if (startDate && sDate < startDate) return false;
+        if (endDate && sDate > endDate) return false;
+        return true;
     });
+}
 
-    const grossTotal = last12.reduce((a, s) => a + s.gross, 0);
-    const netTotal   = last12.reduce((a, s) => a + s.net, 0);
-    const netAvg     = last12.length > 0 ? netTotal / last12.length : 0;
+function initStipPeriodFilterListeners() {
+    const elPeriodFilterSelect = document.getElementById('stip-period-filter-select');
+    const elCustomDateInputs = document.getElementById('stip-custom-date-inputs');
+    const elFilterDateFrom = document.getElementById('stip-filter-date-from');
+    const elFilterDateTo = document.getElementById('stip-filter-date-to');
+
+    if (elPeriodFilterSelect) {
+        elPeriodFilterSelect.value = stipState.dateFilter || 'all-time';
+        if (stipState.dateFilter === 'custom') {
+            elCustomDateInputs.classList.remove('hidden');
+        } else {
+            elCustomDateInputs.classList.add('hidden');
+        }
+        elPeriodFilterSelect.onchange = (e) => {
+            const val = e.target.value;
+            stipState.dateFilter = val;
+            if (val === 'custom') {
+                elCustomDateInputs.classList.remove('hidden');
+            } else {
+                elCustomDateInputs.classList.add('hidden');
+            }
+            renderStipDashboard();
+            renderSalaryHistoryTable();
+        };
+    }
+    if (elFilterDateFrom) {
+        elFilterDateFrom.value = stipState.customDateFrom || '';
+        elFilterDateFrom.onchange = (e) => {
+            stipState.customDateFrom = e.target.value;
+            renderStipDashboard();
+            renderSalaryHistoryTable();
+        };
+    }
+    if (elFilterDateTo) {
+        elFilterDateTo.value = stipState.customDateTo || '';
+        elFilterDateTo.onchange = (e) => {
+            stipState.customDateTo = e.target.value;
+            renderStipDashboard();
+            renderSalaryHistoryTable();
+        };
+    }
+}
+
+function renderStipDashboard() {
+    const filtered = getFilteredSalaries();
+
+    const grossTotal    = filtered.reduce((a, s) => a + s.gross, 0);
+    const netTotal      = filtered.reduce((a, s) => a + s.net, 0);
+    const netAvg        = filtered.length > 0 ? netTotal / filtered.length : 0;
+
+    // Derived: lordo/netto da lavoro (exclude extra components)
+    const grossLavoroTotal = filtered.reduce((a, s) => a + calcolaLordoLavoro(s), 0);
+    const netLavoroTotal   = filtered.reduce((a, s) => a + calcolaNettoLavoro(s), 0);
+    const netLavoroAvg     = filtered.length > 0 ? netLavoroTotal / filtered.length : 0;
 
     document.getElementById('kpi-gross-total').textContent = fmtEur(grossTotal);
     document.getElementById('kpi-net-total').textContent   = fmtEur(netTotal);
     document.getElementById('kpi-net-avg').textContent     = fmtEur(netAvg);
-    document.getElementById('kpi-assegno-unico').textContent = '– calcolato dalle voci –';
+
+    // Update allowance KPI slot to show lordo lavoro average
+    const kpiAllow = document.getElementById('kpi-assegno-unico');
+    if (kpiAllow) kpiAllow.textContent = fmtEur(netLavoroAvg);
+    const kpiAllowLabel = kpiAllow ? kpiAllow.closest('.stat-card')?.querySelector('.stat-label') : null;
+    if (kpiAllowLabel) kpiAllowLabel.textContent = 'Media Netto Lavoro';
+
     document.getElementById('stip-dashboard-title').textContent = stipState.activePersonName || 'Dashboard Stipendi';
 
     // Recent table (last 5)
-    const recent = [...ps].sort((a,b) => b.month.localeCompare(a.month)).slice(0, 5);
+    const recent = [...filtered].sort((a,b) => b.month.localeCompare(a.month)).slice(0, 5);
     const tbody = document.getElementById('stip-recent-table-body');
     if (!tbody) return;
     tbody.innerHTML = recent.length === 0
         ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noPayslips || 'No payslips.'}</td></tr>`
-        : recent.map(s => `<tr>
-            <td>${s.month}</td>
-            <td style="text-align:right;">${fmtEur(s.gross)}</td>
-            <td style="text-align:right;">${fmtEur(s.net)}</td>
-            <td style="text-align:right;">–</td>
-            <td>${s.notes || '–'}</td>
-        </tr>`).join('');
+        : recent.map(s => {
+            const lavoroLordo = calcolaLordoLavoro(s);
+            const lavoroNetto = calcolaNettoLavoro(s);
+            const badge13 = s.tredicesima ? ' <span style="font-size:0.7em;background:#f3e5f5;color:#7b1fa2;border-radius:3px;padding:1px 5px;font-weight:700;">13ª</span>' : '';
+            return `<tr>
+                <td>${s.month}${badge13}</td>
+                <td style="text-align:right;">${fmtEur(s.gross)}</td>
+                <td style="text-align:right;">${fmtEur(s.net)}</td>
+                <td style="text-align:right;color:var(--primary-color);font-weight:600;" title="Lordo lavoro: ${fmtEur(lavoroLordo)}">${fmtEur(lavoroNetto)}</td>
+                <td>${s.notes || '–'}</td>
+            </tr>`;
+        }).join('');
 
-    renderStipCharts(last12);
+    renderStipCharts(filtered);
 }
+
+// ── HELPER: calcolo lordo/netto da lavoro ─────────────────────────────────────
+function calcolaLordoLavoro(s) {
+    return Math.max(0, (s.gross || 0) - (s.premio_produzione_lordo || 0) - (s.tfr_liquidato || 0));
+}
+function calcolaNettoLavoro(s) {
+    return Math.max(0, (s.net || 0) - (s.rimborso_spese || 0) - (s.conguaglio_fiscale || 0)
+                                     - (s.premio_produzione_netto || 0) - (s.tfr_liquidato || 0));
+}
+
+// Live preview in form
+window.updateStipPreview = function() {
+    const gross  = parseFloat(document.getElementById('stip-gross')?.value) || 0;
+    const net    = parseFloat(document.getElementById('stip-net')?.value) || 0;
+    const rimb   = parseFloat(document.getElementById('stip-rimborso-spese')?.value) || 0;
+    const cong   = parseFloat(document.getElementById('stip-conguaglio-fiscale')?.value) || 0;
+    const pLordo = parseFloat(document.getElementById('stip-premio-lordo')?.value) || 0;
+    const pNetto = parseFloat(document.getElementById('stip-premio-netto')?.value) || 0;
+    const tfr    = parseFloat(document.getElementById('stip-tfr-liquidato')?.value) || 0;
+    const lordo  = Math.max(0, gross - pLordo - tfr);
+    const netto  = Math.max(0, net - rimb - cong - pNetto - tfr);
+    const elL = document.getElementById('stip-preview-lordo');
+    const elN = document.getElementById('stip-preview-netto');
+    if (elL) elL.textContent = fmtEur(lordo);
+    if (elN) elN.textContent = fmtEur(netto);
+};
 
 function renderStipCharts(data) {
     const colors = {
@@ -346,12 +517,12 @@ function renderStipCharts(data) {
 
 // ── SALARY HISTORY TABLE ──────────────────────────────────────────────────────
 function renderSalaryHistoryTable() {
-    const ps = personSalaries().sort((a,b) => b.month.localeCompare(a.month));
+    const filtered = getFilteredSalaries().sort((a,b) => b.month.localeCompare(a.month));
     const tbody = document.getElementById('stip-history-table-body');
     if (!tbody) return;
-    tbody.innerHTML = ps.length === 0
+    tbody.innerHTML = filtered.length === 0
         ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noPayslips || 'No payslips.'}</td></tr>`
-        : ps.map(s => `<tr>
+        : filtered.map(s => `<tr>
             <td>${s.month}</td>
             <td style="text-align:right;">${fmtEur(s.gross)}</td>
             <td style="text-align:right;">${fmtEur(s.net)}</td>
@@ -462,13 +633,22 @@ window.handleSalarySubmit = async function(e) {
     const id   = document.getElementById('stip-edit-id').value;
     const personName = stipState.activePersonName || document.getElementById('active-person-select').value || 'Senza nome';
     const month = document.getElementById('stip-month').value;
-    const gross = parseFloat(document.getElementById('stip-gross').value);
-    const net   = parseFloat(document.getElementById('stip-net').value);
+    const gross = parseFloat(document.getElementById('stip-gross').value) || 0;
+    const net   = parseFloat(document.getElementById('stip-net').value) || 0;
     const notes = document.getElementById('stip-notes').value;
+    const rimborso_spese           = parseFloat(document.getElementById('stip-rimborso-spese').value) || 0;
+    const conguaglio_fiscale       = parseFloat(document.getElementById('stip-conguaglio-fiscale').value) || 0;
+    const premio_produzione_lordo  = parseFloat(document.getElementById('stip-premio-lordo').value) || 0;
+    const premio_produzione_netto  = parseFloat(document.getElementById('stip-premio-netto').value) || 0;
+    const tfr_liquidato            = parseFloat(document.getElementById('stip-tfr-liquidato').value) || 0;
+    const tredicesima              = document.getElementById('stip-tredicesima').checked;
 
     const method = id ? 'PUT' : 'POST';
     const url    = id ? `/api/salaries/${id}` : `/api/salary_groups/${stipState.activeGroupId}/salaries`;
-    const body   = { person_name: personName, month, gross, net, notes };
+    const body   = { person_name: personName, month, gross, net, notes,
+                     rimborso_spese, conguaglio_fiscale,
+                     premio_produzione_lordo, premio_produzione_netto,
+                     tfr_liquidato, tredicesima };
 
     const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     if (res.ok) {
@@ -482,6 +662,12 @@ window.handleSalarySubmit = async function(e) {
 window.resetSalaryForm = function() {
     document.getElementById('stip-edit-id').value = '';
     document.getElementById('stip-salary-form').reset();
+    // Reset numeric extras to 0 (form.reset() sets them to '' since they have value="0")
+    ['stip-rimborso-spese','stip-conguaglio-fiscale','stip-premio-lordo','stip-premio-netto','stip-tfr-liquidato'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '0';
+    });
+    window.updateStipPreview();
 };
 
 window.editSalary = function(id) {
@@ -492,6 +678,18 @@ window.editSalary = function(id) {
     document.getElementById('stip-gross').value = s.gross;
     document.getElementById('stip-net').value   = s.net;
     document.getElementById('stip-notes').value = s.notes || '';
+    document.getElementById('stip-rimborso-spese').value    = s.rimborso_spese || 0;
+    document.getElementById('stip-conguaglio-fiscale').value = s.conguaglio_fiscale || 0;
+    document.getElementById('stip-premio-lordo').value      = s.premio_produzione_lordo || 0;
+    document.getElementById('stip-premio-netto').value      = s.premio_produzione_netto || 0;
+    document.getElementById('stip-tfr-liquidato').value     = s.tfr_liquidato || 0;
+    document.getElementById('stip-tredicesima').checked     = !!s.tredicesima;
+    // Open the details section if any extra field is set
+    const hasExtras = (s.rimborso_spese || s.conguaglio_fiscale || s.premio_produzione_lordo ||
+                       s.premio_produzione_netto || s.tfr_liquidato || s.tredicesima);
+    const details = document.getElementById('stip-extra-details');
+    if (details && hasExtras) details.open = true;
+    window.updateStipPreview();
     window.switchStipSubTab('buste', null);
     document.getElementById('stip-salary-form').scrollIntoView({ behavior:'smooth' });
 };
@@ -1048,4 +1246,25 @@ window.confirmStipCustomPdfImport = async function() {
     document.getElementById('stip-custom-pdf-modal').style.display = 'none';
     alert(`${importedCount} stipendi importati con successo.`);
     await window.caricaDatiStipendi();
+};
+
+window.clearSalaryHistory = async function() {
+    const gId = stipState.activeGroupId;
+    const personName = stipState.activePersonName;
+    if (!gId || !personName) return;
+    const confirmation = confirm(`Sei sicuro di voler eliminare TUTTE le buste paga di "${personName}"? Questa azione non può essere annullata.`);
+    if (!confirmation) return;
+
+    try {
+        const res = await fetch(`/api/salary_groups/${gId}/salaries/clear?person_name=${encodeURIComponent(personName)}`, { method: 'DELETE' });
+        if (res.ok) {
+            alert('Cronologia buste paga svuotata con successo.');
+            await window.caricaDatiStipendi();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.errore || 'Errore durante l\'eliminazione della cronologia.');
+        }
+    } catch (e) {
+        alert('Errore di connessione.');
+    }
 };

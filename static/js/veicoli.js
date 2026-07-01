@@ -4117,3 +4117,23 @@ window.formatDescription = function(desc) {
     } catch(e) {}
     return desc;
 };
+
+window.clearVehicleHistory = async function() {
+    const vId = state.activeVehicleId;
+    if (!vId) return;
+    const confirmation = confirm("Sei sicuro di voler eliminare TUTTE le attività (rifornimenti, spese, entrate, manutenzioni) di questo veicolo? Questa azione non può essere annullata.");
+    if (!confirmation) return;
+    
+    try {
+        const res = await fetch(`/api/vehicles/${vId}/activities/clear`, { method: 'DELETE' });
+        if (res.ok) {
+            alert("Cronologia attività svuotata con successo.");
+            await loadState();
+            router();
+        } else {
+            alert("Errore durante l'eliminazione della cronologia.");
+        }
+    } catch (e) {
+        alert("Errore di connessione.");
+    }
+};

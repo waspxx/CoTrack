@@ -5,7 +5,10 @@ const fpState = {
     funds: [],
     activeFundId: null,
     contributions: [],
-    subTab: 'dashboard'
+    subTab: 'dashboard',
+    dateFilter: 'all-time',
+    customDateFrom: '',
+    customDateTo: ''
 };
 
 let chartFPDonut = null;
@@ -91,6 +94,7 @@ window.eliminaGruppoFP = async function() {
 // ── DATA LOADING ──────────────────────────────────────────────────────────────
 window.caricaDatiFP = async function() {
     syncFPTheme();
+    initFPPeriodFilterListeners();
     if (!fpState.activeGroupId) await loadFPGroups();
     if (!fpState.activeGroupId) return;
 
@@ -160,8 +164,139 @@ window.switchFPSubTab = function(tab, event) {
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function fmtEurFP(v) { return '€ ' + (v || 0).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-function renderFPDashboard() {
+function getPeriodDateRangeLocal(period, customFrom, customTo) {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
+    
+    let startDate = null;
+    let endDate = null;
+    
+    switch (period) {
+        case 'current-month': {
+            const start = new Date(y, m, 1);
+            const end = new Date(y, m + 1, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'previous-month': {
+            const start = new Date(y, m - 1, 1);
+            const end = new Date(y, m, 0);
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-month': {
+            const start = new Date(y, m, d - 30);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-3-months': {
+            const start = new Date(y, m - 3, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-6-months': {
+            const start = new Date(y, m - 6, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'last-year': {
+            const start = new Date(y - 1, m, d);
+            const end = today;
+            startDate = formatDateLocal(start);
+            endDate = formatDateLocal(end);
+            break;
+        }
+        case 'custom': {
+            startDate = customFrom || null;
+            endDate = customTo || null;
+            break;
+        }
+        case 'all-time':
+        default:
+            startDate = null;
+            endDate = null;
+            break;
+    }
+    return { startDate, endDate };
+}
+
+function formatDateLocal(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getFilteredContributions() {
     const cs = fpState.contributions;
+    const filter = fpState.dateFilter || 'all-time';
+    if (filter === 'all-time') {
+        return cs;
+    }
+    const { startDate, endDate } = getPeriodDateRangeLocal(filter, fpState.customDateFrom, fpState.customDateTo);
+    return cs.filter(c => {
+        const cDate = c.month + '-01';
+        if (startDate && cDate < startDate) return false;
+        if (endDate && cDate > endDate) return false;
+        return true;
+    });
+}
+
+function initFPPeriodFilterListeners() {
+    const elPeriodFilterSelect = document.getElementById('fp-period-filter-select');
+    const elCustomDateInputs = document.getElementById('fp-custom-date-inputs');
+    const elFilterDateFrom = document.getElementById('fp-filter-date-from');
+    const elFilterDateTo = document.getElementById('fp-filter-date-to');
+
+    if (elPeriodFilterSelect) {
+        elPeriodFilterSelect.value = fpState.dateFilter || 'all-time';
+        if (fpState.dateFilter === 'custom') {
+            elCustomDateInputs.classList.remove('hidden');
+        } else {
+            elCustomDateInputs.classList.add('hidden');
+        }
+        elPeriodFilterSelect.onchange = (e) => {
+            const val = e.target.value;
+            fpState.dateFilter = val;
+            if (val === 'custom') {
+                elCustomDateInputs.classList.remove('hidden');
+            } else {
+                elCustomDateInputs.classList.add('hidden');
+            }
+            renderFPDashboard();
+            renderFPContribTable();
+        };
+    }
+    if (elFilterDateFrom) {
+        elFilterDateFrom.value = fpState.customDateFrom || '';
+        elFilterDateFrom.onchange = (e) => {
+            fpState.customDateFrom = e.target.value;
+            renderFPDashboard();
+            renderFPContribTable();
+        };
+    }
+    if (elFilterDateTo) {
+        elFilterDateTo.value = fpState.customDateTo || '';
+        elFilterDateTo.onchange = (e) => {
+            fpState.customDateTo = e.target.value;
+            renderFPDashboard();
+            renderFPContribTable();
+        };
+    }
+}
+
+function renderFPDashboard() {
+    const cs = getFilteredContributions();
     const totalTFR      = cs.reduce((a,c) => a + c.tfr, 0);
     const totalWorker   = cs.reduce((a,c) => a + c.worker_contrib, 0);
     const totalEmployer = cs.reduce((a,c) => a + c.employer_contrib, 0);
@@ -247,7 +382,7 @@ function renderFPCharts(cs) {
 function renderFPContribTable() {
     const tbody = document.getElementById('fp-contrib-table-body');
     if (!tbody) return;
-    const cs = fpState.contributions;
+    const cs = getFilteredContributions();
     tbody.innerHTML = cs.length === 0
         ? `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noContributions || 'No contributions.'}</td></tr>`
         : cs.map(c => `<tr>
@@ -921,4 +1056,26 @@ window.confirmFPCustomPdfImport = async function() {
     await loadContributions(fpState.activeFundId);
     renderFPDashboard();
     renderFPContribTable();
+};
+
+window.clearFPHistory = async function() {
+    const fId = fpState.activeFundId;
+    if (!fId) return;
+    const confirmation = confirm("Sei sicuro di voler eliminare TUTTI i contributi registrati per questo fondo pensione? Questa azione non può essere annullata.");
+    if (!confirmation) return;
+
+    try {
+        const res = await fetch(`/api/pension_funds/${fId}/contributions/clear`, { method: 'DELETE' });
+        if (res.ok) {
+            alert('Cronologia contributi svuotata con successo.');
+            await loadContributions(fId);
+            renderFPDashboard();
+            renderFPContribTable();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.errore || 'Errore durante l\'eliminazione della cronologia.');
+        }
+    } catch (e) {
+        alert('Errore di connessione.');
+    }
 };

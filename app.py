@@ -641,16 +641,36 @@ def init_db():
 
     conn.execute('''
         CREATE TABLE IF NOT EXISTS salaries (
-            id          TEXT    PRIMARY KEY,
-            salary_group_id INTEGER NOT NULL,
-            person_name TEXT    NOT NULL,
-            month       TEXT    NOT NULL,
-            gross       REAL    NOT NULL DEFAULT 0,
-            net         REAL    NOT NULL DEFAULT 0,
-            notes       TEXT,
+            id                       TEXT    PRIMARY KEY,
+            salary_group_id          INTEGER NOT NULL,
+            person_name              TEXT    NOT NULL,
+            month                    TEXT    NOT NULL,
+            gross                    REAL    NOT NULL DEFAULT 0,
+            net                      REAL    NOT NULL DEFAULT 0,
+            notes                    TEXT,
+            rimborso_spese           REAL    NOT NULL DEFAULT 0,
+            conguaglio_fiscale       REAL    NOT NULL DEFAULT 0,
+            premio_produzione_lordo  REAL    NOT NULL DEFAULT 0,
+            premio_produzione_netto  REAL    NOT NULL DEFAULT 0,
+            tfr_liquidato            REAL    NOT NULL DEFAULT 0,
+            tredicesima              INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (salary_group_id) REFERENCES salary_groups (id) ON DELETE CASCADE
         )
     ''')
+
+    # Migration: add new salary columns if they don't exist (for existing databases)
+    for col, coldef in [
+        ('rimborso_spese',          'REAL NOT NULL DEFAULT 0'),
+        ('conguaglio_fiscale',      'REAL NOT NULL DEFAULT 0'),
+        ('premio_produzione_lordo', 'REAL NOT NULL DEFAULT 0'),
+        ('premio_produzione_netto', 'REAL NOT NULL DEFAULT 0'),
+        ('tfr_liquidato',           'REAL NOT NULL DEFAULT 0'),
+        ('tredicesima',             'INTEGER NOT NULL DEFAULT 0'),
+    ]:
+        try:
+            conn.execute(f'ALTER TABLE salaries ADD COLUMN {col} {coldef}')
+        except Exception:
+            pass
 
     conn.execute('''
         CREATE TABLE IF NOT EXISTS salary_items (
@@ -4543,8 +4563,18 @@ def salaries_route(group_id):
         data = request.json
         sid = f"sal-{int(time.time()*1000)}"
         conn.execute(
-            "INSERT INTO salaries (id, salary_group_id, person_name, month, gross, net, notes) VALUES (?,?,?,?,?,?,?)",
-            (sid, group_id, data.get('person_name',''), data.get('month',''), float(data.get('gross',0)), float(data.get('net',0)), data.get('notes',''))
+            """INSERT INTO salaries
+               (id, salary_group_id, person_name, month, gross, net, notes,
+                rimborso_spese, conguaglio_fiscale, premio_produzione_lordo,
+                premio_produzione_netto, tfr_liquidato, tredicesima)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (sid, group_id,
+             data.get('person_name',''), data.get('month',''),
+             float(data.get('gross', 0)), float(data.get('net', 0)), data.get('notes',''),
+             float(data.get('rimborso_spese', 0)), float(data.get('conguaglio_fiscale', 0)),
+             float(data.get('premio_produzione_lordo', 0)), float(data.get('premio_produzione_netto', 0)),
+             float(data.get('tfr_liquidato', 0)), int(bool(data.get('tredicesima', False)))
+            )
         )
         conn.commit()
         row = conn.execute("SELECT * FROM salaries WHERE id = ?", (sid,)).fetchone()
@@ -4569,8 +4599,18 @@ def salary_detail(salary_id):
         conn.close()
         return jsonify({"ok": True})
     data = request.json
-    conn.execute("UPDATE salaries SET person_name=?, month=?, gross=?, net=?, notes=? WHERE id=?",
-                 (data.get('person_name',''), data.get('month',''), float(data.get('gross',0)), float(data.get('net',0)), data.get('notes',''), salary_id))
+    conn.execute(
+        """UPDATE salaries SET person_name=?, month=?, gross=?, net=?, notes=?,
+           rimborso_spese=?, conguaglio_fiscale=?, premio_produzione_lordo=?,
+           premio_produzione_netto=?, tfr_liquidato=?, tredicesima=?
+           WHERE id=?""",
+        (data.get('person_name',''), data.get('month',''),
+         float(data.get('gross', 0)), float(data.get('net', 0)), data.get('notes',''),
+         float(data.get('rimborso_spese', 0)), float(data.get('conguaglio_fiscale', 0)),
+         float(data.get('premio_produzione_lordo', 0)), float(data.get('premio_produzione_netto', 0)),
+         float(data.get('tfr_liquidato', 0)), int(bool(data.get('tredicesima', False))),
+         salary_id)
+    )
     conn.commit()
     row = conn.execute("SELECT * FROM salaries WHERE id=?", (salary_id,)).fetchone()
     conn.close()
@@ -5232,7 +5272,7 @@ def import_custom_salaries_csv():
         csv_reader = csv.DictReader(stream, delimiter=delimiter)
         import random
         imported = 0
-        updated = 0
+        skipped_duplicates = 0
         
         for row in csv_reader:
             month = (row.get(mapping.get('month')) or '').strip()
@@ -5257,10 +5297,12 @@ def import_custom_salaries_csv():
             net = parse_float(row.get(mapping.get('net')))
             notes = (row.get(mapping.get('notes')) or '').strip()
             
-            existing = conn.execute("SELECT id FROM salaries WHERE salary_group_id=? AND person_name=? AND month=?", (salary_group_id, person_name, month)).fetchone()
+            existing = conn.execute(
+                "SELECT id FROM salaries WHERE salary_group_id=? AND person_name=? AND month=? AND gross=? AND net=?",
+                (salary_group_id, person_name, month, gross, net)
+            ).fetchone()
             if existing:
-                conn.execute("UPDATE salaries SET gross=?, net=?, notes=? WHERE id=?", (gross, net, notes, existing['id']))
-                updated += 1
+                skipped_duplicates += 1
             else:
                 sid = f"sal-{int(time.time()*1000)}-{random.randint(1000, 9999)}"
                 conn.execute("INSERT INTO salaries (id, salary_group_id, person_name, month, gross, net, notes) VALUES (?,?,?,?,?,?,?)",
@@ -5268,7 +5310,7 @@ def import_custom_salaries_csv():
                 imported += 1
                 
         conn.commit()
-        return jsonify({"messaggio": f"Importazione completata: {imported} stipendi importati, {updated} aggiornati."})
+        return jsonify({"messaggio": f"Importazione completata: {imported} stipendi importati, {skipped_duplicates} duplicati ignorati."})
     except Exception as e:
         print(f"Error in import_custom_salaries_csv: {e}")
         return jsonify({"errore": f"Errore durante l'importazione: {str(e)}"}), 500
@@ -5352,6 +5394,66 @@ def import_custom_pension_csv():
         print(f"Error in import_custom_pension_csv: {e}")
         return jsonify({"errore": f"Errore durante l'importazione: {str(e)}"}), 500
     finally: conn.close()
+
+# --- CLEAR HISTORY ENDPOINTS ---
+@app.route('/api/vehicles/<int:vehicle_id>/activities/clear', methods=['DELETE'])
+def clear_vehicle_activities(vehicle_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    v = conn.execute("SELECT id FROM vehicles WHERE id = ? AND garage_id IN (SELECT id FROM garages WHERE user_id = ?)", (vehicle_id, session['user_id'])).fetchone()
+    if not v:
+        conn.close()
+        return jsonify({"errore": _("Vehicle not found or unauthorized")}), 404
+    conn.execute("DELETE FROM vehicle_activities WHERE vehicleId = ?", (vehicle_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/loans/<loan_id>/payments/clear', methods=['DELETE'])
+def clear_loan_payments(loan_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    loan = conn.execute("SELECT * FROM loans WHERE id = ? AND user_id = ?", (loan_id, session['user_id'])).fetchone()
+    if not loan:
+        conn.close()
+        return jsonify({"errore": _("Loan not found or unauthorized")}), 404
+    conn.execute("DELETE FROM loan_payments WHERE loan_id = ?", (loan_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/pension_funds/<fund_id>/contributions/clear', methods=['DELETE'])
+def clear_pension_contributions(fund_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    fund = conn.execute("SELECT f.* FROM pension_funds f JOIN pension_fund_groups g ON f.pension_fund_group_id=g.id WHERE f.id=? AND g.user_id=?", (fund_id, session['user_id'])).fetchone()
+    if not fund:
+        conn.close()
+        return jsonify({"errore": "Fondo non trovato o non autorizzato"}), 404
+    conn.execute("DELETE FROM pension_contributions WHERE fund_id = ?", (fund_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/salary_groups/<int:group_id>/salaries/clear', methods=['DELETE'])
+def clear_group_salaries(group_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    person_name = request.args.get('person_name')
+    if not person_name:
+        return jsonify({"errore": "Nome persona mancante"}), 400
+    conn = get_db_connection()
+    group = conn.execute("SELECT * FROM salary_groups WHERE id = ? AND user_id = ?", (group_id, session['user_id'])).fetchone()
+    if not group:
+        conn.close()
+        return jsonify({"errore": "Gruppo non trovato o non autorizzato"}), 404
+    conn.execute("DELETE FROM salaries WHERE salary_group_id = ? AND person_name = ?", (group_id, person_name))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5001)
