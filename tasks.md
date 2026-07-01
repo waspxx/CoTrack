@@ -11,6 +11,8 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Associazione automatica dei cedolini caricati (PDF/CSV) alla persona attiva selezionata
+- [x] **Bug** Persistenza delle persone aggiunte e della persona selezionata nel tab stipendi durante il cambio tab
 - [x] **Feature** Calcolo automatico della scadenza iniziale per promemoria ricorrenti chilometrici basandosi sulla manutenzione precedente registrata dello stesso tipo
 - [x] **Feature** Controllo giornaliero dei promemoria dei veicoli in scadenza e invio mail di avviso via SMTP
 - [x] **Feature** Tracciamento bici elettriche e sessioni di ricarica nel garage (Ah/Volt per calcolo capacità batteria, percentuali di avvio/fine ricarica e calcolo kWh automatico)

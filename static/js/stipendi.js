@@ -100,9 +100,23 @@ window.caricaDatiStipendi = async function() {
     const res = await fetch(`/api/salary_groups/${stipState.activeGroupId}/salaries`);
     stipState.salaries = res.ok ? await res.json() : [];
 
-    // Build unique persons list
+    // Build unique persons list from recorded salaries
     const names = [...new Set(stipState.salaries.map(s => s.person_name))];
-    stipState.persons = names;
+
+    // Read custom added persons from localStorage for the active group
+    const storedPersonsKey = `salary_group_${stipState.activeGroupId}_persons`;
+    let storedPersons = [];
+    try {
+        const raw = localStorage.getItem(storedPersonsKey);
+        if (raw) {
+            storedPersons = JSON.parse(raw);
+        }
+    } catch (e) {
+        console.error("Errore lettura persone da localStorage:", e);
+    }
+
+    // Merge database names with custom stored names
+    stipState.persons = [...new Set([...names, ...storedPersons])];
 
     populatePersonSelector();
     renderStipDashboard();
@@ -200,7 +214,7 @@ function populatePersonSelector() {
         sel.appendChild(opt);
     });
     if (stipState.persons.length > 0) {
-        const saved = localStorage.getItem('activeStipPerson');
+        const saved = localStorage.getItem(`activeStipPerson_${stipState.activeGroupId}`);
         if (saved && stipState.persons.includes(saved)) {
             stipState.activePersonName = saved;
         } else {
@@ -214,7 +228,7 @@ function populatePersonSelector() {
 
 window.handlePersonChange = function(e) {
     stipState.activePersonName = e.target.value;
-    localStorage.setItem('activeStipPerson', stipState.activePersonName);
+    localStorage.setItem(`activeStipPerson_${stipState.activeGroupId}`, stipState.activePersonName);
     renderStipDashboard();
     renderSalaryHistoryTable();
 };
@@ -367,12 +381,44 @@ function renderPersonsGrid() {
     container.innerHTML = stipState.persons.map(name => {
         const myS = stipState.salaries.filter(s => s.person_name === name);
         const latestNet = myS.length ? myS.sort((a,b) => b.month.localeCompare(a.month))[0].net : 0;
-        return `<div class="person-card">
-            <div class="person-card-name">${name}</div>
-            <div class="person-card-sub">${myS.length} busta/e paga · Ultimo netto: ${fmtEur(latestNet)}</div>
+        
+        // Show delete button only if the person has no payslips registered
+        const deleteBtn = myS.length === 0 
+            ? `<button class="icon-btn btn-delete" onclick="window.removeSalaryPerson('${name}')" title="Elimina" style="border:none; background:none; cursor:pointer; color:#ef4444; font-size:1.1em; padding:4px;">🗑️</button>`
+            : '';
+
+        return `<div class="person-card" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <div>
+                <div class="person-card-name">${name}</div>
+                <div class="person-card-sub">${myS.length} busta/e paga · Ultimo netto: ${fmtEur(latestNet)}</div>
+            </div>
+            ${deleteBtn}
         </div>`;
     }).join('');
 }
+
+window.removeSalaryPerson = function(name) {
+    if (!confirm(`Eliminare la persona "${name}"?`)) return;
+    
+    // Remove from localStorage stored persons list
+    const storedPersonsKey = `salary_group_${stipState.activeGroupId}_persons`;
+    let storedPersons = [];
+    try {
+        const raw = localStorage.getItem(storedPersonsKey);
+        if (raw) storedPersons = JSON.parse(raw);
+    } catch (e) {}
+    
+    storedPersons = storedPersons.filter(p => p !== name);
+    localStorage.setItem(storedPersonsKey, JSON.stringify(storedPersons));
+    
+    // Clear selection if it was this person
+    const activeKey = `activeStipPerson_${stipState.activeGroupId}`;
+    if (localStorage.getItem(activeKey) === name) {
+        localStorage.removeItem(activeKey);
+    }
+    
+    window.caricaDatiStipendi();
+};
 
 // ── PERSON MODAL ──────────────────────────────────────────────────────────────
 window.openSalaryPersonModal = function(name = null) {
@@ -384,14 +430,28 @@ window.openSalaryPersonModal = function(name = null) {
 window.closeSalaryPersonModal = function() { document.getElementById('stip-person-modal').classList.remove('open'); };
 window.handlePersonSubmit = function(e) {
     e.preventDefault();
-    // Persons are implicit – just add a placeholder salary month entry
     const name = document.getElementById('stip-person-name').value.trim();
     if (!name) return;
+    
+    // Save to localStorage for this group to persist the person
+    const storedPersonsKey = `salary_group_${stipState.activeGroupId}_persons`;
+    let storedPersons = [];
+    try {
+        const raw = localStorage.getItem(storedPersonsKey);
+        if (raw) storedPersons = JSON.parse(raw);
+    } catch (e) {}
+    
+    if (!storedPersons.includes(name)) {
+        storedPersons.push(name);
+        localStorage.setItem(storedPersonsKey, JSON.stringify(storedPersons));
+    }
+
     if (!stipState.persons.includes(name)) stipState.persons.push(name);
     // Update selector
     populatePersonSelector();
     document.getElementById('active-person-select').value = name;
     stipState.activePersonName = name;
+    localStorage.setItem(`activeStipPerson_${stipState.activeGroupId}`, name);
     window.closeSalaryPersonModal();
     renderPersonsGrid();
 };
@@ -549,28 +609,15 @@ window.openStipPdfReviewModal = function(salaries) {
     if (!tbody) return;
     
     tbody.innerHTML = salaries.map((c, index) => {
-        let optionsHtml = '';
-        stipState.persons.forEach(p => {
-            const selected = (c.person_name && p.toLowerCase() === c.person_name.toLowerCase()) ? 'selected' : '';
-            optionsHtml += `<option value="${p}" ${selected}>${p}</option>`;
-        });
-        if (c.person_name && !stipState.persons.some(p => p.toLowerCase() === c.person_name.toLowerCase())) {
-            optionsHtml += `<option value="${c.person_name}" selected>${c.person_name}</option>`;
-        }
-        if (!optionsHtml) {
-            optionsHtml = `<option value="Dipendente" selected>Dipendente</option>`;
-        }
-        
         const itemsCount = c.items ? c.items.length : 0;
+        const displayName = stipState.activePersonName || "Dipendente";
         
         return `
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="text-align: center; padding: 8px;"><input type="checkbox" class="stip-pdf-row-checkbox" data-index="${index}" checked></td>
                 <td style="padding: 8px;"><input type="month" class="stip-pdf-row-month" value="${c.month || ''}" style="border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
-                <td style="padding: 8px;">
-                    <select class="stip-pdf-row-person" style="border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px; max-width: 150px;" data-index="${index}">
-                        ${optionsHtml}
-                    </select>
+                <td style="padding: 8px; font-weight: 500;">
+                    ${displayName}
                 </td>
                 <td style="padding: 8px;"><input type="number" step="0.01" class="stip-pdf-row-gross" value="${c.gross || 0.00}" style="width: 90px; text-align: right; border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
                 <td style="padding: 8px;"><input type="number" step="0.01" class="stip-pdf-row-net" value="${c.net || 0.00}" style="width: 90px; text-align: right; border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
@@ -610,13 +657,12 @@ window.submitStipPdfImportedSalaries = async function() {
         if (!originalSalary) continue;
         
         const monthInput = document.querySelector(`.stip-pdf-row-month[data-index="${index}"]`);
-        const personSelect = document.querySelector(`.stip-pdf-row-person[data-index="${index}"]`);
         const grossInput = document.querySelector(`.stip-pdf-row-gross[data-index="${index}"]`);
         const netInput = document.querySelector(`.stip-pdf-row-net[data-index="${index}"]`);
         const notesInput = document.querySelector(`.stip-pdf-row-notes[data-index="${index}"]`);
         
         const month = monthInput ? monthInput.value : originalSalary.month;
-        const person_name = personSelect ? personSelect.value : (originalSalary.person_name || "Dipendente");
+        const person_name = stipState.activePersonName || "Dipendente";
         const gross = grossInput ? parseFloat(grossInput.value) : (originalSalary.gross || 0.0);
         const net = netInput ? parseFloat(netInput.value) : (originalSalary.net || 0.0);
         const notes = notesInput ? notesInput.value : (originalSalary.notes || "Importato da PDF");
@@ -702,7 +748,7 @@ function openStipMappingModal(file, headers, sample) {
     const isIt = document.documentElement.lang === 'it';
     const dbFields = [
         { id: 'month', label: isIt ? 'Mese (YYYY-MM)' : 'Month (YYYY-MM)', required: true },
-        { id: 'person_name', label: isIt ? 'Nome Persona' : 'Person Name', required: true },
+        { id: 'person_name', label: isIt ? 'Nome Persona' : 'Person Name', required: !stipState.activePersonName },
         { id: 'gross', label: isIt ? 'Stipendio Lordo' : 'Gross Salary', required: true },
         { id: 'net', label: isIt ? 'Stipendio Netto' : 'Net Salary', required: true },
         { id: 'notes', label: isIt ? 'Note / Descrizione' : 'Notes / Description', required: false }
@@ -754,7 +800,8 @@ window.confermaMappingStipendiCSV = async function() {
         notes: document.getElementById('stipmap_notes').value
     };
 
-    if (!mapping.month || !mapping.person_name || !mapping.gross || !mapping.net) {
+    const isPersonRequired = !stipState.activePersonName;
+    if (!mapping.month || (isPersonRequired && !mapping.person_name) || !mapping.gross || !mapping.net) {
         alert("Compila tutti i campi obbligatori (*).");
         return;
     }
@@ -766,7 +813,11 @@ window.confermaMappingStipendiCSV = async function() {
     formData.append("mapping", JSON.stringify(mapping));
 
     try {
-        let risposta = await fetch('/api/salaries/import_custom_csv?salary_group_id=' + stipState.activeGroupId, { method: 'POST', body: formData });
+        let url = `/api/salaries/import_custom_csv?salary_group_id=${stipState.activeGroupId}`;
+        if (stipState.activePersonName) {
+            url += `&person_name=${encodeURIComponent(stipState.activePersonName)}`;
+        }
+        let risposta = await fetch(url, { method: 'POST', body: formData });
         let result = await risposta.json();
         if (risposta.ok) {
             alert(result.messaggio);
@@ -919,32 +970,18 @@ window.testStipCustomPdfRegex = function() {
         
         parsedStipCustomPdfRows.push({
             month: monthVal,
-            person_name: personVal,
+            person_name: stipState.activePersonName || 'Dipendente',
             gross: grossVal,
             net: netVal,
             notes: notesVal
         });
         
-        let optionsHtml = '';
-        stipState.persons.forEach(p => {
-            const selected = (personVal && p.toLowerCase() === personVal.toLowerCase()) ? 'selected' : '';
-            optionsHtml += `<option value="${p}" ${selected}>${p}</option>`;
-        });
-        if (personVal && !stipState.persons.some(p => p.toLowerCase() === personVal.toLowerCase())) {
-            optionsHtml += `<option value="${personVal}" selected>${personVal}</option>`;
-        }
-        if (!optionsHtml) {
-            optionsHtml = `<option value="Dipendente" selected>Dipendente</option>`;
-        }
-        
         tbody.innerHTML += `
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="text-align: center;"><input type="checkbox" class="stip-custom-pdf-row-cb" data-index="${index}" checked></td>
                 <td><input type="month" class="stip-custom-pdf-row-month" value="${formatDateForInput(monthVal)}" style="padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
-                <td>
-                    <select class="stip-custom-pdf-row-person" style="padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}">
-                        ${optionsHtml}
-                    </select>
+                <td style="font-weight: 500; font-size: 12px; padding: 4px;">
+                    ${stipState.activePersonName || "Dipendente"}
                 </td>
                 <td><input type="number" step="0.01" class="stip-custom-pdf-row-gross" value="${cleanFloatStr(grossVal)}" style="width: 80px; text-align: right; padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
                 <td><input type="number" step="0.01" class="stip-custom-pdf-row-net" value="${cleanFloatStr(netVal)}" style="width: 80px; text-align: right; padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
@@ -977,13 +1014,12 @@ window.confirmStipCustomPdfImport = async function() {
     for (let cb of checkboxes) {
         const index = parseInt(cb.getAttribute("data-index"));
         const monthInput = document.querySelector(`.stip-custom-pdf-row-month[data-index="${index}"]`);
-        const personSelect = document.querySelector(`.stip-custom-pdf-row-person[data-index="${index}"]`);
         const grossInput = document.querySelector(`.stip-custom-pdf-row-gross[data-index="${index}"]`);
         const netInput = document.querySelector(`.stip-custom-pdf-row-net[data-index="${index}"]`);
         const notesInput = document.querySelector(`.stip-custom-pdf-row-notes[data-index="${index}"]`);
         
         const month = monthInput ? monthInput.value : '';
-        const person_name = personSelect ? personSelect.value : 'Dipendente';
+        const person_name = stipState.activePersonName || 'Dipendente';
         const gross = grossInput ? parseFloat(grossInput.value) : 0.0;
         const net = netInput ? parseFloat(netInput.value) : 0.0;
         const notes = notesInput ? notesInput.value : 'Importato da PDF personalizzato';

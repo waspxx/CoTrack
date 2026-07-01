@@ -5070,6 +5070,7 @@ def extract_pdf_text_route():
 def import_custom_salaries_csv():
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
     salary_group_id = request.args.get('salary_group_id')
+    person_name_override = request.args.get('person_name')
     if not salary_group_id:
         return jsonify({"errore": "ID gruppo stipendi mancante"}), 400
         
@@ -5106,7 +5107,10 @@ def import_custom_salaries_csv():
         
         for row in csv_reader:
             month = (row.get(mapping.get('month')) or '').strip()
-            person_name = (row.get(mapping.get('person_name')) or '').strip()
+            if person_name_override:
+                person_name = person_name_override.strip()
+            else:
+                person_name = (row.get(mapping.get('person_name')) or '').strip()
             if not month or not person_name:
                 continue
                 
