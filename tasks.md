@@ -4,13 +4,13 @@
 ## 📥 Idee Lampo (Inbox)
 *Spazio per annotare al volo qualsiasi idea, spunto o task prima di organizzarlo.*
 - [ ] **Feature** Cambiare alcune cose di grafica del tab wallet per cercare di differenziarsi da Wallet by Budgetbakers
-- [ ] **Feature** In base ai tab in uso, aggiornare il report di Gemini per inviare via mail i dati più significativi per compararli con la settimana o il mese precedente. Cercare di ridurre il più possibile il consumo di token.
 
 ## 🟡 In Corso (In Progress)
 *Attività su cui si sta lavorando attualmente.*
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** In base ai tab in uso, aggiornare il report di Gemini per inviare via mail i dati più significativi per compararli con la settimana o il mese precedente. Cercare di ridurre il più possibile il consumo di token.
 - [x] **Feature** Associazione automatica dei cedolini caricati (PDF/CSV) alla persona attiva selezionata
 - [x] **Bug** Persistenza delle persone aggiunte e della persona selezionata nel tab stipendi durante il cambio tab
 - [x] **Feature** Calcolo automatico della scadenza iniziale per promemoria ricorrenti chilometrici basandosi sulla manutenzione precedente registrata dello stesso tipo

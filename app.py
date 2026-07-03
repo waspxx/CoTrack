@@ -1059,6 +1059,411 @@ Portfolio Data:
     except Exception as e:
         return f"<p>Errore durante l'analisi: {str(e)}</p>"
 
+def get_user_active_tabs(conn, user_id):
+    tabs_keys = [
+        'tab_investimenti_active', 'tab_wallet_active', 'tab_bollette_active',
+        'tab_veicoli_active', 'tab_prestiti_active', 'tab_stipendi_active', 'tab_fondopensione_active'
+    ]
+    active_tabs = {}
+    for key in tabs_keys:
+        row = conn.execute(
+            "SELECT value FROM configurations WHERE key = ?", 
+            (f"user_config:{user_id}:{key}",)
+        ).fetchone()
+        active_tabs[key] = (row['value'] == 'true') if row else True
+    return active_tabs
+
+def get_wallet_summary(conn, wallet_id):
+    today = datetime.today()
+    date_now = today.strftime('%Y-%m-%d')
+    date_7d = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+    date_14d = (today - timedelta(days=14)).strftime('%Y-%m-%d')
+    date_30d = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+    date_60d = (today - timedelta(days=60)).strftime('%Y-%m-%d')
+    
+    txs = conn.execute(
+        "SELECT amount, type, date FROM wallet_transactions WHERE wallet_id = ?",
+        (wallet_id,)
+    ).fetchall()
+    
+    def is_expense(t):
+        t_type = (t['type'] or '').lower()
+        return 'uscita' in t_type or 'spesa' in t_type or 'expense' in t_type or (t['amount'] or 0.0) < 0
+        
+    w_sum = {
+        'inc_7d': 0.0, 'exp_7d': 0.0,
+        'inc_prev_7d': 0.0, 'exp_prev_7d': 0.0,
+        'inc_30d': 0.0, 'exp_30d': 0.0,
+        'inc_prev_30d': 0.0, 'exp_prev_30d': 0.0
+    }
+    
+    for t in txs:
+        date_str = t['date']
+        if not date_str: continue
+        if ' ' in date_str:
+            date_str = date_str.split(' ')[0]
+        elif 'T' in date_str:
+            date_str = date_str.split('T')[0]
+            
+        amount = abs(t['amount'] or 0.0)
+        is_exp = is_expense(t)
+        
+        # Last 7 days
+        if date_7d <= date_str <= date_now:
+            if is_exp: w_sum['exp_7d'] += amount
+            else: w_sum['inc_7d'] += amount
+        # Prev 7 days
+        elif date_14d <= date_str < date_7d:
+            if is_exp: w_sum['exp_prev_7d'] += amount
+            else: w_sum['inc_prev_7d'] += amount
+            
+        # Last 30 days
+        if date_30d <= date_str <= date_now:
+            if is_exp: w_sum['exp_30d'] += amount
+            else: w_sum['inc_30d'] += amount
+        # Prev 30 days
+        elif date_60d <= date_str < date_30d:
+            if is_exp: w_sum['exp_prev_30d'] += amount
+            else: w_sum['inc_prev_30d'] += amount
+            
+    return w_sum
+
+def get_bills_summary(conn, bills_profile_id):
+    rows = conn.execute(
+        "SELECT * FROM bills WHERE bills_id = ? ORDER BY year DESC, month DESC",
+        (bills_profile_id,)
+    ).fetchall()
+    
+    if not rows:
+        return None
+        
+    b_curr = rows[0]
+    total_curr = (b_curr['water_price'] or 0.0) + (b_curr['electricity_price'] or 0.0) + (b_curr['gas_price'] or 0.0)
+    
+    b_prev = None
+    if len(rows) > 1:
+        b_prev = rows[1]
+    
+    b_year_ago = None
+    for r in rows:
+        if r['year'] == b_curr['year'] - 1 and r['month'] == b_curr['month']:
+            b_year_ago = r
+            break
+            
+    total_prev = ((b_prev['water_price'] or 0.0) + (b_prev['electricity_price'] or 0.0) + (b_prev['gas_price'] or 0.0)) if b_prev else None
+    total_year_ago = ((b_year_ago['water_price'] or 0.0) + (b_year_ago['electricity_price'] or 0.0) + (b_year_ago['gas_price'] or 0.0)) if b_year_ago else None
+    
+    return {
+        'curr_year': b_curr['year'],
+        'curr_month': b_curr['month'],
+        'curr_total': total_curr,
+        'curr_details': {
+            'water': b_curr['water_price'] or 0.0,
+            'elec': b_curr['electricity_price'] or 0.0,
+            'gas': b_curr['gas_price'] or 0.0
+        },
+        'prev_total': total_prev,
+        'prev_details': {
+            'water': b_prev['water_price'] or 0.0,
+            'elec': b_prev['electricity_price'] or 0.0,
+            'gas': b_prev['gas_price'] or 0.0
+        } if b_prev else None,
+        'year_ago_total': total_year_ago
+    }
+
+def get_vehicle_summary(conn, garage_id):
+    today = datetime.today()
+    date_now = today.strftime('%Y-%m-%d')
+    date_7d = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+    date_14d = (today - timedelta(days=14)).strftime('%Y-%m-%d')
+    date_30d = (today - timedelta(days=30)).strftime('%Y-%m-%d')
+    date_60d = (today - timedelta(days=60)).strftime('%Y-%m-%d')
+    
+    vehicles = conn.execute(
+        "SELECT id, brand, model FROM vehicles WHERE garage_id = ? AND archived = 0",
+        (garage_id,)
+    ).fetchall()
+    
+    v_sums = {}
+    for v in vehicles:
+        activities = conn.execute(
+            "SELECT totalCost, totalCost2, totalCost3, date FROM vehicle_activities WHERE vehicleId = ?",
+            (v['id'],)
+        ).fetchall()
+        
+        sum_data = {
+            'cost_7d': 0.0, 'cost_prev_7d': 0.0,
+            'cost_30d': 0.0, 'cost_prev_30d': 0.0
+        }
+        for act in activities:
+            date_str = act['date']
+            if not date_str: continue
+            if ' ' in date_str:
+                date_str = date_str.split(' ')[0]
+            elif 'T' in date_str:
+                date_str = date_str.split('T')[0]
+                
+            cost = (act['totalCost'] or 0.0) + (act['totalCost2'] or 0.0) + (act['totalCost3'] or 0.0)
+            
+            # Last 7 days
+            if date_7d <= date_str <= date_now:
+                sum_data['cost_7d'] += cost
+            # Prev 7 days
+            elif date_14d <= date_str < date_7d:
+                sum_data['cost_prev_7d'] += cost
+                
+            # Last 30 days
+            if date_30d <= date_str <= date_now:
+                sum_data['cost_30d'] += cost
+            # Prev 30 days
+            elif date_60d <= date_str < date_30d:
+                sum_data['cost_prev_30d'] += cost
+                
+        v_sums[f"{v['brand']} {v['model']}"] = sum_data
+    return v_sums
+
+def calculate_amortization_py(principal, annual_rate, term_months, start_date_str, custom_monthly_payment=None, payments=[]):
+    def add_months_py(date_str, months):
+        try:
+            dt = datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            try:
+                dt = datetime.strptime(date_str.split(' ')[0], '%Y-%m-%d')
+            except Exception:
+                return date_str
+        month = dt.month - 1 + months
+        year = dt.year + month // 12
+        month = month % 12 + 1
+        day = min(dt.day, [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+        return f"{year:04d}-{month:02d}-{day:02d}"
+        
+    def get_month_diff_py(d1_str, d2_str):
+        try:
+            d1 = datetime.strptime(d1_str.split(' ')[0], '%Y-%m-%d')
+            d2 = datetime.strptime(d2_str.split(' ')[0], '%Y-%m-%d')
+            return (d2.year - d1.year) * 12 + d2.month - d1.month
+        except Exception:
+            return 0
+
+    extra_payments = [p for p in payments if p['type'] in ('extra', 'Rimborso', 'Rimborso Straordinario')]
+    rate_changes = [p for p in payments if p['type'] == 'rate_change']
+    
+    rate_changes = sorted(rate_changes, key=lambda x: x['date'] or '')
+    
+    current_annual_rate = annual_rate
+    current_monthly_rate = (current_annual_rate / 12) / 100
+    
+    base_installment = 0.0
+    if custom_monthly_payment and custom_monthly_payment > 0:
+        base_installment = custom_monthly_payment
+    else:
+        if current_monthly_rate == 0:
+            base_installment = principal / term_months
+        else:
+            base_installment = principal * (current_monthly_rate * ((1 + current_monthly_rate) ** term_months)) / (((1 + current_monthly_rate) ** term_months) - 1)
+            
+    schedule = []
+    remaining_principal = principal
+    t = 1
+    
+    extras_by_month = {}
+    for p in extra_payments:
+        m_index = get_month_diff_py(start_date_str, p['date'])
+        if m_index > 0:
+            extras_by_month[m_index] = extras_by_month.get(m_index, 0.0) + p['amount']
+            
+    while remaining_principal > 0.01 and t <= 1200:
+        date = add_months_py(start_date_str, t)
+        
+        rate_changed = False
+        for rc in rate_changes:
+            if rc['date'] <= date and rc['amount'] != current_annual_rate:
+                current_annual_rate = rc['amount']
+                rate_changed = True
+                
+        if rate_changed:
+            current_monthly_rate = (current_annual_rate / 12) / 100
+            remaining_term = term_months - (t - 1)
+            if remaining_term > 0 and (not custom_monthly_payment or custom_monthly_payment <= 0):
+                if current_monthly_rate == 0:
+                    base_installment = remaining_principal / remaining_term
+                else:
+                    base_installment = remaining_principal * (current_monthly_rate * ((1 + current_monthly_rate) ** remaining_term)) / (((1 + current_monthly_rate) ** remaining_term) - 1)
+                    
+        interest_portion = remaining_principal * current_monthly_rate
+        installment = base_installment
+        if remaining_principal + interest_portion < installment:
+            installment = remaining_principal + interest_portion
+            
+        extra_amount = extras_by_month.get(t, 0.0)
+        principal_portion = installment - interest_portion
+        
+        if principal_portion > remaining_principal:
+            principal_portion = remaining_principal
+            installment = principal_portion + interest_portion
+            
+        principal_paid_total = principal_portion + extra_amount
+        if principal_paid_total > remaining_principal:
+            principal_paid_total = remaining_principal
+            
+        remaining_principal -= principal_paid_total
+        if remaining_principal < 0:
+            remaining_principal = 0.0
+            
+        schedule.append({
+            'date': date,
+            'remaining': remaining_principal,
+            'principal': principal_portion,
+            'interest': interest_portion,
+            'installment': installment,
+            'extra': extra_amount
+        })
+        t += 1
+        
+    return schedule
+
+def get_loan_summary(conn, loan_id):
+    l = conn.execute("SELECT * FROM loans WHERE id = ?", (loan_id,)).fetchone()
+    if not l:
+        return None
+        
+    pmts = conn.execute("SELECT * FROM loan_payments WHERE loan_id = ?", (loan_id,)).fetchall()
+    payments_list = [dict(p) for p in pmts]
+    
+    schedule = calculate_amortization_py(
+        l['principal'], l['interest_rate'], l['term_months'], l['start_date'],
+        custom_monthly_payment=l['monthly_payment'], payments=payments_list
+    )
+    
+    today_str = datetime.today().strftime('%Y-%m-%d')
+    date_7d = (datetime.today() - timedelta(days=7)).strftime('%Y-%m-%d')
+    date_30d = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d')
+    
+    def get_remaining_at_date(target_date):
+        rem = l['principal']
+        for s in schedule:
+            if s['date'] <= target_date:
+                rem = s['remaining']
+            else:
+                break
+        return rem
+        
+    rem_today = get_remaining_at_date(today_str)
+    rem_7d = get_remaining_at_date(date_7d)
+    rem_30d = get_remaining_at_date(date_30d)
+    
+    return {
+        'name': l['name'],
+        'rem_today': rem_today,
+        'rem_7d': rem_7d,
+        'rem_30d': rem_30d
+    }
+
+def get_salaries_summary(conn, salary_group_id):
+    rows = conn.execute(
+        "SELECT * FROM salaries WHERE salary_group_id = ? ORDER BY month DESC",
+        (salary_group_id,)
+    ).fetchall()
+    
+    if not rows:
+        return None
+        
+    s_curr = rows[0]
+    
+    s_prev = None
+    if len(rows) > 1:
+        s_prev = rows[1]
+        
+    s_year_ago = None
+    try:
+        curr_y, curr_m = map(int, s_curr['month'].split('-'))
+        target_month_str = f"{curr_y - 1:04d}-{curr_m:02d}"
+        for r in rows:
+            if r['month'] == target_month_str:
+                s_year_ago = r
+                break
+    except Exception:
+        pass
+        
+    return {
+        'person': s_curr['person_name'],
+        'curr_month': s_curr['month'],
+        'curr_net': s_curr['net'],
+        'curr_gross': s_curr['gross'],
+        'prev_month': s_prev['month'] if s_prev else None,
+        'prev_net': s_prev['net'] if s_prev else None,
+        'prev_gross': s_prev['gross'] if s_prev else None,
+        'year_ago_net': s_year_ago['net'] if s_year_ago else None
+    }
+
+def get_pension_summary(conn, fund_id):
+    rows = conn.execute(
+        "SELECT * FROM pension_contributions WHERE fund_id = ? ORDER BY month DESC",
+        (fund_id,)
+    ).fetchall()
+    
+    if not rows:
+        return None
+        
+    c_curr = rows[0]
+    
+    c_prev = None
+    if len(rows) > 1:
+        c_prev = rows[1]
+        
+    c_year_ago = None
+    try:
+        curr_y, curr_m = map(int, c_curr['month'].split('-'))
+        target_month_str = f"{curr_y - 1:04d}-{curr_m:02d}"
+        for r in rows:
+            if r['month'] == target_month_str:
+                c_year_ago = r
+                break
+    except Exception:
+        pass
+        
+    return {
+        'curr_month': c_curr['month'],
+        'curr_val': c_curr['total_value'],
+        'prev_val': c_prev['total_value'] if c_prev else None,
+        'year_ago_val': c_year_ago['total_value'] if c_year_ago else None
+    }
+
+def get_gemini_holistic_analysis(compiled_data_text):
+    if not genai or not app.config.get('GEMINI_API_KEY'):
+        return "<p>Errore: API Gemini non configurata.</p>"
+        
+    prompt = f"""Role: Professional financial advisor (objective analysis only).
+Task: Analyze the user's financial overview and perform a concise comparison of performance and shifts across active accounts compared to the previous week or month.
+Guidelines:
+- Be extremely concise and direct (max 250 words).
+- Avoid introductory boilerplate, generic phrases, or financial disclaimers.
+- Focus on significant changes in investments, spending, bills, vehicles, loans, salaries, or pension funds.
+- Format response in Markdown (using headers, bold text, bullet points).
+- Respond entirely in Italian.
+
+Financial Overview:
+{compiled_data_text}"""
+
+    try:
+        client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
+        try:
+            response = client.models.generate_content(
+                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash'),
+                contents=prompt
+            )
+        except Exception as primary_e:
+            print(f"Errore modello primario in get_gemini_holistic_analysis: {primary_e}. Tentativo con il fallback.")
+            response = client.models.generate_content(
+                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.1-flash-lite'),
+                contents=prompt
+            )
+        
+        markdown_text = response.text.replace("```markdown", "").replace("```html", "").replace("```", "").strip()
+        return markdown_to_html(markdown_text)
+    except Exception as e:
+        return f"<p>Errore durante l'analisi: {str(e)}</p>"
+
 def send_weekly_report():
     with app.app_context():
         conn = get_db_connection()
@@ -1070,35 +1475,458 @@ def send_weekly_report():
                 email_destinatario = app.config.get('MAIL_DEFAULT_SENDER') or app.config.get('SMTP_USERNAME')
                 
             if not email_destinatario or '@' not in email_destinatario: continue
+            
+            # Detect active tabs
+            active_tabs = get_user_active_tabs(conn, user['id'])
+            
+            # 1. Investments
+            investments_data = []
+            if active_tabs.get('tab_investimenti_active', True):
+                portfolios = conn.execute("SELECT * FROM portfolios WHERE user_id = ?", (user['id'],)).fetchall()
+                for p in portfolios:
+                    snap_today = get_portfolio_snapshot_at_date(p['id'])
+                    if snap_today:
+                        snap_7d = get_portfolio_snapshot_at_date(p['id'], (datetime.today() - timedelta(days=7)).strftime('%Y-%m-%d'))
+                        snap_30d = get_portfolio_snapshot_at_date(p['id'], (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d'))
+                        investments_data.append({
+                            'name': p['name'],
+                            'today': snap_today,
+                            '7d': snap_7d,
+                            '30d': snap_30d
+                        })
+                        
+            # 2. Wallet
+            wallet_data = []
+            if active_tabs.get('tab_wallet_active', True):
+                wallets = conn.execute("SELECT * FROM wallets WHERE user_id = ?", (user['id'],)).fetchall()
+                for w in wallets:
+                    summary = get_wallet_summary(conn, w['id'])
+                    wallet_data.append({
+                        'name': w['name'],
+                        'summary': summary
+                    })
+                    
+            # 3. Bills
+            bills_data = []
+            if active_tabs.get('tab_bollette_active', True):
+                profiles = conn.execute("SELECT * FROM bills_profiles WHERE user_id = ?", (user['id'],)).fetchall()
+                for bp in profiles:
+                    summary = get_bills_summary(conn, bp['id'])
+                    if summary:
+                        bills_data.append({
+                            'name': bp['name'],
+                            'summary': summary
+                        })
+                        
+            # 4. Vehicles
+            vehicles_data = []
+            if active_tabs.get('tab_veicoli_active', True):
+                garages = conn.execute("SELECT * FROM garages WHERE user_id = ?", (user['id'],)).fetchall()
+                for g in garages:
+                    summary = get_vehicle_summary(conn, g['id'])
+                    if summary:
+                        vehicles_data.append({
+                            'garage_name': g['name'],
+                            'summary': summary
+                        })
+                        
+            # 5. Loans
+            loans_data = []
+            if active_tabs.get('tab_prestiti_active', True):
+                loans = conn.execute("SELECT * FROM loans WHERE user_id = ?", (user['id'],)).fetchall()
+                for l in loans:
+                    summary = get_loan_summary(conn, l['id'])
+                    if summary:
+                        loans_data.append(summary)
+                        
+            # 6. Salaries
+            salaries_data = []
+            if active_tabs.get('tab_stipendi_active', True):
+                groups = conn.execute("SELECT * FROM salary_groups WHERE user_id = ?", (user['id'],)).fetchall()
+                for sg in groups:
+                    summary = get_salaries_summary(conn, sg['id'])
+                    if summary:
+                        salaries_data.append({
+                            'group_name': sg['name'],
+                            'summary': summary
+                        })
+                        
+            # 7. Pension Funds
+            pension_data = []
+            if active_tabs.get('tab_fondopensione_active', True):
+                groups = conn.execute("SELECT * FROM pension_fund_groups WHERE user_id = ?", (user['id'],)).fetchall()
+                for pg in groups:
+                    funds = conn.execute("SELECT * FROM pension_funds WHERE pension_fund_group_id = ?", (pg['id'],)).fetchall()
+                    for f in funds:
+                        summary = get_pension_summary(conn, f['id'])
+                        if summary:
+                            pension_data.append({
+                                'fund_name': f['name'],
+                                'summary': summary
+                            })
+            
+            has_data = bool(investments_data or wallet_data or bills_data or vehicles_data or loans_data or salaries_data or pension_data)
+            if not has_data:
+                continue
                 
-            portfolios = conn.execute("SELECT * FROM portfolios WHERE user_id = ?", (user['id'],)).fetchall()
-            report_html = "<h2>Resoconto Settimanale Portafogli</h2>"
-            has_data = False
+            # Compile text representation for single Gemini call
+            compiled_text_parts = []
             
-            for p in portfolios:
-                snapshot = generate_snapshot_for_portfolio(p['id'])
-                if snapshot:
-                    has_data = True
-                    analisi = get_gemini_analysis_html(snapshot, portfolio_id=p['id'])
-                    report_html += f"<div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>"
-                    report_html += f"<h3>Portafoglio: {p['name']}</h3>"
-                    report_html += f"<ul><li><b>Investito:</b> {snapshot['invested']}</li><li><b>Valore Attuale:</b> {snapshot['value']}</li>"
-                    report_html += f"<li><b>Rendimento:</b> {snapshot['return_pct']}%</li><li><b>Guadagno Totale:</b> {snapshot['gain']}</li></ul>"
-                    report_html += f"</div><div style='margin-bottom: 30px;'><h4>Analisi Intelligenza Artificiale:</h4>{analisi}</div><hr style='border-top: 1px solid #dee2e6;'>"
+            if investments_data:
+                compiled_text_parts.append("--- INVESTIMENTI ---")
+                for item in investments_data:
+                    name = item['name']
+                    t_val = item['today']['value']
+                    t_inv = item['today']['invested']
+                    t_gain = item['today']['gain']
+                    t_ret = item['today']['return_pct']
+                    
+                    s7_str = "N/A"
+                    if item['7d']:
+                        s7_str = f"Val={item['7d']['value']:.2f}, Inv={item['7d']['invested']:.2f}, Guad={item['7d']['gain']:.2f}"
+                        
+                    s30_str = "N/A"
+                    if item['30d']:
+                        s30_str = f"Val={item['30d']['value']:.2f}, Inv={item['30d']['invested']:.2f}, Guad={item['30d']['gain']:.2f}"
+                        
+                    compiled_text_parts.append(
+                        f"Portafoglio '{name}':\n"
+                        f"  Oggi: Val={t_val:.2f}, Inv={t_inv:.2f}, Guad={t_gain:.2f}, Rend={t_ret:.2f}%\n"
+                        f"  7gg fa: {s7_str}\n"
+                        f"  30gg fa: {s30_str}"
+                    )
+                    
+            if wallet_data:
+                compiled_text_parts.append("--- WALLET (ENTRATE/USCITE) ---")
+                for item in wallet_data:
+                    name = item['name']
+                    s = item['summary']
+                    compiled_text_parts.append(
+                        f"Wallet '{name}':\n"
+                        f"  Ultimi 7gg: Entrate={s['inc_7d']:.2f}, Uscite={s['exp_7d']:.2f}\n"
+                        f"  Prev 7gg: Entrate={s['inc_prev_7d']:.2f}, Uscite={s['exp_prev_7d']:.2f}\n"
+                        f"  Ultimi 30gg: Entrate={s['inc_30d']:.2f}, Uscite={s['exp_30d']:.2f}\n"
+                        f"  Prev 30gg: Entrate={s['inc_prev_30d']:.2f}, Uscite={s['exp_prev_30d']:.2f}"
+                    )
+                    
+            if bills_data:
+                compiled_text_parts.append("--- BOLLETTE ---")
+                for item in bills_data:
+                    name = item['name']
+                    s = item['summary']
+                    prev_str = f"Tot={s['prev_total']:.2f}" if s['prev_total'] is not None else "N/A"
+                    compiled_text_parts.append(
+                        f"Profilo Bollette '{name}':\n"
+                        f"  Corr ({s['curr_year']}-{s['curr_month']}): Tot={s['curr_total']:.2f} (Acqua={s['curr_details']['water']:.2f}, Luce={s['curr_details']['elec']:.2f}, Gas={s['curr_details']['gas']:.2f})\n"
+                        f"  Prec: {prev_str}"
+                    )
+                    
+            if vehicles_data:
+                compiled_text_parts.append("--- VEICOLI ---")
+                for item in vehicles_data:
+                    garage = item['garage_name']
+                    for v_name, s in item['summary'].items():
+                        compiled_text_parts.append(
+                            f"Veicolo '{v_name}' (Garage '{garage}'):\n"
+                            f"  Costi 7gg: {s['cost_7d']:.2f} (Prev 7gg: {s['cost_prev_7d']:.2f})\n"
+                            f"  Costi 30gg: {s['cost_30d']:.2f} (Prev 30gg: {s['cost_prev_30d']:.2f})"
+                        )
+                        
+            if loans_data:
+                compiled_text_parts.append("--- PRESTITI ---")
+                for item in loans_data:
+                    compiled_text_parts.append(
+                        f"Prestito '{item['name']}':\n"
+                        f"  Debito Residuo Oggi: {item['rem_today']:.2f}\n"
+                        f"  7gg fa: {item['rem_7d']:.2f}\n"
+                        f"  30gg fa: {item['rem_30d']:.2f}"
+                    )
+                    
+            if salaries_data:
+                compiled_text_parts.append("--- STIPENDI ---")
+                for item in salaries_data:
+                    name = item['group_name']
+                    s = item['summary']
+                    prev_str = f"Net={s['prev_net']:.2f}" if s['prev_net'] is not None else "N/A"
+                    compiled_text_parts.append(
+                        f"Dipendente '{s['person']}' ({name}):\n"
+                        f"  Corr ({s['curr_month']}): Net={s['curr_net']:.2f}, Lord={s['curr_gross']:.2f}\n"
+                        f"  Prec: {prev_str}"
+                    )
+                    
+            if pension_data:
+                compiled_text_parts.append("--- FONDO PENSIONE ---")
+                for item in pension_data:
+                    name = item['fund_name']
+                    s = item['summary']
+                    prev_str = f"Val={s['prev_val']:.2f}" if s['prev_val'] is not None else "N/A"
+                    compiled_text_parts.append(
+                        f"Fondo '{name}':\n"
+                        f"  Corr ({s['curr_month']}): Val={s['curr_val']:.2f}\n"
+                        f"  Prec: {prev_str}"
+                    )
+                    
+            compiled_data_text = "\n".join(compiled_text_parts)
             
-            if has_data and app.config.get('SMTP_SERVER') and app.config.get('SMTP_USERNAME'):
+            # Call Gemini ONCE for holistic analysis
+            analisi_ai = get_gemini_holistic_analysis(compiled_data_text)
+            
+            # Construct premium HTML email body
+            report_body_html = ""
+            
+            # 1. Investments Card
+            if investments_data:
+                report_body_html += "<div class='section-title'>📈 Investimenti</div>"
+                for item in investments_data:
+                    name = item['name']
+                    val = item['today']['value']
+                    inv = item['today']['invested']
+                    gain = item['today']['gain']
+                    ret = item['today']['return_pct']
+                    
+                    comp_html = ""
+                    if item['7d']:
+                        diff_val = val - item['7d']['value']
+                        sign = "+" if diff_val >= 0 else ""
+                        cls = "pos" if diff_val >= 0 else "neg"
+                        comp_html = f"<span class='{cls}' style='font-size:11px; font-weight:bold;'>({sign}€{diff_val:,.2f} vs sett. prec.)</span>"
+                        
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Portafoglio: {name}</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Valore Attuale</span><br><span class='kpi-value'>€{val:,.2f}</span> {comp_html}</td>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Capitale Investito</span><br><span class='kpi-value'>€{inv:,.2f}</span></td>
+                            </tr>
+                            <tr>
+                                <td style='padding:5px 0;'><span class='kpi-label'>Rendimento</span><br><span class='kpi-value'>{ret:.2f}%</span></td>
+                                <td style='padding:5px 0;'><span class='kpi-label'>Guadagno Totale</span><br><span class='kpi-value'>€{gain:,.2f}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+                    
+            # 2. Wallet Card
+            if wallet_data:
+                report_body_html += "<div class='section-title'>💼 Entrate & Uscite (Wallet)</div>"
+                for item in wallet_data:
+                    name = item['name']
+                    s = item['summary']
+                    
+                    comp_inc_7d = ""
+                    if s['inc_prev_7d'] > 0:
+                        diff = s['inc_7d'] - s['inc_prev_7d']
+                        sign = "+" if diff >= 0 else ""
+                        cls = "pos" if diff >= 0 else "neg"
+                        comp_inc_7d = f"<span class='{cls}'>({sign}€{diff:,.2f} vs sett. prec.)</span>"
+                        
+                    comp_exp_7d = ""
+                    if s['exp_prev_7d'] > 0:
+                        diff = s['exp_7d'] - s['exp_prev_7d']
+                        sign = "+" if diff >= 0 else ""
+                        cls = "neg" if diff > 0 else "pos"
+                        comp_exp_7d = f"<span class='{cls}'>({sign}€{diff:,.2f} vs sett. prec.)</span>"
+                        
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Wallet: {name}</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Entrate (Ultimi 7gg)</span><br><span class='kpi-value'>€{s['inc_7d']:,.2f}</span> <div style='font-size:11px;'>{comp_inc_7d}</div></td>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Uscite (Ultimi 7gg)</span><br><span class='kpi-value'>€{s['exp_7d']:,.2f}</span> <div style='font-size:11px;'>{comp_exp_7d}</div></td>
+                            </tr>
+                            <tr>
+                                <td style='padding:5px 0;'><span class='kpi-label'>Entrate (Ultimi 30gg)</span><br><span class='kpi-value'>€{s['inc_30d']:,.2f}</span></td>
+                                <td style='padding:5px 0;'><span class='kpi-label'>Uscite (Ultimi 30gg)</span><br><span class='kpi-value'>€{s['exp_30d']:,.2f}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+                    
+            # 3. Bills Card
+            if bills_data:
+                report_body_html += "<div class='section-title'>🔌 Bollette</div>"
+                for item in bills_data:
+                    name = item['name']
+                    s = item['summary']
+                    
+                    comp_total = ""
+                    if s['prev_total'] is not None:
+                        diff = s['curr_total'] - s['prev_total']
+                        sign = "+" if diff >= 0 else ""
+                        cls = "neg" if diff > 0 else "pos"
+                        comp_total = f"<span class='{cls}'>({sign}€{diff:,.2f} vs mese prec.)</span>"
+                        
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Profilo Bollette: {name} ({s['curr_year']}-{s['curr_month']:02d})</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Costo Totale</span><br><span class='kpi-value'>€{s['curr_total']:,.2f}</span> <div style='font-size:11px;'>{comp_total}</div></td>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Dettaglio Spesa</span><br><span style='font-size:12px; color:#475569;'>Luce: €{s['curr_details']['elec']:.2f} | Gas: €{s['curr_details']['gas']:.2f} | Acqua: €{s['curr_details']['water']:.2f}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+                    
+            # 4. Vehicles Card
+            if vehicles_data:
+                report_body_html += "<div class='section-title'>🚗 Veicoli</div>"
+                for item in vehicles_data:
+                    garage = item['garage_name']
+                    for v_name, s in item['summary'].items():
+                        comp_cost = ""
+                        if s['cost_prev_7d'] > 0:
+                            diff = s['cost_7d'] - s['cost_prev_7d']
+                            sign = "+" if diff >= 0 else ""
+                            cls = "neg" if diff > 0 else "pos"
+                            comp_cost = f"<span class='{cls}'>({sign}€{diff:,.2f} vs sett. prec.)</span>"
+                            
+                        report_body_html += f"""
+                        <div class='card'>
+                            <div class='card-title'>{v_name} (Garage: {garage})</div>
+                            <table style='width:100%; border-collapse:collapse;'>
+                                    <tr>
+                                        <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Spese (Ultimi 7gg)</span><br><span class='kpi-value'>€{s['cost_7d']:,.2f}</span> <div style='font-size:11px;'>{comp_cost}</div></td>
+                                        <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Spese (Ultimi 30gg)</span><br><span class='kpi-value'>€{s['cost_30d']:,.2f}</span></td>
+                                    </tr>
+                            </table>
+                        </div>
+                        """
+                        
+            # 5. Loans Card
+            if loans_data:
+                report_body_html += "<div class='section-title'>🤝 Prestiti & Mutui</div>"
+                for item in loans_data:
+                    diff_7d = item['rem_today'] - item['rem_7d']
+                    comp_7d = f"<span class='pos'>({abs(diff_7d):,.2f}€ pagati)</span>" if diff_7d < 0 else ""
+                    
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Prestito: {item['name']}</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:100%;'><span class='kpi-label'>Debito Residuo</span><br><span class='kpi-value'>€{item['rem_today']:,.2f}</span> <span style='font-size:11px;'>{comp_7d}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+                    
+            # 6. Salaries Card
+            if salaries_data:
+                report_body_html += "<div class='section-title'>💼 Stipendi</div>"
+                for item in salaries_data:
+                    name = item['group_name']
+                    s = item['summary']
+                    
+                    comp_sal = ""
+                    if s['prev_net'] is not None:
+                        diff = s['curr_net'] - s['prev_net']
+                        sign = "+" if diff >= 0 else ""
+                        cls = "pos" if diff >= 0 else "neg"
+                        comp_sal = f"<span class='{cls}'>({sign}€{diff:,.2f} vs mese prec.)</span>"
+                        
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Dipendente: {s['person']} ({name}) - {s['curr_month']}</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Stipendio Netto</span><br><span class='kpi-value'>€{s['curr_net']:,.2f}</span> <div style='font-size:11px;'>{comp_sal}</div></td>
+                                <td style='padding:5px 0; width:50%;'><span class='kpi-label'>Stipendio Lordo</span><br><span class='kpi-value'>€{s['curr_gross']:,.2f}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+                    
+            # 7. Pension Funds Card
+            if pension_data:
+                report_body_html += "<div class='section-title'>🛡️ Fondo Pensione</div>"
+                for item in pension_data:
+                    name = item['fund_name']
+                    s = item['summary']
+                    
+                    comp_pension = ""
+                    if s['prev_val'] is not None:
+                        diff = s['curr_val'] - s['prev_val']
+                        sign = "+" if diff >= 0 else ""
+                        cls = "pos" if diff >= 0 else "neg"
+                        comp_pension = f"<span class='{cls}'>({sign}€{diff:,.2f} vs mese prec.)</span>"
+                        
+                    report_body_html += f"""
+                    <div class='card'>
+                        <div class='card-title'>Fondo: {name} ({s['curr_month']})</div>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <td style='padding:5px 0; width:100%;'><span class='kpi-label'>Valore Posizione</span><br><span class='kpi-value'>€{s['curr_val']:,.2f}</span> <div style='font-size:11px;'>{comp_pension}</div></td>
+                            </tr>
+                        </table>
+                    </div>
+                    """
+            
+            # Combine into the premium layout
+            premium_report_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333333; margin: 0; padding: 20px; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+        .header {{ background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px 20px; text-align: center; color: #ffffff; }}
+        .header h1 {{ margin: 0; font-size: 24px; font-weight: 700; }}
+        .header p {{ margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }}
+        .content {{ padding: 25px 20px; }}
+        .section-title {{ font-size: 16px; font-weight: 700; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .card {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; }}
+        .card-title {{ font-size: 14px; font-weight: 700; color: #334155; margin-top: 0; margin-bottom: 10px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }}
+        .kpi-label {{ font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .kpi-value {{ font-size: 15px; font-weight: 600; color: #0f172a; margin-top: 2px; }}
+        .pos {{ color: #10b981; }}
+        .neg {{ color: #ef4444; }}
+        .neutral {{ color: #64748b; }}
+        .ai-section {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 20px; margin-top: 30px; }}
+        .ai-title {{ font-size: 15px; font-weight: 700; color: #15803d; margin-top: 0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .ai-content {{ font-size: 13.5px; line-height: 1.6; color: #1e293b; }}
+        .footer {{ text-align: center; padding: 20px; font-size: 11px; color: #94a3b8; background: #f8fafc; border-top: 1px solid #e2e8f0; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CoTrack</h1>
+            <p>Resoconto Finanziario Settimanale AI</p>
+        </div>
+        <div class="content">
+            {report_body_html}
+            
+            <div class="ai-section">
+                <div class="ai-title">✨ Analisi Finanziaria AI</div>
+                <div class="ai-content">{analisi_ai}</div>
+            </div>
+        </div>
+        <div class="footer">
+            Generato automaticamente da CoTrack. Non rispondere a questa email.
+        </div>
+    </div>
+</body>
+</html>
+"""
+            
+            if app.config.get('SMTP_SERVER') and app.config.get('SMTP_USERNAME'):
                 msg = MIMEMultipart()
                 msg['From'] = app.config.get('MAIL_DEFAULT_SENDER') or app.config.get('SMTP_USERNAME')
                 msg['To'] = email_destinatario
                 msg['Subject'] = "Resoconto Settimanale AI - CoTrack"
-                msg.attach(MIMEText(report_html, 'html'))
+                msg.attach(MIMEText(premium_report_html, 'html'))
                 try:
                     server = smtplib.SMTP(app.config.get('SMTP_SERVER'), app.config.get('SMTP_PORT'))
                     server.starttls()
                     server.login(app.config.get('SMTP_USERNAME'), app.config.get('SMTP_PASSWORD'))
                     server.send_message(msg)
                     server.quit()
-                except Exception as e: print(f"Errore invio report a {email_destinatario}: {e}")
+                except Exception as e:
+                    print(f"Errore invio report a {email_destinatario}: {e}")
+                    
         conn.close()
 
 def send_daily_reminders():
@@ -1673,6 +2501,38 @@ def settings_exchange():
         row = conn.execute("SELECT value FROM configurations WHERE key = 'default_exchange'").fetchone()
         conn.close()
         return jsonify({"exchange": row['value'] if row and row['value'] else '.MI'})
+
+@app.route('/api/settings/tabs', methods=['GET', 'POST'])
+def settings_tabs():
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+    tabs_keys = [
+        'tab_investimenti_active', 'tab_wallet_active', 'tab_bollette_active',
+        'tab_veicoli_active', 'tab_prestiti_active', 'tab_stipendi_active', 'tab_fondopensione_active'
+    ]
+    if request.method == 'POST':
+        data = request.json or {}
+        for key in tabs_keys:
+            if key in data:
+                val = 'true' if data[key] else 'false'
+                conn.execute(
+                    "INSERT OR REPLACE INTO configurations (key, value) VALUES (?, ?)",
+                    (f"user_config:{user_id}:{key}", val)
+                )
+        conn.commit()
+        conn.close()
+        return jsonify({"messaggio": _("Settings updated successfully")})
+    else:
+        res = {}
+        for key in tabs_keys:
+            row = conn.execute(
+                "SELECT value FROM configurations WHERE key = ?", 
+                (f"user_config:{user_id}:{key}",)
+            ).fetchone()
+            res[key] = (row['value'] == 'true') if row else True
+        conn.close()
+        return jsonify(res)
 
 @app.route('/api/portfolios', methods=['GET', 'POST'])
 def manage_portfolios():

@@ -215,6 +215,7 @@ async function checkAuth() {
             
             await Promise.all([
                 caricaImpostazioniExchange(),
+                caricaImpostazioniTab(),
                 caricaPortafogli(),
                 caricaWallets(),
                 caricaBills(),
@@ -236,6 +237,21 @@ async function caricaImpostazioniExchange() {
             if (sel && data.exchange) sel.value = data.exchange;
         }
     } catch (e) { console.warn('Impossibile caricare impostazioni exchange:', e); }
+}
+
+async function caricaImpostazioniTab() {
+    try {
+        let res = await fetch('/api/settings/tabs');
+        if (res.ok) {
+            let data = await res.json();
+            for (let key in data) {
+                localStorage.setItem(key, data[key] ? 'true' : 'false');
+            }
+            if (typeof window.applyTabVisibility === 'function') {
+                window.applyTabVisibility();
+            }
+        }
+    } catch (e) { console.warn('Impossibile caricare impostazioni tab:', e); }
 }
 
 async function cambiaExchangeDefault(exchange) {
@@ -4438,6 +4454,13 @@ window.toggleTabSetting = function(storageKey, isChecked) {
 
     localStorage.setItem(storageKey, isChecked ? 'true' : 'false');
     window.applyTabVisibility();
+
+    // Salva sul backend
+    fetch('/api/settings/tabs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [storageKey]: isChecked })
+    }).catch(err => console.error("Errore salvataggio impostazioni tab sul server:", err));
 };
 
 window.saveDefaultTabSetting = function(tabId) {
