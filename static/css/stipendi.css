@@ -250,6 +250,9 @@
 #tab-stipendi .stat-card.stip-net .stat-icon-wrapper { background-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
 #tab-stipendi .stat-card.stip-avg .stat-icon-wrapper { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 #tab-stipendi .stat-card.stip-allowance .stat-icon-wrapper { background-color: rgba(236, 72, 153, 0.15); color: #ec4899; }
+#tab-stipendi .stat-card.stip-gross-lavoro .stat-icon-wrapper { background-color: rgba(249, 115, 22, 0.15); color: #f97316; }
+#tab-stipendi .stat-card.stip-net-lavoro .stat-icon-wrapper { background-color: rgba(20, 184, 166, 0.15); color: #14b8a6; }
+#tab-stipendi .stat-card.stip-avg-lavoro .stat-icon-wrapper { background-color: rgba(6, 182, 212, 0.15); color: #06b6d4; }
 #tab-stipendi .stat-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 #tab-stipendi .stat-value { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 2px 0; }
 

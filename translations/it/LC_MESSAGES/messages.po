@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-01 12:21+0200\n"
+"POT-Creation-Date: 2026-07-02 10:45+0200\n"
 "PO-Revision-Date: 2026-04-27 15:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -18,223 +18,223 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: app.py:1339
+#: app.py:1534
 msgid "Login successful"
 msgstr "Login effettuato"
 
-#: app.py:1340
+#: app.py:1535
 msgid "Invalid credentials"
 msgstr "Credenziali non valide"
 
-#: app.py:1376
+#: app.py:1571
 msgid "Username must be a valid email address"
 msgstr ""
 
-#: app.py:1386
+#: app.py:1581
 msgid "Registration completed"
 msgstr "Registrazione completata"
 
-#: app.py:1388
+#: app.py:1583
 msgid "Username already in use"
 msgstr "Username già in uso"
 
-#: app.py:1395
+#: app.py:1590
 msgid "Logout successful"
 msgstr "Logout effettuato"
 
-#: app.py:1428
+#: app.py:1623
 msgid "Valid email required"
 msgstr ""
 
-#: app.py:1441
+#: app.py:1636
 msgid "If the email exists, a reset link has been sent."
 msgstr ""
 
-#: app.py:1447 app.py:1788
+#: app.py:1642 app.py:1983
 msgid "Missing data"
 msgstr "Dati mancanti"
 
-#: app.py:1452
+#: app.py:1647
 #, fuzzy
 msgid "Invalid or expired token"
 msgstr "Credenziali non valide"
 
-#: app.py:1457
+#: app.py:1652
 #, fuzzy
 msgid "Password updated successfully"
 msgstr "Tipo asset aggiornato con successo!"
 
-#: app.py:1463 app.py:1478 app.py:1489 app.py:1512 app.py:1529 app.py:1551
-#: app.py:1569 app.py:1584 app.py:1602 app.py:1618 app.py:1633 app.py:1651
-#: app.py:1667 app.py:1682 app.py:1700 app.py:1717 app.py:1761 app.py:1770
-#: app.py:1780 app.py:1800 app.py:1833 app.py:1845 app.py:1903 app.py:1941
-#: app.py:2057 app.py:2134 app.py:2160 app.py:2289 app.py:2563 app.py:2572
-#: app.py:2593 app.py:2618 app.py:2628 app.py:2652 app.py:2681 app.py:2871
-#: app.py:3060 app.py:3135 app.py:3163 app.py:3227 app.py:3265 app.py:3539
-#: app.py:3593 app.py:3643 app.py:3720 app.py:3773 app.py:3843 app.py:3872
-#: app.py:3943 app.py:3972 app.py:4023 app.py:4038 app.py:4056 app.py:4074
-#: app.py:4126 app.py:4169 app.py:4221 app.py:4261 app.py:4390 app.py:5180
-#: app.py:5200 app.py:5279
+#: app.py:1658 app.py:1673 app.py:1684 app.py:1707 app.py:1724 app.py:1746
+#: app.py:1764 app.py:1779 app.py:1797 app.py:1813 app.py:1828 app.py:1846
+#: app.py:1862 app.py:1877 app.py:1895 app.py:1912 app.py:1956 app.py:1965
+#: app.py:1975 app.py:1995 app.py:2028 app.py:2040 app.py:2098 app.py:2140
+#: app.py:2256 app.py:2333 app.py:2359 app.py:2488 app.py:2762 app.py:2771
+#: app.py:2792 app.py:2817 app.py:2827 app.py:2851 app.py:2880 app.py:3070
+#: app.py:3259 app.py:3334 app.py:3362 app.py:3426 app.py:3464 app.py:3738
+#: app.py:3792 app.py:3842 app.py:3919 app.py:3972 app.py:4042 app.py:4071
+#: app.py:4142 app.py:4171 app.py:4222 app.py:4237 app.py:4255 app.py:4273
+#: app.py:4325 app.py:4368 app.py:4420 app.py:4460 app.py:4589 app.py:5741
+#: app.py:5761 app.py:5855 app.py:5978 app.py:5992 app.py:6006 app.py:6020
 msgid "Not authenticated"
 msgstr "Non autenticato"
 
-#: app.py:1516 templates/components/tab_investimenti.html:7
+#: app.py:1711 templates/components/tab_investimenti.html:7
 msgid "New Portfolio"
 msgstr "Nuovo Portafoglio"
 
-#: app.py:1521
+#: app.py:1716
 msgid "Portfolio created"
 msgstr "Portafoglio creato"
 
-#: app.py:1533 app.py:1587 app.py:1636 app.py:1685
+#: app.py:1728 app.py:1782 app.py:1831 app.py:1880
 msgid "Name cannot be empty"
 msgstr "Il nome non può essere vuoto"
 
-#: app.py:1544 app.py:1557
+#: app.py:1739 app.py:1752
 msgid "Portfolio not found or unauthorized"
 msgstr "Portafoglio non trovato o non autorizzato"
 
-#: app.py:1547
+#: app.py:1742
 msgid "Portfolio renamed successfully"
 msgstr "Portafoglio rinominato con successo"
 
-#: app.py:1564
+#: app.py:1759
 msgid "Portfolio deleted successfully"
 msgstr "Portafoglio eliminato con successo"
 
-#: app.py:1572 templates/components/tab_wallet.html:7
+#: app.py:1767 templates/components/tab_wallet.html:7
 msgid "New Wallet"
 msgstr "Nuovo Wallet"
 
-#: app.py:1577
+#: app.py:1772
 msgid "Wallet created"
 msgstr "Wallet creato"
 
-#: app.py:1596 app.py:1607
+#: app.py:1791 app.py:1802
 msgid "Wallet not found or unauthorized"
 msgstr "Wallet non trovato o non autorizzato"
 
-#: app.py:1598
+#: app.py:1793
 msgid "Wallet renamed successfully"
 msgstr "Wallet rinominato con successo"
 
-#: app.py:1613
+#: app.py:1808
 msgid "Wallet deleted successfully"
 msgstr "Wallet eliminato con successo"
 
-#: app.py:1621 templates/components/tab_bollette.html:6
+#: app.py:1816 templates/components/tab_bollette.html:6
 msgid "New Bills Group"
 msgstr "Nuovo Gruppo Bollette"
 
-#: app.py:1626
+#: app.py:1821
 msgid "Bills group created"
 msgstr "Gruppo Bollette creato"
 
-#: app.py:1645 app.py:1656 app.py:3078 app.py:3125 app.py:3181 app.py:3209
-#: app.py:3234 app.py:3275
+#: app.py:1840 app.py:1851 app.py:3277 app.py:3324 app.py:3380 app.py:3408
+#: app.py:3433 app.py:3474
 msgid "Bills group not found or unauthorized"
 msgstr "Gruppo Bollette non trovato o non autorizzato"
 
-#: app.py:1647
+#: app.py:1842
 msgid "Bills group renamed successfully"
 msgstr "Gruppo Bollette rinominato con successo"
 
-#: app.py:1662
+#: app.py:1857
 msgid "Bills group deleted successfully"
 msgstr "Gruppo Bollette eliminato con successo"
 
-#: app.py:1670 templates/components/tab_veicoli.html:6
+#: app.py:1865 templates/components/tab_veicoli.html:6
 msgid "New Garage"
 msgstr "Nuovo Garage"
 
-#: app.py:1675
+#: app.py:1870
 msgid "Garage created"
 msgstr "Garage creato"
 
-#: app.py:1694 app.py:1705 app.py:3549 app.py:3653 app.py:3783 app.py:3953
-#: app.py:3985
+#: app.py:1889 app.py:1900 app.py:3748 app.py:3852 app.py:3982 app.py:4152
+#: app.py:4184
 msgid "Garage not found or unauthorized"
 msgstr "Garage non trovato o non autorizzato"
 
-#: app.py:1696
+#: app.py:1891
 msgid "Garage renamed successfully"
 msgstr "Garage rinominato con successo"
 
-#: app.py:1713
+#: app.py:1908
 msgid "Garage deleted successfully"
 msgstr "Garage eliminato con successo"
 
-#: app.py:1751
+#: app.py:1946
 msgid "Transaction saved successfully!"
 msgstr "Transazione salvata con successo!"
 
-#: app.py:1766
+#: app.py:1961
 msgid "Transaction deleted!"
 msgstr "Transazione eliminata!"
 
-#: app.py:1776
+#: app.py:1971
 msgid "All transactions deleted!"
 msgstr "Tutte le transazioni eliminate!"
 
-#: app.py:1795
+#: app.py:1990
 msgid "Asset type updated successfully!"
 msgstr "Tipo asset aggiornato con successo!"
 
-#: app.py:1836
+#: app.py:2031
 msgid "Database not found"
 msgstr "Database non trovato"
 
-#: app.py:1849 app.py:1906 app.py:1945 app.py:2061 app.py:2137 app.py:2683
-#: app.py:2875 app.py:3267 app.py:4271 app.py:5182 app.py:5207 app.py:5285
+#: app.py:2044 app.py:2101 app.py:2144 app.py:2260 app.py:2336 app.py:2882
+#: app.py:3074 app.py:3466 app.py:4470 app.py:5743 app.py:5768 app.py:5861
 msgid "No file uploaded"
 msgstr "Nessun file caricato"
 
-#: app.py:1855 app.py:1910 app.py:2067 app.py:2141 app.py:2686 app.py:3269
+#: app.py:2050 app.py:2105 app.py:2266 app.py:2340 app.py:2885 app.py:3468
 msgid "No file selected"
 msgstr "Nessun file selezionato"
 
-#: app.py:1894
+#: app.py:2089
 #, python-format
 msgid "CSV format error: %(err)s"
 msgstr "Errore formato CSV: %(err)s"
 
-#: app.py:1897
+#: app.py:2092
 msgid "Import completed successfully!"
 msgstr "Importazione completata con successo!"
 
-#: app.py:1899 app.py:1937 app.py:2867
+#: app.py:2094 app.py:2135 app.py:3066
 msgid "Invalid file format. Expected CSV."
 msgstr "Formato file non valido. Atteso CSV."
 
-#: app.py:1921 app.py:1962 app.py:2694 app.py:2892 app.py:3285 app.py:4294
-#: app.py:5224 app.py:5302
+#: app.py:2117 app.py:2161 app.py:2893 app.py:3091 app.py:3484 app.py:4493
+#: app.py:5785 app.py:5878
 msgid "The uploaded file is empty."
 msgstr "Il file caricato è vuoto."
 
-#: app.py:1933
+#: app.py:2129 app.py:5891
 #, fuzzy
 msgid "CSV format error."
 msgstr "Errore formato CSV: %(err)s"
 
-#: app.py:1950 app.py:2880 app.py:4277 app.py:5212 app.py:5290
+#: app.py:2149 app.py:3079 app.py:4476 app.py:5773 app.py:5866
 msgid "Missing column mapping"
 msgstr ""
 
-#: app.py:1955 app.py:2885 app.py:4283 app.py:5217 app.py:5295
+#: app.py:2154 app.py:3084 app.py:4482 app.py:5778 app.py:5871
 msgid "Invalid mapping format"
 msgstr ""
 
-#: app.py:2050
+#: app.py:2249
 #, fuzzy, python-format
 msgid "Import error: %(err)s"
 msgstr "Errore formato CSV: %(err)s"
 
-#: app.py:2052
+#: app.py:2251
 #, fuzzy
 msgid "Custom import completed successfully!"
 msgstr "Importazione completata con successo!"
 
-#: app.py:2071
+#: app.py:2270
 msgid ""
 "PyPDF2 library not installed. Add it to the server with 'pip install "
 "PyPDF2'."
@@ -242,43 +242,43 @@ msgstr ""
 "Libreria PyPDF2 non installata. Aggiungila al server con 'pip install "
 "PyPDF2'."
 
-#: app.py:2090
+#: app.py:2289
 msgid "ISIN code not found in PDF"
 msgstr "Codice ISIN non trovato nel PDF"
 
-#: app.py:2109
+#: app.py:2308
 msgid "Execution data (quantity, price, total) not found in PDF"
 msgstr "Dati di esecuzione (quantità, prezzo, totale) non trovati nel PDF"
 
-#: app.py:2123
+#: app.py:2322
 #, python-format
 msgid "Transaction for %(name)s imported successfully!"
 msgstr "Transazione per %(name)s importata con successo!"
 
-#: app.py:2125
+#: app.py:2324
 msgid "This transaction has already been imported into the portfolio."
 msgstr "Questa transazione risulta già importata nel portafoglio."
 
-#: app.py:2128 app.py:2154
+#: app.py:2327 app.py:2353
 #, python-format
 msgid "Error reading PDF: %(err)s"
 msgstr "Errore durante la lettura del PDF: %(err)s"
 
-#: app.py:2130 app.py:2156
+#: app.py:2329 app.py:2355
 msgid "Invalid file format. Expected PDF."
 msgstr "Formato file non valido. Atteso PDF."
 
-#: app.py:2145
+#: app.py:2344
 msgid "PyPDF2 library not installed."
 msgstr ""
 
-#: app.py:2163
+#: app.py:2362
 msgid "Google Generative AI SDK not installed. Run 'pip install google-genai'."
 msgstr ""
 "Google Generative AI SDK non installata. Esegui 'pip install google-"
 "genai'."
 
-#: app.py:2167
+#: app.py:2366
 msgid ""
 "Gemini API key not configured. Please set GEMINI_API_KEY environment "
 "variable."
@@ -286,35 +286,35 @@ msgstr ""
 "Chiave API di Gemini non configurata. Imposta la variabile d'ambiente "
 "GEMINI_API_KEY."
 
-#: app.py:2578
+#: app.py:2777
 #, fuzzy
 msgid "Missing category"
 msgstr "Dati mancanti"
 
-#: app.py:2584
+#: app.py:2783
 #, fuzzy
 msgid "Category updated successfully"
 msgstr "Tipo asset aggiornato con successo!"
 
-#: app.py:2609
+#: app.py:2808
 msgid "Configuration saved!"
 msgstr "Configurazione salvata!"
 
-#: app.py:2624
+#: app.py:2823
 msgid "All Wallet transactions deleted!"
 msgstr "Tutte le transazioni Wallet eliminate!"
 
-#: app.py:2635
+#: app.py:2834
 #, fuzzy
 msgid "No transactions selected"
 msgstr "Transazione eliminata!"
 
-#: app.py:2643
+#: app.py:2842
 #, fuzzy
 msgid "Selected transactions deleted!"
 msgstr "Tutte le transazioni eliminate!"
 
-#: app.py:2858 app.py:2984
+#: app.py:3057 app.py:3183
 #, python-format
 msgid ""
 "Imported %(count)s new transactions. (Ignored %(ignored)s already "
@@ -324,7 +324,7 @@ msgstr ""
 "presenti). ATTENZIONE: %(errors)s righe non sono state lette "
 "correttamente."
 
-#: app.py:2860 app.py:2986
+#: app.py:3059 app.py:3185
 #, python-format
 msgid ""
 "Imported %(count)s new transactions successfully! (Ignored %(ignored)s "
@@ -333,68 +333,68 @@ msgstr ""
 "Importate %(count)s nuove transazioni con successo! (Ignorate %(ignored)s"
 " già presenti)."
 
-#: app.py:3072
+#: app.py:3271
 msgid "Missing required fields"
 msgstr ""
 
-#: app.py:3109
+#: app.py:3308
 #, fuzzy
 msgid "Bill saved successfully"
 msgstr "Transazione salvata con successo!"
 
-#: app.py:3120 app.py:3176 app.py:3204
+#: app.py:3319 app.py:3375 app.py:3403
 #, fuzzy
 msgid "Missing bills_id"
 msgstr "Nuovo Portafoglio"
 
-#: app.py:3147
+#: app.py:3346
 #, fuzzy
 msgid "Bill not found or unauthorized"
 msgstr "Portafoglio non trovato o non autorizzato"
 
-#: app.py:3152
+#: app.py:3351
 #, fuzzy
 msgid "Bill deleted successfully"
 msgstr "Portafoglio eliminato con successo"
 
-#: app.py:3193
+#: app.py:3392
 #, fuzzy
 msgid "Config saved successfully"
 msgstr "Configurazione salvata con successo!"
 
-#: app.py:3334
+#: app.py:3533
 #, python-format
 msgid "Imported %(count)s bills successfully!"
 msgstr "Importate %(count)s bollette con successo!"
 
-#: app.py:3342
+#: app.py:3541
 #, fuzzy
 msgid "Invalid file type"
 msgstr "Formato file non valido. Atteso PDF."
 
-#: app.py:3543 app.py:3647 app.py:3777 app.py:3947 app.py:3979
+#: app.py:3742 app.py:3846 app.py:3976 app.py:4146 app.py:4178
 #, fuzzy
 msgid "Missing garage_id"
 msgstr "Nuovo Portafoglio"
 
-#: app.py:3603
+#: app.py:3802 app.py:5983
 #, fuzzy
 msgid "Vehicle not found or unauthorized"
 msgstr "Portafoglio non trovato o non autorizzato"
 
-#: app.py:3731
+#: app.py:3930
 msgid "Activity not found or unauthorized"
 msgstr "Attività non trovata o non autorizzata"
 
-#: app.py:4132 app.py:4176 app.py:4267
+#: app.py:4331 app.py:4375 app.py:4466 app.py:5997
 msgid "Loan not found or unauthorized"
 msgstr "Prestito non trovato o non autorizzato"
 
-#: app.py:4233
+#: app.py:4432
 msgid "Payment not found or unauthorized"
 msgstr "Pagamento non trovato o non autorizzato"
 
-#: app.py:4380
+#: app.py:4579
 #, python-format
 msgid ""
 "Import completed: %(imported)d payments imported, %(skipped)d skipped as "
@@ -403,7 +403,7 @@ msgstr ""
 "Importazione completata: %(imported)d pagamenti importati, %(skipped)d "
 "saltati come duplicati."
 
-#: app.py:5185
+#: app.py:5746
 msgid "The file must be a PDF"
 msgstr ""
 
@@ -525,7 +525,7 @@ msgstr "Nessun dato del portafoglio disponibile."
 msgid "No bills inserted."
 msgstr "Nessuna bolletta ancora inserita."
 
-#: templates/components/tab_fondopensione.html:234 templates/index.html:66
+#: templates/components/tab_fondopensione.html:305 templates/index.html:66
 msgid "No contributions."
 msgstr "Nessun contributo."
 
@@ -638,7 +638,7 @@ msgstr "Nessuna transazione trovata."
 msgid "No assets in portfolio."
 msgstr "Nessun asset nel portafoglio."
 
-#: templates/components/tab_prestiti.html:236 templates/index.html:94
+#: templates/components/tab_prestiti.html:268 templates/index.html:94
 msgid "Interest Rate Change (TAN)"
 msgstr "Variazione Tasso (TAN)"
 
@@ -653,6 +653,60 @@ msgstr "Fisso"
 #: templates/index.html:97
 msgid "Variable"
 msgstr "Variabile"
+
+#: templates/components/tab_fondopensione.html:300 templates/index.html:98
+msgid "Spese"
+msgstr "Spese"
+
+#: templates/index.html:104
+msgid "Map Pension Fund CSV Columns"
+msgstr "Mappa Colonne CSV Fondo Pensione"
+
+#: templates/components/tab_investimenti.html:462
+#: templates/components/tab_prestiti.html:555
+#: templates/components/tab_stipendi.html:426
+#: templates/components/tab_wallet.html:278 templates/index.html:105
+msgid ""
+"Select the corresponding column from your CSV file for each required "
+"field."
+msgstr ""
+"Seleziona la colonna corrispondente dal tuo file CSV per ciascun campo "
+"richiesto."
+
+#: templates/components/tab_bollette.html:172
+#: templates/components/tab_bollette.html:202
+#: templates/components/tab_fondopensione.html:253
+#: templates/components/tab_fondopensione.html:366
+#: templates/components/tab_fondopensione.html:400
+#: templates/components/tab_fondopensione.html:480
+#: templates/components/tab_investimenti.html:467
+#: templates/components/tab_investimenti.html:549
+#: templates/components/tab_prestiti.html:276
+#: templates/components/tab_prestiti.html:437
+#: templates/components/tab_prestiti.html:471
+#: templates/components/tab_prestiti.html:545
+#: templates/components/tab_prestiti.html:560
+#: templates/components/tab_stipendi.html:288
+#: templates/components/tab_stipendi.html:371
+#: templates/components/tab_stipendi.html:431
+#: templates/components/tab_stipendi.html:466
+#: templates/components/tab_stipendi.html:545
+#: templates/components/tab_veicoli.html:862
+#: templates/components/tab_veicoli.html:962
+#: templates/components/tab_wallet.html:283 templates/index.html:110
+msgid "Cancel"
+msgstr "Annulla"
+
+#: templates/components/tab_fondopensione.html:481
+#: templates/components/tab_investimenti.html:468
+#: templates/components/tab_investimenti.html:550
+#: templates/components/tab_prestiti.html:546
+#: templates/components/tab_prestiti.html:561
+#: templates/components/tab_stipendi.html:432
+#: templates/components/tab_stipendi.html:546
+#: templates/components/tab_wallet.html:284 templates/index.html:111
+msgid "Confirm and Import"
+msgstr "Conferma e Importa"
 
 #: templates/components/header.html:4
 msgid "Make a donation to support the project"
@@ -742,13 +796,13 @@ msgid "Total Cost"
 msgstr "Costo Totale"
 
 #: templates/components/tab_bollette.html:75
-#: templates/components/tab_fondopensione.html:230
-#: templates/components/tab_stipendi.html:252
-#: templates/components/tab_stipendi.html:317
-#: templates/components/tab_veicoli.html:313
-#: templates/components/tab_veicoli.html:339
-#: templates/components/tab_veicoli.html:365
-#: templates/components/tab_veicoli.html:392
+#: templates/components/tab_fondopensione.html:301
+#: templates/components/tab_stipendi.html:329
+#: templates/components/tab_stipendi.html:394
+#: templates/components/tab_veicoli.html:314
+#: templates/components/tab_veicoli.html:340
+#: templates/components/tab_veicoli.html:366
+#: templates/components/tab_veicoli.html:393
 msgid "Actions"
 msgstr "Azioni"
 
@@ -777,15 +831,15 @@ msgid "Year"
 msgstr "Anno"
 
 #: templates/components/tab_bollette.html:111
-#: templates/components/tab_fondopensione.html:134
-#: templates/components/tab_fondopensione.html:225
-#: templates/components/tab_fondopensione.html:310
-#: templates/components/tab_fondopensione.html:404
-#: templates/components/tab_prestiti.html:312
-#: templates/components/tab_stipendi.html:167
-#: templates/components/tab_stipendi.html:248
-#: templates/components/tab_stipendi.html:374
-#: templates/components/tab_stipendi.html:453
+#: templates/components/tab_fondopensione.html:189
+#: templates/components/tab_fondopensione.html:293
+#: templates/components/tab_fondopensione.html:385
+#: templates/components/tab_fondopensione.html:464
+#: templates/components/tab_prestiti.html:347
+#: templates/components/tab_stipendi.html:194
+#: templates/components/tab_stipendi.html:325
+#: templates/components/tab_stipendi.html:451
+#: templates/components/tab_stipendi.html:530
 msgid "Month"
 msgstr "Mese"
 
@@ -846,41 +900,16 @@ msgstr "Prezzo (€)"
 #: templates/components/tab_bollette.html:137
 #: templates/components/tab_bollette.html:151
 #: templates/components/tab_bollette.html:165
-#: templates/components/tab_veicoli.html:311
+#: templates/components/tab_veicoli.html:312
 msgid "Consumption"
 msgstr "Consumo"
 
-#: templates/components/tab_bollette.html:172
-#: templates/components/tab_bollette.html:202
-#: templates/components/tab_fondopensione.html:186
-#: templates/components/tab_fondopensione.html:291
-#: templates/components/tab_fondopensione.html:325
-#: templates/components/tab_fondopensione.html:340
-#: templates/components/tab_fondopensione.html:420
-#: templates/components/tab_investimenti.html:467
-#: templates/components/tab_investimenti.html:549
-#: templates/components/tab_prestiti.html:244
-#: templates/components/tab_prestiti.html:402
-#: templates/components/tab_prestiti.html:436
-#: templates/components/tab_prestiti.html:510
-#: templates/components/tab_prestiti.html:525
-#: templates/components/tab_stipendi.html:213
-#: templates/components/tab_stipendi.html:294
-#: templates/components/tab_stipendi.html:354
-#: templates/components/tab_stipendi.html:389
-#: templates/components/tab_stipendi.html:468
-#: templates/components/tab_veicoli.html:861
-#: templates/components/tab_veicoli.html:961
-#: templates/components/tab_wallet.html:283
-msgid "Cancel"
-msgstr "Annulla"
-
 #: templates/components/tab_bollette.html:173
 #: templates/components/tab_bollette.html:203
-#: templates/components/tab_fondopensione.html:292
-#: templates/components/tab_stipendi.html:214
-#: templates/components/tab_stipendi.html:295
-#: templates/components/tab_veicoli.html:862
+#: templates/components/tab_fondopensione.html:367
+#: templates/components/tab_stipendi.html:289
+#: templates/components/tab_stipendi.html:372
+#: templates/components/tab_veicoli.html:863
 msgid "Save"
 msgstr "Salva"
 
@@ -920,180 +949,282 @@ msgstr "Fondo Attivo"
 msgid "Add fund"
 msgstr "Aggiungi fondo"
 
-#: templates/components/tab_fondopensione.html:36
-#: templates/components/tab_prestiti.html:41
-#: templates/components/tab_stipendi.html:37
+#: templates/components/tab_fondopensione.html:37
+#: templates/components/tab_prestiti.html:42
+#: templates/components/tab_stipendi.html:38
+#: templates/components/tab_veicoli.html:33
+#, fuzzy
+msgid "Periodo"
+msgstr "Periodo"
+
+#: templates/components/tab_fondopensione.html:40
+#: templates/components/tab_prestiti.html:45
+#: templates/components/tab_stipendi.html:41
+#: templates/components/tab_veicoli.html:36
+msgid "Mese corrente"
+msgstr "Mese corrente"
+
+#: templates/components/tab_fondopensione.html:41
+#: templates/components/tab_prestiti.html:46
+#: templates/components/tab_stipendi.html:42
+#: templates/components/tab_veicoli.html:37
+msgid "Mese precedente"
+msgstr "Mese precedente"
+
+#: templates/components/tab_fondopensione.html:42
+#: templates/components/tab_prestiti.html:47
+#: templates/components/tab_stipendi.html:43
+#: templates/components/tab_veicoli.html:38
+msgid "Ultimo mese"
+msgstr "Ultimo mese"
+
+#: templates/components/tab_fondopensione.html:43
+#: templates/components/tab_prestiti.html:48
+#: templates/components/tab_stipendi.html:44
+#: templates/components/tab_veicoli.html:39
+msgid "Ultimi 3 mesi"
+msgstr "Ultimi 3 mesi"
+
+#: templates/components/tab_fondopensione.html:44
+#: templates/components/tab_prestiti.html:49
+#: templates/components/tab_stipendi.html:45
+#: templates/components/tab_veicoli.html:40
+msgid "Ultimi 6 mesi"
+msgstr "Ultimi 6 mesi"
+
+#: templates/components/tab_fondopensione.html:45
+#: templates/components/tab_prestiti.html:50
+#: templates/components/tab_stipendi.html:46
+#: templates/components/tab_veicoli.html:41
+msgid "Ultimo anno"
+msgstr "Ultimo anno"
+
+#: templates/components/tab_fondopensione.html:46
+#: templates/components/tab_prestiti.html:51
+#: templates/components/tab_stipendi.html:47
+#: templates/components/tab_veicoli.html:42
+msgid "Tutto il periodo"
+msgstr "Tutto il periodo"
+
+#: templates/components/tab_fondopensione.html:47
+#: templates/components/tab_prestiti.html:52
+#: templates/components/tab_stipendi.html:48
+#: templates/components/tab_veicoli.html:43
+msgid "Personalizza"
+msgstr "Personalizza"
+
+#: templates/components/tab_fondopensione.html:52
+#: templates/components/tab_prestiti.html:57
+#: templates/components/tab_stipendi.html:53
+#: templates/components/tab_veicoli.html:48
+msgid "Dal"
+msgstr "Dal"
+
+#: templates/components/tab_fondopensione.html:56
+#: templates/components/tab_prestiti.html:61
+#: templates/components/tab_stipendi.html:57
+#: templates/components/tab_veicoli.html:52
+#, fuzzy
+msgid "Al"
+msgstr "Vendita"
+
+#: templates/components/tab_fondopensione.html:63
+#: templates/components/tab_prestiti.html:68
+#: templates/components/tab_stipendi.html:64
 #: templates/components/tab_veicoli.html:59
 msgid "Menu"
 msgstr "Menu"
 
-#: templates/components/tab_fondopensione.html:39
-#: templates/components/tab_stipendi.html:40
+#: templates/components/tab_fondopensione.html:66
+#: templates/components/tab_stipendi.html:67
 #: templates/components/tab_veicoli.html:62
 #: templates/components/tab_veicoli.html:143
 msgid "Dashboard"
 msgstr "Dashboard"
 
-#: templates/components/tab_fondopensione.html:43
+#: templates/components/tab_fondopensione.html:70
 #, fuzzy
 msgid "Contributions"
 msgstr "Contributo Ticker"
 
-#: templates/components/tab_fondopensione.html:47
+#: templates/components/tab_fondopensione.html:74
 msgid "Manage Funds"
 msgstr "Gestione Fondi"
 
-#: templates/components/tab_fondopensione.html:58
+#: templates/components/tab_fondopensione.html:86
 #, fuzzy
 msgid "Pension Fund Dashboard"
 msgstr "Fondo Pensione"
 
-#: templates/components/tab_fondopensione.html:59
+#: templates/components/tab_fondopensione.html:87
 msgid ""
 "Summary of contributions paid and performance of your complementary "
 "pension fund."
 msgstr ""
 
-#: templates/components/tab_fondopensione.html:71
+#: templates/components/tab_fondopensione.html:90
+msgid "Aggiorna Dati Storici"
+msgstr "Aggiorna Dati Storici"
+
+#: templates/components/tab_fondopensione.html:103
 #, fuzzy
 msgid "Total Paid"
 msgstr "Guadagno Totale"
 
-#: templates/components/tab_fondopensione.html:82
+#: templates/components/tab_fondopensione.html:117
+msgid "Controvalore"
+msgstr ""
+
+#: templates/components/tab_fondopensione.html:130
 msgid "Accrued TFR Paid"
 msgstr "TFR Maturato Versato"
 
-#: templates/components/tab_fondopensione.html:94
+#: templates/components/tab_fondopensione.html:142
 #, fuzzy
 msgid "Worker Contribution"
 msgstr "Contributo Ticker"
 
-#: templates/components/tab_fondopensione.html:107
+#: templates/components/tab_fondopensione.html:155
 #, fuzzy
 msgid "Employer Contribution"
 msgstr "Contributo Ticker"
 
-#: templates/components/tab_fondopensione.html:115
+#: templates/components/tab_fondopensione.html:163
 msgid "Contributions Breakdown"
 msgstr "Ripartizione Contributi"
 
-#: templates/components/tab_fondopensione.html:121
+#: templates/components/tab_fondopensione.html:169
 msgid "Monthly Payments Trend"
 msgstr "Andamento Versamenti Mensili"
 
-#: templates/components/tab_fondopensione.html:129
+#: templates/components/tab_fondopensione.html:177
+msgid "Valuation Trend over Time"
+msgstr "Andamento Controvalore nel Tempo"
+
+#: templates/components/tab_fondopensione.html:184
 msgid "Recent Contributions Registered"
 msgstr "Ultimi Contributi Registrati"
 
-#: templates/components/tab_fondopensione.html:135
-#: templates/components/tab_fondopensione.html:226
-#: templates/components/tab_fondopensione.html:311
-#: templates/components/tab_fondopensione.html:405
+#: templates/components/tab_fondopensione.html:190
+#: templates/components/tab_fondopensione.html:294
+#: templates/components/tab_fondopensione.html:386
+#: templates/components/tab_fondopensione.html:465
 msgid "TFR"
 msgstr "TFR"
 
-#: templates/components/tab_fondopensione.html:136
-#: templates/components/tab_fondopensione.html:227
-#: templates/components/tab_fondopensione.html:312
-#: templates/components/tab_fondopensione.html:406
+#: templates/components/tab_fondopensione.html:191
+#: templates/components/tab_fondopensione.html:295
+#: templates/components/tab_fondopensione.html:387
+#: templates/components/tab_fondopensione.html:466
 msgid "Worker"
 msgstr "Lavoratore"
 
-#: templates/components/tab_fondopensione.html:137
-#: templates/components/tab_fondopensione.html:228
-#: templates/components/tab_fondopensione.html:313
-#: templates/components/tab_fondopensione.html:407
+#: templates/components/tab_fondopensione.html:192
+#: templates/components/tab_fondopensione.html:296
+#: templates/components/tab_fondopensione.html:388
+#: templates/components/tab_fondopensione.html:467
 msgid "Employer"
 msgstr "Datore"
 
-#: templates/components/tab_fondopensione.html:138
-#: templates/components/tab_fondopensione.html:229
-#: templates/components/tab_fondopensione.html:314
-#: templates/components/tab_fondopensione.html:408
-#: templates/components/tab_veicoli.html:310
+#: templates/components/tab_fondopensione.html:193
+#: templates/components/tab_fondopensione.html:297
+#: templates/components/tab_fondopensione.html:389
+#: templates/components/tab_fondopensione.html:468
+#: templates/components/tab_veicoli.html:311
 #, fuzzy
 msgid "Total"
 msgstr "Guadagno Totale"
 
-#: templates/components/tab_fondopensione.html:139
-#: templates/components/tab_fondopensione.html:182
-#: templates/components/tab_fondopensione.html:287
-#: templates/components/tab_fondopensione.html:315
-#: templates/components/tab_fondopensione.html:386
-#: templates/components/tab_fondopensione.html:409
-#: templates/components/tab_prestiti.html:426
-#: templates/components/tab_prestiti.html:478
-#: templates/components/tab_prestiti.html:499
-#: templates/components/tab_stipendi.html:171
-#: templates/components/tab_stipendi.html:209
-#: templates/components/tab_stipendi.html:251
-#: templates/components/tab_stipendi.html:379
-#: templates/components/tab_stipendi.html:435
-#: templates/components/tab_stipendi.html:457
-#: templates/components/tab_veicoli.html:338
-#: templates/components/tab_veicoli.html:364
-#: templates/components/tab_veicoli.html:391
+#: templates/components/tab_fondopensione.html:194
+#: templates/components/tab_fondopensione.html:249
+#: templates/components/tab_fondopensione.html:362
+#: templates/components/tab_fondopensione.html:390
+#: templates/components/tab_fondopensione.html:446
+#: templates/components/tab_fondopensione.html:469
+#: templates/components/tab_prestiti.html:461
+#: templates/components/tab_prestiti.html:513
+#: templates/components/tab_prestiti.html:534
+#: templates/components/tab_stipendi.html:198
+#: templates/components/tab_stipendi.html:284
+#: templates/components/tab_stipendi.html:328
+#: templates/components/tab_stipendi.html:456
+#: templates/components/tab_stipendi.html:512
+#: templates/components/tab_stipendi.html:534
+#: templates/components/tab_veicoli.html:339
+#: templates/components/tab_veicoli.html:365
+#: templates/components/tab_veicoli.html:392
 #, fuzzy
 msgid "Notes"
 msgstr "Nota"
 
-#: templates/components/tab_fondopensione.html:143
+#: templates/components/tab_fondopensione.html:198
 msgid "No contributions registered."
 msgstr "Nessun contributo registrato."
 
-#: templates/components/tab_fondopensione.html:153
+#: templates/components/tab_fondopensione.html:208
 #, fuzzy
 msgid "Record Contributions"
 msgstr "Contributo Ticker"
 
-#: templates/components/tab_fondopensione.html:154
+#: templates/components/tab_fondopensione.html:209
 msgid "Enter monthly payments to the fund: TFR, worker share, and employer share."
 msgstr ""
 "Inserisci i versamenti mensili al fondo: TFR, quota lavoratore e quota "
 "datore di lavoro."
 
-#: templates/components/tab_fondopensione.html:162
+#: templates/components/tab_fondopensione.html:217
 #, fuzzy
 msgid "New Contribution"
 msgstr "Contributo Ticker"
 
-#: templates/components/tab_fondopensione.html:166
-#: templates/components/tab_stipendi.html:197
+#: templates/components/tab_fondopensione.html:221
+#: templates/components/tab_stipendi.html:224
 #, fuzzy
 msgid "Month *"
 msgstr "Mese"
 
-#: templates/components/tab_fondopensione.html:170
+#: templates/components/tab_fondopensione.html:225
 #, fuzzy
 msgid "TFR (€)"
 msgstr "Prezzo (€)"
 
-#: templates/components/tab_fondopensione.html:174
+#: templates/components/tab_fondopensione.html:229
 #, fuzzy
 msgid "Worker Share (€)"
 msgstr "Prezzo Quota (€)"
 
-#: templates/components/tab_fondopensione.html:178
-#, fuzzy
+#: templates/components/tab_fondopensione.html:233
 msgid "Employer Share (€)"
-msgstr "Prezzo Quota (€)"
+msgstr "Quota Azienda (€)"
 
-#: templates/components/tab_fondopensione.html:183
-#: templates/components/tab_fondopensione.html:288
-#, fuzzy
+#: templates/components/tab_fondopensione.html:237
+#: templates/components/tab_fondopensione.html:298
+msgid "Numero Quote"
+msgstr "Numero Quote"
+
+#: templates/components/tab_fondopensione.html:241
+msgid "Valore Quota (€)"
+msgstr "Valore Quota (€)"
+
+#: templates/components/tab_fondopensione.html:245
+msgid "Spese (€)"
+msgstr "Spese (€)"
+
+#: templates/components/tab_fondopensione.html:250
+#: templates/components/tab_fondopensione.html:363
 msgid "Optional"
-msgstr "Opzioni"
+msgstr "Opzionale"
 
-#: templates/components/tab_fondopensione.html:187
-#: templates/components/tab_prestiti.html:245
+#: templates/components/tab_fondopensione.html:254
+#: templates/components/tab_prestiti.html:277
 msgid "Record"
-msgstr "Registra</button>"
+msgstr "Registra"
 
-#: templates/components/tab_fondopensione.html:194
+#: templates/components/tab_fondopensione.html:261
 msgid "Import from Payslip or Statement (PDF)"
 msgstr "Importa da Busta Paga o Estratto Conto (PDF)"
 
-#: templates/components/tab_fondopensione.html:195
+#: templates/components/tab_fondopensione.html:262
 msgid ""
 "Upload the payslip (busta paga) or pension fund statement in PDF to "
 "automatically detect and import contributions."
@@ -1101,30 +1232,30 @@ msgstr ""
 "Carica la busta paga o l'estratto conto del fondo pensione in PDF per "
 "rilevare ed importare i contributi in automatico."
 
-#: templates/components/tab_fondopensione.html:198
-#: templates/components/tab_prestiti.html:255
+#: templates/components/tab_fondopensione.html:265
+#: templates/components/tab_prestiti.html:287
 msgid "Select PDF and Analyze"
 msgstr "Seleziona PDF ed Analizza</button>"
 
-#: templates/components/tab_fondopensione.html:200
-#: templates/components/tab_prestiti.html:257
-#: templates/components/tab_stipendi.html:226
+#: templates/components/tab_fondopensione.html:267
+#: templates/components/tab_prestiti.html:289
+#: templates/components/tab_stipendi.html:302
 msgid "Custom PDF Import"
 msgstr "Importazione PDF Personalizzata"
 
-#: templates/components/tab_fondopensione.html:202
-#: templates/components/tab_stipendi.html:227
+#: templates/components/tab_fondopensione.html:269
+#: templates/components/tab_stipendi.html:303
 msgid "Analysis in progress... ⏳"
 msgstr "Analisi in corso... ⏳"
 
-#: templates/components/tab_fondopensione.html:209
-#: templates/components/tab_prestiti.html:265
-#: templates/components/tab_stipendi.html:232
+#: templates/components/tab_fondopensione.html:276
+#: templates/components/tab_prestiti.html:297
+#: templates/components/tab_stipendi.html:308
 #, fuzzy
 msgid "Import from CSV"
 msgstr "Importa CSV"
 
-#: templates/components/tab_fondopensione.html:210
+#: templates/components/tab_fondopensione.html:277
 msgid ""
 "Upload a CSV file to import multiple complementary pension contributions "
 "by mapping columns."
@@ -1132,83 +1263,105 @@ msgstr ""
 "Carica un file CSV per importare contributi multipli del fondo pensione "
 "mappando le colonne."
 
-#: templates/components/tab_fondopensione.html:212
-#: templates/components/tab_stipendi.html:235
+#: templates/components/tab_fondopensione.html:279
+#: templates/components/tab_stipendi.html:311
 #, fuzzy
 msgid "Select CSV and Import"
 msgstr "Grafici e Report"
 
-#: templates/components/tab_fondopensione.html:219
-#, fuzzy
+#: templates/components/tab_fondopensione.html:286
 msgid "Contributions History"
-msgstr "Storico Consumi & Costi"
+msgstr "Storico Contributi"
 
-#: templates/components/tab_fondopensione.html:246
+#: templates/components/tab_fondopensione.html:287
+#: templates/components/tab_prestiti.html:310
+#: templates/components/tab_stipendi.html:319
+#: templates/components/tab_veicoli.html:286
+msgid "Svuota Cronologia"
+msgstr "Svuota Cronologia"
+
+#: templates/components/tab_fondopensione.html:299
+msgid "Valore Quota"
+msgstr "Valore Quota"
+
+#: templates/components/tab_fondopensione.html:317
 msgid "My Pension Funds"
 msgstr "I Miei Fondi Pensione"
 
-#: templates/components/tab_fondopensione.html:247
+#: templates/components/tab_fondopensione.html:318
 msgid "New Fund"
 msgstr "Nuovo Fondo"
 
-#: templates/components/tab_fondopensione.html:250
+#: templates/components/tab_fondopensione.html:321
 msgid "No pension funds added."
 msgstr "Nessun fondo pensione aggiunto."
 
-#: templates/components/tab_fondopensione.html:262
+#: templates/components/tab_fondopensione.html:333
 msgid "New Pension Fund"
 msgstr "Nuovo Fondo Pensione"
 
-#: templates/components/tab_fondopensione.html:268
+#: templates/components/tab_fondopensione.html:339
 msgid "Fund Name *"
 msgstr "Nome Fondo *"
 
-#: templates/components/tab_fondopensione.html:269
+#: templates/components/tab_fondopensione.html:340
 msgid "e.g., Cometa Fund, Fonchim..."
 msgstr "Es. Fondo Cometa, Fonchim..."
 
-#: templates/components/tab_fondopensione.html:273
+#: templates/components/tab_fondopensione.html:344
 msgid "Manager / Provider"
 msgstr "Gestore / Provider"
 
-#: templates/components/tab_fondopensione.html:274
+#: templates/components/tab_fondopensione.html:345
 msgid "e.g., Amundi, Allianz..."
 msgstr "Es. Amundi, Allianz..."
 
-#: templates/components/tab_fondopensione.html:277
-#: templates/components/tab_prestiti.html:424
-#: templates/components/tab_prestiti.html:497
-#: templates/components/tab_stipendi.html:315
-#: templates/components/tab_stipendi.html:328
+#: templates/components/tab_fondopensione.html:348
+#: templates/components/tab_prestiti.html:459
+#: templates/components/tab_prestiti.html:532
+#: templates/components/tab_stipendi.html:392
+#: templates/components/tab_stipendi.html:405
 #, fuzzy
 msgid "Type"
 msgstr "Tipo:"
 
-#: templates/components/tab_fondopensione.html:279
+#: templates/components/tab_fondopensione.html:350
 msgid "Category Fund"
 msgstr "Fondo di Categoria"
 
-#: templates/components/tab_fondopensione.html:280
+#: templates/components/tab_fondopensione.html:351
 msgid "Open Fund"
 msgstr "Fondo Aperto"
 
-#: templates/components/tab_fondopensione.html:281
+#: templates/components/tab_fondopensione.html:352
 msgid "Individual Pension Plan (PIP)"
 msgstr "PIP (Piano Individuale)"
 
-#: templates/components/tab_fondopensione.html:282
-#: templates/components/tab_veicoli.html:682
-#: templates/components/tab_veicoli.html:774
-#: templates/components/tab_veicoli.html:895
+#: templates/components/tab_fondopensione.html:353
+#: templates/components/tab_veicoli.html:683
+#: templates/components/tab_veicoli.html:775
+#: templates/components/tab_veicoli.html:896
 #, fuzzy
 msgid "Other"
 msgstr "Ottobre"
 
-#: templates/components/tab_fondopensione.html:300
+#: templates/components/tab_fondopensione.html:358
+msgid "Investing.com Link (Historical Data)"
+msgstr "Link Investing.com (Dati Storici)"
+
+#: templates/components/tab_fondopensione.html:359
+msgid ""
+"e.g., https://it.investing.com/funds/amundi-secondapensione-espansione-"
+"historical-data"
+msgstr ""
+"es. https://it.investing.com/funds/amundi-secondapensione-espansione-"
+"historical-data"
+
+#: templates/components/tab_fondopensione.html:375
 msgid "Review Detected Contributions"
 msgstr "Verifica Contributi Rilevati"
 
-#: templates/components/tab_fondopensione.html:304
+#: templates/components/tab_fondopensione.html:379
 msgid ""
 "The following contributions were detected in the PDF file. Select those "
 "you want to import into the active fund."
@@ -1216,104 +1369,76 @@ msgstr ""
 "I seguenti contributi sono stati rilevati nel file PDF. Seleziona quelli "
 "che desideri importare nel fondo attivo."
 
-#: templates/components/tab_fondopensione.html:326
-#: templates/components/tab_prestiti.html:437
-#: templates/components/tab_stipendi.html:390
+#: templates/components/tab_fondopensione.html:401
+#: templates/components/tab_prestiti.html:472
+#: templates/components/tab_stipendi.html:467
 msgid "Import Selected"
 msgstr "Importa Selezionati"
 
-#: templates/components/tab_fondopensione.html:334
-msgid "Map Pension Fund CSV Columns"
-msgstr "Mappa Colonne CSV Fondo Pensione"
-
-#: templates/components/tab_fondopensione.html:335
-#: templates/components/tab_investimenti.html:462
-#: templates/components/tab_prestiti.html:520
-#: templates/components/tab_stipendi.html:349
-#: templates/components/tab_wallet.html:278
-msgid ""
-"Select the corresponding column from your CSV file for each required "
-"field."
-msgstr ""
-"Seleziona la colonna corrispondente dal tuo file CSV per ciascun campo "
-"richiesto."
-
-#: templates/components/tab_fondopensione.html:341
-#: templates/components/tab_fondopensione.html:421
-#: templates/components/tab_investimenti.html:468
-#: templates/components/tab_investimenti.html:550
-#: templates/components/tab_prestiti.html:511
-#: templates/components/tab_prestiti.html:526
-#: templates/components/tab_stipendi.html:355
-#: templates/components/tab_stipendi.html:469
-#: templates/components/tab_wallet.html:284
-msgid "Confirm and Import"
-msgstr "Conferma e Importa"
-
-#: templates/components/tab_fondopensione.html:349
-#: templates/components/tab_prestiti.html:445
-#: templates/components/tab_stipendi.html:398
+#: templates/components/tab_fondopensione.html:409
+#: templates/components/tab_prestiti.html:480
+#: templates/components/tab_stipendi.html:475
 msgid "Custom PDF Import Workbench"
 msgstr "Area di Lavoro Importa PDF Personalizzato"
 
-#: templates/components/tab_fondopensione.html:354
-#: templates/components/tab_prestiti.html:450
-#: templates/components/tab_stipendi.html:403
+#: templates/components/tab_fondopensione.html:414
+#: templates/components/tab_prestiti.html:485
+#: templates/components/tab_stipendi.html:480
 msgid "Extracted PDF Text"
 msgstr "Testo Estratto dal PDF"
 
-#: templates/components/tab_fondopensione.html:360
-#: templates/components/tab_prestiti.html:456
-#: templates/components/tab_stipendi.html:409
+#: templates/components/tab_fondopensione.html:420
+#: templates/components/tab_prestiti.html:491
+#: templates/components/tab_stipendi.html:486
 msgid "Extraction Pattern (Regex)"
 msgstr "Pattern di Estrazione (Regex)"
 
-#: templates/components/tab_fondopensione.html:363
-#: templates/components/tab_prestiti.html:459
-#: templates/components/tab_stipendi.html:412
+#: templates/components/tab_fondopensione.html:423
+#: templates/components/tab_prestiti.html:494
+#: templates/components/tab_stipendi.html:489
 msgid "Use capture groups () to capture fields from matching lines."
 msgstr ""
 "Usa i gruppi di cattura () per estrarre i campi dalle righe "
 "corrispondenti."
 
-#: templates/components/tab_fondopensione.html:367
-#: templates/components/tab_prestiti.html:463
-#: templates/components/tab_stipendi.html:416
+#: templates/components/tab_fondopensione.html:427
+#: templates/components/tab_prestiti.html:498
+#: templates/components/tab_stipendi.html:493
 msgid "Map Capture Groups to Fields"
 msgstr "Mappa i Gruppi di Cattura sui Campi"
 
-#: templates/components/tab_fondopensione.html:370
-#: templates/components/tab_stipendi.html:419
+#: templates/components/tab_fondopensione.html:430
+#: templates/components/tab_stipendi.html:496
 msgid "Month (YYYY-MM) *"
 msgstr "Mese (AAAA-MM) *"
 
-#: templates/components/tab_fondopensione.html:374
+#: templates/components/tab_fondopensione.html:434
 msgid "TFR (€) *"
 msgstr "TFR (€) *"
 
-#: templates/components/tab_fondopensione.html:378
+#: templates/components/tab_fondopensione.html:438
 msgid "Worker Contrib (€) *"
 msgstr "Contr. Lavoratore (€) *"
 
-#: templates/components/tab_fondopensione.html:382
+#: templates/components/tab_fondopensione.html:442
 msgid "Employer Contrib (€) *"
 msgstr "Contr. Azienda (€) *"
 
-#: templates/components/tab_fondopensione.html:392
-#: templates/components/tab_prestiti.html:484
-#: templates/components/tab_stipendi.html:441
+#: templates/components/tab_fondopensione.html:452
+#: templates/components/tab_prestiti.html:519
+#: templates/components/tab_stipendi.html:518
 msgid "Test & Parse"
 msgstr "Testa & Analizza"
 
-#: templates/components/tab_fondopensione.html:398
-#: templates/components/tab_prestiti.html:490
-#: templates/components/tab_stipendi.html:447
+#: templates/components/tab_fondopensione.html:458
+#: templates/components/tab_prestiti.html:525
+#: templates/components/tab_stipendi.html:524
 msgid "Parsed Results Preview"
 msgstr "Anteprima dei Risultati Analizzati"
 
-#: templates/components/tab_fondopensione.html:413
-#: templates/components/tab_prestiti.html:503
-#: templates/components/tab_stipendi.html:461
+#: templates/components/tab_fondopensione.html:473
+#: templates/components/tab_prestiti.html:538
+#: templates/components/tab_stipendi.html:538
 msgid "Enter a pattern and click Test to view results."
 msgstr "Inserisci un pattern e clicca Testa per vedere i risultati."
 
@@ -1804,8 +1929,8 @@ msgid "Shares"
 msgstr "Quote"
 
 #: templates/components/tab_investimenti.html:279
-#: templates/components/tab_veicoli.html:336
-#: templates/components/tab_veicoli.html:389
+#: templates/components/tab_veicoli.html:337
+#: templates/components/tab_veicoli.html:390
 msgid "Cost"
 msgstr "Carico"
 
@@ -1924,12 +2049,12 @@ msgstr "Aggiungi Transazione"
 
 #: templates/components/tab_investimenti.html:431
 #: templates/components/tab_investimenti.html:490
-#: templates/components/tab_prestiti.html:423
-#: templates/components/tab_prestiti.html:496
-#: templates/components/tab_veicoli.html:304
-#: templates/components/tab_veicoli.html:334
-#: templates/components/tab_veicoli.html:360
-#: templates/components/tab_veicoli.html:386
+#: templates/components/tab_prestiti.html:458
+#: templates/components/tab_prestiti.html:531
+#: templates/components/tab_veicoli.html:305
+#: templates/components/tab_veicoli.html:335
+#: templates/components/tab_veicoli.html:361
+#: templates/components/tab_veicoli.html:387
 #: templates/components/tab_wallet.html:266
 msgid "Date"
 msgstr "Data"
@@ -1951,7 +2076,7 @@ msgid "AI Portfolio Analysis"
 msgstr "Analisi Portafoglio con IA"
 
 #: templates/components/tab_investimenti.html:453
-#: templates/components/tab_stipendi.html:340
+#: templates/components/tab_stipendi.html:417
 msgid "Close"
 msgstr "Chiudi"
 
@@ -2040,367 +2165,371 @@ msgstr "Azioni"
 msgid "Add loan"
 msgstr "Aggiungi Bolletta"
 
-#: templates/components/tab_prestiti.html:44
+#: templates/components/tab_prestiti.html:71
 msgid "Progress Dashboard"
 msgstr "Dashboard Progressi"
 
-#: templates/components/tab_prestiti.html:48
+#: templates/components/tab_prestiti.html:75
 msgid "Savings Simulator"
 msgstr "Simulatore Risparmio"
 
-#: templates/components/tab_prestiti.html:52
+#: templates/components/tab_prestiti.html:79
 #, fuzzy
 msgid "Record & History"
 msgstr "Storico Transazioni"
 
-#: templates/components/tab_prestiti.html:56
+#: templates/components/tab_prestiti.html:83
 msgid "Amortization Schedule"
 msgstr "Piano Ammortamento"
 
-#: templates/components/tab_prestiti.html:60
+#: templates/components/tab_prestiti.html:87
 msgid "Manage Loans"
 msgstr "Gestione Prestiti"
 
-#: templates/components/tab_prestiti.html:71
+#: templates/components/tab_prestiti.html:98
 msgid "Loading loan details..."
 msgstr "Caricamento dettagli prestito..."
 
-#: templates/components/tab_prestiti.html:77
+#: templates/components/tab_prestiti.html:104
 #, fuzzy
 msgid "Remaining Capital"
 msgstr "Dati mancanti"
 
-#: templates/components/tab_prestiti.html:81
+#: templates/components/tab_prestiti.html:108
 #, fuzzy
 msgid "Returned Capital"
 msgstr "Capitale Investito"
 
-#: templates/components/tab_prestiti.html:88
+#: templates/components/tab_prestiti.html:115
 msgid "Paid Interest"
 msgstr "Interessi Corrisposti"
 
-#: templates/components/tab_prestiti.html:92
+#: templates/components/tab_prestiti.html:119
 msgid "Remaining Interest"
 msgstr "Interessi Rimanenti"
 
-#: templates/components/tab_prestiti.html:96
+#: templates/components/tab_prestiti.html:123
 msgid "Savings Achieved"
 msgstr "Risparmi Conseguiti"
 
-#: templates/components/tab_prestiti.html:103
+#: templates/components/tab_prestiti.html:127
+msgid "Mesi Rimanenti"
+msgstr ""
+
+#: templates/components/tab_prestiti.html:135
 msgid "Repayment Status Breakdown"
 msgstr "Suddivisione Stato Rimborso"
 
-#: templates/components/tab_prestiti.html:109
+#: templates/components/tab_prestiti.html:141
 msgid "Debt Extinction Projection"
 msgstr "Proiezione Estinzione Debito"
 
-#: templates/components/tab_prestiti.html:118
+#: templates/components/tab_prestiti.html:150
 msgid "Loan Conditions Summary"
 msgstr "Sintesi Condizioni Prestito"
 
-#: templates/components/tab_prestiti.html:121
+#: templates/components/tab_prestiti.html:153
 msgid "Original Amount"
 msgstr "Importo Originario"
 
-#: templates/components/tab_prestiti.html:125
+#: templates/components/tab_prestiti.html:157
 msgid "Nominal Rate (TAN)"
 msgstr "Tasso Nominale (TAN)"
 
-#: templates/components/tab_prestiti.html:129
+#: templates/components/tab_prestiti.html:161
 #, fuzzy
 msgid "Contractual Duration"
 msgstr "Durata Max:"
 
-#: templates/components/tab_prestiti.html:133
+#: templates/components/tab_prestiti.html:165
 msgid "Calculated Monthly Payment"
 msgstr "Rata Mensile Calcolata"
 
-#: templates/components/tab_prestiti.html:137
-#: templates/components/tab_prestiti.html:381
+#: templates/components/tab_prestiti.html:169
+#: templates/components/tab_prestiti.html:416
 #, fuzzy
 msgid "Start Date"
 msgstr "Saldo Inizio Periodo"
 
-#: templates/components/tab_prestiti.html:141
+#: templates/components/tab_prestiti.html:173
 msgid "Expected Maturity"
 msgstr "Scadenza Prevista"
 
-#: templates/components/tab_prestiti.html:151
+#: templates/components/tab_prestiti.html:183
 msgid "Early Repayment Simulator"
 msgstr "Simulatore Estinzione Anticipata"
 
-#: templates/components/tab_prestiti.html:152
+#: templates/components/tab_prestiti.html:184
 msgid ""
 "Check the impact of extra repayments on the calculation of future "
 "interest and on term reduction."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:158
+#: templates/components/tab_prestiti.html:190
 msgid "Set Simulation Parameters"
 msgstr "Imposta Parametri Simulazione"
 
-#: templates/components/tab_prestiti.html:161
+#: templates/components/tab_prestiti.html:193
 msgid "Extra Repayment Amount (€)"
 msgstr "Importo Rimborso Straordinario (€)"
 
-#: templates/components/tab_prestiti.html:162
+#: templates/components/tab_prestiti.html:194
 msgid "e.g., 5000"
 msgstr "Esempio: 5000"
 
-#: templates/components/tab_prestiti.html:165
+#: templates/components/tab_prestiti.html:197
 msgid "Extra Repayment Date"
 msgstr "Data Rimborso Straordinario"
 
-#: templates/components/tab_prestiti.html:169
+#: templates/components/tab_prestiti.html:201
 msgid "Fixed Monthly Payment Increase (€)"
 msgstr "Aumento Rata Mensile Fissa (€)"
 
-#: templates/components/tab_prestiti.html:170
-#: templates/components/tab_veicoli.html:628
+#: templates/components/tab_prestiti.html:202
+#: templates/components/tab_veicoli.html:629
 msgid "e.g., 100"
 msgstr "Esempio: 100"
 
-#: templates/components/tab_prestiti.html:173
+#: templates/components/tab_prestiti.html:205
 msgid "Simulation Strategy"
 msgstr "Strategia Simulazione"
 
-#: templates/components/tab_prestiti.html:175
+#: templates/components/tab_prestiti.html:207
 msgid "Reduce Term (Keep payment unchanged)"
 msgstr "Riduci Durata (Tieni rata invariata)"
 
-#: templates/components/tab_prestiti.html:176
+#: templates/components/tab_prestiti.html:208
 msgid "Reduce Payment (Keep term unchanged)"
 msgstr "Riduci Rata (Tieni durata invariata)"
 
-#: templates/components/tab_prestiti.html:184
+#: templates/components/tab_prestiti.html:216
 msgid "Comparative Simulation Results"
 msgstr "Risultati Comparativi Simulazione"
 
-#: templates/components/tab_prestiti.html:189
+#: templates/components/tab_prestiti.html:221
 msgid "Interest Saved"
 msgstr "Interessi Risparmiati"
 
-#: templates/components/tab_prestiti.html:193
+#: templates/components/tab_prestiti.html:225
 msgid "Months Saved"
 msgstr "Mesi Risparmiati"
 
-#: templates/components/tab_prestiti.html:197
+#: templates/components/tab_prestiti.html:229
 msgid "New Maturity Date"
 msgstr "Nuova Scadenza"
 
-#: templates/components/tab_prestiti.html:212
+#: templates/components/tab_prestiti.html:244
 msgid "Recording & Payment History"
 msgstr "Registrazione & Storico Pagamenti"
 
-#: templates/components/tab_prestiti.html:213
+#: templates/components/tab_prestiti.html:245
 msgid ""
 "Record regular payments (monthly installments) or extraordinary "
 "repayments (partial early redemptions)."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:220
+#: templates/components/tab_prestiti.html:252
 msgid "Record Movement"
 msgstr "Registra Movimento"
 
-#: templates/components/tab_prestiti.html:224
+#: templates/components/tab_prestiti.html:256
 msgid "Payment Date *"
 msgstr "Data Pagamento *"
 
-#: templates/components/tab_prestiti.html:228
-#: templates/components/tab_prestiti.html:470
-#: templates/components/tab_veicoli.html:780
+#: templates/components/tab_prestiti.html:260
+#: templates/components/tab_prestiti.html:505
+#: templates/components/tab_veicoli.html:781
 msgid "Amount (€) *"
 msgstr "Importo (€) *"
 
-#: templates/components/tab_prestiti.html:228
+#: templates/components/tab_prestiti.html:260
 #, python-format
 msgid "New Rate (TAN %%) *"
 msgstr "Nuovo Tasso (TAN %%) *"
 
-#: templates/components/tab_prestiti.html:229
+#: templates/components/tab_prestiti.html:261
 msgid "e.g., 620.50"
 msgstr "Esempio: 620.50"
 
-#: templates/components/tab_prestiti.html:232
+#: templates/components/tab_prestiti.html:264
 msgid "Transaction Type *"
 msgstr "Tipo Transazione *"
 
-#: templates/components/tab_prestiti.html:234
+#: templates/components/tab_prestiti.html:266
 msgid "Regular Monthly Installment"
 msgstr "Rata Mensile Ordinaria"
 
-#: templates/components/tab_prestiti.html:235
+#: templates/components/tab_prestiti.html:267
 msgid "Extraordinary Early Repayment"
 msgstr "Rimborso Anticipato Straordinario"
 
-#: templates/components/tab_prestiti.html:240
+#: templates/components/tab_prestiti.html:272
 msgid "Notes (optional)"
 msgstr "Note (opzionale)"
 
-#: templates/components/tab_prestiti.html:241
+#: templates/components/tab_prestiti.html:273
 msgid "e.g., End-of-year extra repayment"
 msgstr "Esempio: Rimborso straordinario fine anno"
 
-#: templates/components/tab_prestiti.html:251
+#: templates/components/tab_prestiti.html:283
 msgid "Detect from Bank Statement (PDF)"
 msgstr "Rileva da Estratto Conto (PDF)"
 
-#: templates/components/tab_prestiti.html:252
+#: templates/components/tab_prestiti.html:284
 msgid ""
 "Upload the bank statement in PDF from the intermediary to automatically "
 "detect and import payments."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:259
+#: templates/components/tab_prestiti.html:291
 msgid "Analysis in progress with Gemini... ⏳"
 msgstr "Analisi in corso con Gemini... ⏳"
 
-#: templates/components/tab_prestiti.html:266
+#: templates/components/tab_prestiti.html:298
 msgid "Upload a CSV file containing your payment history to import them."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:269
+#: templates/components/tab_prestiti.html:301
 #, fuzzy
 msgid "Custom CSV Import"
 msgstr "Importazione PDF Personalizzata"
 
-#: templates/components/tab_prestiti.html:276
+#: templates/components/tab_prestiti.html:309
 #, fuzzy
 msgid "Registered Transactions History"
 msgstr "Storico Transazioni"
 
-#: templates/components/tab_prestiti.html:300
+#: templates/components/tab_prestiti.html:335
 msgid "Detailed Amortization Schedule"
 msgstr "Piano di Ammortamento Dettagliato"
 
-#: templates/components/tab_prestiti.html:301
+#: templates/components/tab_prestiti.html:336
 msgid ""
 "View the calculated monthly amortization schedule for the loan, "
 "integrating the registered extra repayments."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:306
+#: templates/components/tab_prestiti.html:341
 msgid "List of Projected Monthly Installments"
 msgstr "Elenco Rate Mensili Proiettate"
 
-#: templates/components/tab_prestiti.html:313
+#: templates/components/tab_prestiti.html:348
 msgid "Maturity"
 msgstr "Scadenza"
 
-#: templates/components/tab_prestiti.html:314
+#: templates/components/tab_prestiti.html:349
 #, fuzzy
 msgid "Rate (TAN)"
 msgstr "Tasso Nominale (TAN)"
 
-#: templates/components/tab_prestiti.html:315
+#: templates/components/tab_prestiti.html:350
 #, fuzzy
 msgid "Interest Share"
 msgstr "N Quote"
 
-#: templates/components/tab_prestiti.html:316
+#: templates/components/tab_prestiti.html:351
 #, fuzzy
 msgid "Capital Share"
 msgstr "Metriche di Capitale"
 
-#: templates/components/tab_prestiti.html:317
+#: templates/components/tab_prestiti.html:352
 msgid "Extra Repayment"
 msgstr "Extra Rimborso"
 
-#: templates/components/tab_prestiti.html:318
+#: templates/components/tab_prestiti.html:353
 #, fuzzy
 msgid "Total Installment"
 msgstr "Valore Totale Attuale"
 
-#: templates/components/tab_prestiti.html:319
+#: templates/components/tab_prestiti.html:354
 #, fuzzy
 msgid "Remaining Debt"
 msgstr "Dati mancanti"
 
-#: templates/components/tab_prestiti.html:334
+#: templates/components/tab_prestiti.html:369
 msgid "My Loans & Financed Capital"
 msgstr "I Miei Prestiti & Finanziamenti"
 
-#: templates/components/tab_prestiti.html:336
+#: templates/components/tab_prestiti.html:371
 msgid "Import loans backup"
 msgstr "Importa backup prestiti"
 
-#: templates/components/tab_prestiti.html:336
+#: templates/components/tab_prestiti.html:371
 #, fuzzy
 msgid "Import"
 msgstr "Importa CSV"
 
-#: templates/components/tab_prestiti.html:337
+#: templates/components/tab_prestiti.html:372
 msgid "Export loans backup"
 msgstr "Esporta backup prestiti"
 
-#: templates/components/tab_prestiti.html:337
+#: templates/components/tab_prestiti.html:372
 #, fuzzy
 msgid "Export"
 msgstr "Esporta CSV"
 
-#: templates/components/tab_prestiti.html:338
-#: templates/components/tab_prestiti.html:354
+#: templates/components/tab_prestiti.html:373
+#: templates/components/tab_prestiti.html:389
 #, fuzzy
 msgid "New Loan"
 msgstr "Prestiti"
 
-#: templates/components/tab_prestiti.html:361
+#: templates/components/tab_prestiti.html:396
 msgid "Loan Name *"
 msgstr "Nome Prestito *"
 
-#: templates/components/tab_prestiti.html:362
+#: templates/components/tab_prestiti.html:397
 msgid "e.g., Home Mortgage, Auto Loan..."
 msgstr "Esempio: Mutuo Casa, Prestito Auto..."
 
-#: templates/components/tab_prestiti.html:367
+#: templates/components/tab_prestiti.html:402
 #, fuzzy
 msgid "Financed Capital (€) *"
 msgstr "Capitale Investito"
 
-#: templates/components/tab_prestiti.html:368
-#: templates/components/tab_veicoli.html:947
+#: templates/components/tab_prestiti.html:403
+#: templates/components/tab_veicoli.html:948
 msgid "e.g., 15000"
 msgstr "Esempio: 15000"
 
-#: templates/components/tab_prestiti.html:371
+#: templates/components/tab_prestiti.html:406
 #, python-format
 msgid "Nominal Annual Rate - TAN (%%) *"
 msgstr "Tasso Annuo Nominale - TAN (%%) *"
 
-#: templates/components/tab_prestiti.html:372
+#: templates/components/tab_prestiti.html:407
 msgid "e.g., 3.5"
 msgstr "Esempio: 3.5"
 
-#: templates/components/tab_prestiti.html:377
+#: templates/components/tab_prestiti.html:412
 msgid "Loan Duration (Months) *"
 msgstr "Durata Finanziamento (Mesi) *"
 
-#: templates/components/tab_prestiti.html:378
+#: templates/components/tab_prestiti.html:413
 msgid "e.g., 120"
 msgstr "Esempio: 120"
 
-#: templates/components/tab_prestiti.html:387
+#: templates/components/tab_prestiti.html:422
 msgid "Rate Type *"
 msgstr "Tipo Tasso *"
 
-#: templates/components/tab_prestiti.html:389
+#: templates/components/tab_prestiti.html:424
 msgid "Fixed Rate"
 msgstr "Tasso Fisso"
 
-#: templates/components/tab_prestiti.html:390
+#: templates/components/tab_prestiti.html:425
 msgid "Variable Rate"
 msgstr "Tasso Variabile"
 
-#: templates/components/tab_prestiti.html:394
+#: templates/components/tab_prestiti.html:429
 msgid "Contractual Monthly Installment (€ - optional)"
 msgstr "Rata Mensile Contrattuale (€ - opzionale)"
 
-#: templates/components/tab_prestiti.html:395
+#: templates/components/tab_prestiti.html:430
 msgid "Leave blank for automatic calculation"
 msgstr "Lascia vuoto per calcolo automatico"
 
-#: templates/components/tab_prestiti.html:399
+#: templates/components/tab_prestiti.html:434
 msgid ""
 "For variable rate loans, you can record interest rate updates in the "
 "'Record & History' tab using 'Interest Rate Change (TAN)'."
@@ -2409,39 +2538,39 @@ msgstr ""
 "tasso nella scheda 'Registrazione & Storico' usando 'Variazione Tasso "
 "(TAN)'."
 
-#: templates/components/tab_prestiti.html:403
+#: templates/components/tab_prestiti.html:438
 #, fuzzy
 msgid "Save Loan"
 msgstr "Salva"
 
-#: templates/components/tab_prestiti.html:413
+#: templates/components/tab_prestiti.html:448
 #, fuzzy
 msgid "Review Detected Transactions"
 msgstr "Elimina transazioni selezionate"
 
-#: templates/components/tab_prestiti.html:417
+#: templates/components/tab_prestiti.html:452
 msgid ""
 "The following transactions were detected in the PDF file. Select those "
 "you want to import into the active loan."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:425
-#: templates/components/tab_prestiti.html:498
-#: templates/components/tab_stipendi.html:316
-#: templates/components/tab_veicoli.html:362
+#: templates/components/tab_prestiti.html:460
+#: templates/components/tab_prestiti.html:533
+#: templates/components/tab_stipendi.html:393
+#: templates/components/tab_veicoli.html:363
 #: templates/components/tab_wallet.html:266
 msgid "Amount"
 msgstr "Importo"
 
-#: templates/components/tab_prestiti.html:466
+#: templates/components/tab_prestiti.html:501
 msgid "Date (YYYY-MM-DD or DD/MM/YYYY) *"
 msgstr "Data (AAAA-MM-GG o GG/MM/AAAA) *"
 
-#: templates/components/tab_prestiti.html:474
+#: templates/components/tab_prestiti.html:509
 msgid "Type *"
 msgstr "Tipo *"
 
-#: templates/components/tab_prestiti.html:519
+#: templates/components/tab_prestiti.html:554
 msgid "Map Loan CSV Columns"
 msgstr "Mappa Colonne CSV Prestito"
 
@@ -2506,237 +2635,272 @@ msgstr "Azioni"
 msgid "Add person"
 msgstr "Aggiungi Transazione"
 
-#: templates/components/tab_stipendi.html:44
-#: templates/components/tab_stipendi.html:185
+#: templates/components/tab_stipendi.html:71
+#: templates/components/tab_stipendi.html:212
 msgid "Payslips"
 msgstr "Buste Paga"
 
-#: templates/components/tab_stipendi.html:48
+#: templates/components/tab_stipendi.html:75
 msgid "Manage People"
 msgstr "Gestione Persone"
 
-#: templates/components/tab_stipendi.html:55
+#: templates/components/tab_stipendi.html:82
 msgid "PDF Keywords"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:60
+#: templates/components/tab_stipendi.html:87
 #, fuzzy
 msgid "Month/Period"
 msgstr "Mese/Anno"
 
-#: templates/components/tab_stipendi.html:64
+#: templates/components/tab_stipendi.html:91
 #, fuzzy
 msgid "Employee"
 msgstr "Datore"
 
-#: templates/components/tab_stipendi.html:68
+#: templates/components/tab_stipendi.html:95
 #, fuzzy
 msgid "Gross Salary"
 msgstr "Stipendio Lordo (€) *"
 
-#: templates/components/tab_stipendi.html:72
+#: templates/components/tab_stipendi.html:99
 #, fuzzy
 msgid "Net Salary"
 msgstr "Stipendio Netto (€) *"
 
-#: templates/components/tab_stipendi.html:75
+#: templates/components/tab_stipendi.html:102
 msgid "Reset Defaults"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:86
+#: templates/components/tab_stipendi.html:113
 msgid "Salary Dashboard"
 msgstr "Dashboard Stipendi"
 
-#: templates/components/tab_stipendi.html:87
+#: templates/components/tab_stipendi.html:114
 msgid "Gross/net summary and main items for the selected period."
 msgstr "Riepilogo netto/lordo e voci principali per il periodo selezionato."
 
-#: templates/components/tab_stipendi.html:100
+#: templates/components/tab_stipendi.html:127
 #, fuzzy
 msgid "Total Gross (12m)"
 msgstr "Totale Acquistato (€)"
 
-#: templates/components/tab_stipendi.html:112
+#: templates/components/tab_stipendi.html:139
 msgid "Total Net (12m)"
 msgstr "Netto Totale (12m)"
 
-#: templates/components/tab_stipendi.html:126
+#: templates/components/tab_stipendi.html:153
 #, fuzzy
 msgid "Monthly Net Average"
 msgstr "Mese/Anno"
 
-#: templates/components/tab_stipendi.html:140
+#: templates/components/tab_stipendi.html:167
 msgid "Allowances (12m)"
 msgstr "Assegni Unici (12m)"
 
-#: templates/components/tab_stipendi.html:148
+#: templates/components/tab_stipendi.html:175
 msgid "Average Payslip Breakdown"
 msgstr "Ripartizione Busta Paga Media"
 
-#: templates/components/tab_stipendi.html:154
+#: templates/components/tab_stipendi.html:181
 #, fuzzy
 msgid "Monthly Net Trend"
 msgstr "Tendenza del saldo"
 
-#: templates/components/tab_stipendi.html:162
+#: templates/components/tab_stipendi.html:189
 msgid "Recent Payslips"
 msgstr "Ultime Buste Paga"
 
-#: templates/components/tab_stipendi.html:168
-#: templates/components/tab_stipendi.html:249
-#: templates/components/tab_stipendi.html:376
-#: templates/components/tab_stipendi.html:455
+#: templates/components/tab_stipendi.html:195
+#: templates/components/tab_stipendi.html:326
+#: templates/components/tab_stipendi.html:453
+#: templates/components/tab_stipendi.html:532
 msgid "Gross"
 msgstr "Lordo"
 
-#: templates/components/tab_stipendi.html:169
-#: templates/components/tab_stipendi.html:250
-#: templates/components/tab_stipendi.html:377
-#: templates/components/tab_stipendi.html:456
+#: templates/components/tab_stipendi.html:196
+#: templates/components/tab_stipendi.html:327
+#: templates/components/tab_stipendi.html:454
+#: templates/components/tab_stipendi.html:533
 msgid "Net"
 msgstr "Netto"
 
-#: templates/components/tab_stipendi.html:170
+#: templates/components/tab_stipendi.html:197
 #, fuzzy
 msgid "Allowance"
 msgstr "SALDO"
 
-#: templates/components/tab_stipendi.html:175
+#: templates/components/tab_stipendi.html:202
 msgid "No payslips registered."
 msgstr "Nessuna busta paga registrata."
 
-#: templates/components/tab_stipendi.html:186
+#: templates/components/tab_stipendi.html:213
 msgid ""
 "Record and manage monthly payslips. You can import from PDF for automatic"
 " recognition."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:193
+#: templates/components/tab_stipendi.html:220
 msgid "Record Payslip"
 msgstr "Registra Busta Paga"
 
-#: templates/components/tab_stipendi.html:201
+#: templates/components/tab_stipendi.html:229
 #, fuzzy
 msgid "Gross (€) *"
 msgstr "Costi (€)"
 
-#: templates/components/tab_stipendi.html:202
-msgid "e.g., 2800.00"
-msgstr "Es. 2800.00"
-
-#: templates/components/tab_stipendi.html:205
+#: templates/components/tab_stipendi.html:233
 msgid "Net (€) *"
 msgstr "Netto (€) *"
 
-#: templates/components/tab_stipendi.html:206
-msgid "e.g., 1980.00"
-msgstr "Es. 1980.00"
+#: templates/components/tab_stipendi.html:241
+msgid "Dettagli Aggiuntivi (Scorporo)"
+msgstr ""
 
-#: templates/components/tab_stipendi.html:210
+#: templates/components/tab_stipendi.html:245
+msgid ""
+"Inserisci solo i valori presenti in busta. Lordo e netto da lavoro "
+"vengono calcolati automaticamente."
+msgstr ""
+
+#: templates/components/tab_stipendi.html:249
+msgid "Rimborso Spese (€)"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:253
+msgid "Conguaglio 730 (€)"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:257
+msgid "Premio Produzione Lordo (€)"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:261
+msgid "Premio Produzione Netto (€)"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:265
+msgid "TFR Liquidato (€)"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:271
+msgid "Contiene 13ª / 14ª"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:277
+msgid "Lordo lavoro"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:278
+#, fuzzy
+msgid "Netto lavoro"
+msgstr "Stipendio Netto (€) *"
+
+#: templates/components/tab_stipendi.html:285
 msgid "e.g., with 13th month"
 msgstr "Es. con tredicesima"
 
-#: templates/components/tab_stipendi.html:221
+#: templates/components/tab_stipendi.html:297
 #, fuzzy
 msgid "Import from PDF Payslip"
 msgstr "Importa CSV"
 
-#: templates/components/tab_stipendi.html:222
+#: templates/components/tab_stipendi.html:298
 msgid "Upload payslip in PDF to automatically detect gross, net, and items."
 msgstr ""
 "Carica la busta paga in PDF per riconoscere automaticamente lordo, netto "
 "e voci."
 
-#: templates/components/tab_stipendi.html:224
+#: templates/components/tab_stipendi.html:300
 #, fuzzy
 msgid "Select PDF"
 msgstr "Seleziona Tutto"
 
-#: templates/components/tab_stipendi.html:233
+#: templates/components/tab_stipendi.html:309
 msgid "Upload a CSV file to import multiple salaries by mapping columns."
 msgstr "Carica un file CSV per importare stipendi multipli mappando le colonne."
 
-#: templates/components/tab_stipendi.html:242
+#: templates/components/tab_stipendi.html:318
 #, fuzzy
 msgid "Payslips History"
 msgstr "Storico Bollette"
 
-#: templates/components/tab_stipendi.html:256
+#: templates/components/tab_stipendi.html:333
 #, fuzzy
 msgid "No data."
 msgstr "Dati mancanti"
 
-#: templates/components/tab_stipendi.html:268
+#: templates/components/tab_stipendi.html:345
 msgid "People in the Group"
 msgstr "Persone nel Gruppo"
 
-#: templates/components/tab_stipendi.html:269
-#: templates/components/tab_stipendi.html:284
+#: templates/components/tab_stipendi.html:346
+#: templates/components/tab_stipendi.html:361
 msgid "New Person"
 msgstr "Nuova Persona"
 
-#: templates/components/tab_stipendi.html:272
+#: templates/components/tab_stipendi.html:349
 #, fuzzy
 msgid "No people added."
 msgstr "Nessuna bolletta ancora inserita."
 
-#: templates/components/tab_stipendi.html:290
-#: templates/components/tab_stipendi.html:423
+#: templates/components/tab_stipendi.html:367
+#: templates/components/tab_stipendi.html:500
 msgid "Person Name *"
 msgstr "Nome Persona *"
 
-#: templates/components/tab_stipendi.html:291
+#: templates/components/tab_stipendi.html:368
 msgid "e.g. John Doe"
 msgstr "Es. Mario Rossi"
 
-#: templates/components/tab_stipendi.html:305
+#: templates/components/tab_stipendi.html:382
 msgid "Payslip Items"
 msgstr "Voci Busta Paga"
 
-#: templates/components/tab_stipendi.html:314
+#: templates/components/tab_stipendi.html:391
 msgid "Item"
 msgstr "Voce"
 
-#: templates/components/tab_stipendi.html:323
+#: templates/components/tab_stipendi.html:400
 #, fuzzy
 msgid "Add Item"
 msgstr "Aggiungi Bolletta"
 
-#: templates/components/tab_stipendi.html:326
+#: templates/components/tab_stipendi.html:403
 msgid "Label"
 msgstr "Etichetta"
 
-#: templates/components/tab_stipendi.html:326
+#: templates/components/tab_stipendi.html:403
 msgid "e.g., Allowance"
 msgstr "Es. Assegno Unico"
 
-#: templates/components/tab_stipendi.html:330
+#: templates/components/tab_stipendi.html:407
 msgid "Bonus / Allowance"
 msgstr "Bonus / Assegno"
 
-#: templates/components/tab_stipendi.html:331
+#: templates/components/tab_stipendi.html:408
 #, fuzzy
 msgid "Deduction"
 msgstr "Azioni"
 
-#: templates/components/tab_stipendi.html:332
+#: templates/components/tab_stipendi.html:409
 msgid "Expense Reimbursement"
 msgstr "Rimborso Spese"
 
-#: templates/components/tab_stipendi.html:335
+#: templates/components/tab_stipendi.html:412
 #, fuzzy
 msgid "Amount (€)"
 msgstr "Importo"
 
-#: templates/components/tab_stipendi.html:348
+#: templates/components/tab_stipendi.html:425
 msgid "Map Salaries CSV Columns"
 msgstr "Mappa Colonne CSV Stipendi"
 
-#: templates/components/tab_stipendi.html:364
+#: templates/components/tab_stipendi.html:441
 msgid "Review Detected Salaries"
 msgstr "Verifica Stipendi Rilevati"
 
-#: templates/components/tab_stipendi.html:368
+#: templates/components/tab_stipendi.html:445
 msgid ""
 "The following salaries and payslip details were detected in the PDF file."
 " Select those you want to import."
@@ -2744,20 +2908,20 @@ msgstr ""
 "I seguenti stipendi e dettagli della busta paga sono stati rilevati nel "
 "file PDF. Seleziona quelli che desideri importare."
 
-#: templates/components/tab_stipendi.html:375
-#: templates/components/tab_stipendi.html:454
+#: templates/components/tab_stipendi.html:452
+#: templates/components/tab_stipendi.html:531
 msgid "Person"
 msgstr "Persona"
 
-#: templates/components/tab_stipendi.html:378
+#: templates/components/tab_stipendi.html:455
 msgid "Items"
 msgstr "Voci"
 
-#: templates/components/tab_stipendi.html:427
+#: templates/components/tab_stipendi.html:504
 msgid "Gross Salary (€) *"
 msgstr "Stipendio Lordo (€) *"
 
-#: templates/components/tab_stipendi.html:431
+#: templates/components/tab_stipendi.html:508
 msgid "Net Salary (€) *"
 msgstr "Stipendio Netto (€) *"
 
@@ -2782,52 +2946,6 @@ msgstr "Veicoli"
 #, fuzzy
 msgid "Add vehicle"
 msgstr "Veicoli"
-
-#: templates/components/tab_veicoli.html:33
-#, fuzzy
-msgid "Periodo"
-msgstr "Periodo"
-
-#: templates/components/tab_veicoli.html:36
-msgid "Mese corrente"
-msgstr "Mese corrente"
-
-#: templates/components/tab_veicoli.html:37
-msgid "Mese precedente"
-msgstr "Mese precedente"
-
-#: templates/components/tab_veicoli.html:38
-msgid "Ultimo mese"
-msgstr "Ultimo mese"
-
-#: templates/components/tab_veicoli.html:39
-msgid "Ultimi 3 mesi"
-msgstr "Ultimi 3 mesi"
-
-#: templates/components/tab_veicoli.html:40
-msgid "Ultimi 6 mesi"
-msgstr "Ultimi 6 mesi"
-
-#: templates/components/tab_veicoli.html:41
-msgid "Ultimo anno"
-msgstr "Ultimo anno"
-
-#: templates/components/tab_veicoli.html:42
-msgid "Tutto il periodo"
-msgstr "Tutto il periodo"
-
-#: templates/components/tab_veicoli.html:43
-msgid "Personalizza"
-msgstr "Personalizza"
-
-#: templates/components/tab_veicoli.html:48
-msgid "Dal"
-msgstr "Dal"
-
-#: templates/components/tab_veicoli.html:52
-#, fuzzy
-msgid "Al"
-msgstr "Vendita"
 
 #: templates/components/tab_veicoli.html:66
 msgid "Timeline"
@@ -2893,7 +3011,7 @@ msgid "Charts and Reports"
 msgstr "Grafici e Report"
 
 #: templates/components/tab_veicoli.html:110
-#: templates/components/tab_veicoli.html:549
+#: templates/components/tab_veicoli.html:550
 #, fuzzy
 msgid "Manage Vehicles"
 msgstr "Veicoli"
@@ -2917,7 +3035,7 @@ msgid "Statistics and summary of your vehicle."
 msgstr "Statistiche e riassunto del tuo veicolo."
 
 #: templates/components/tab_veicoli.html:156
-#: templates/components/tab_veicoli.html:563
+#: templates/components/tab_veicoli.html:564
 msgid "Add Activity"
 msgstr "Aggiungi Attività"
 
@@ -2980,30 +3098,30 @@ msgid "Quick Add"
 msgstr "Nuovo inserimento rapido"
 
 #: templates/components/tab_veicoli.html:250
-#: templates/components/tab_veicoli.html:570
+#: templates/components/tab_veicoli.html:571
 msgid "Refueling"
 msgstr "Rifornimento"
 
 #: templates/components/tab_veicoli.html:254
-#: templates/components/tab_veicoli.html:571
+#: templates/components/tab_veicoli.html:572
 #, fuzzy
 msgid "Expense"
 msgstr "Uscite"
 
 #: templates/components/tab_veicoli.html:258
-#: templates/components/tab_veicoli.html:388
-#: templates/components/tab_veicoli.html:572
+#: templates/components/tab_veicoli.html:389
+#: templates/components/tab_veicoli.html:573
 msgid "Maintenance"
 msgstr "Manutenzione"
 
 #: templates/components/tab_veicoli.html:262
-#: templates/components/tab_veicoli.html:573
+#: templates/components/tab_veicoli.html:574
 #, fuzzy
 msgid "Income"
 msgstr "Entrate"
 
 #: templates/components/tab_veicoli.html:266
-#: templates/components/tab_veicoli.html:574
+#: templates/components/tab_veicoli.html:575
 msgid "Reminder"
 msgstr "Promemoria"
 
@@ -3016,644 +3134,644 @@ msgstr "Aggiungi Transazione"
 msgid "All activities"
 msgstr "Tutte le attività"
 
-#: templates/components/tab_veicoli.html:297
+#: templates/components/tab_veicoli.html:298
 msgid "Refuelings Register"
 msgstr "Registro Rifornimenti"
 
-#: templates/components/tab_veicoli.html:298
+#: templates/components/tab_veicoli.html:299
 #, fuzzy
 msgid "New Refueling"
 msgstr "Nuovo Portafoglio"
 
-#: templates/components/tab_veicoli.html:305
-#: templates/components/tab_veicoli.html:387
+#: templates/components/tab_veicoli.html:306
+#: templates/components/tab_veicoli.html:388
 msgid "Odometer (km)"
 msgstr "Odo (km)"
 
-#: templates/components/tab_veicoli.html:306
+#: templates/components/tab_veicoli.html:307
 msgid "Distance"
 msgstr "Distanza"
 
-#: templates/components/tab_veicoli.html:307
+#: templates/components/tab_veicoli.html:308
 msgid "Fuel"
 msgstr "Carburante"
 
-#: templates/components/tab_veicoli.html:308
+#: templates/components/tab_veicoli.html:309
 msgid "Liters"
 msgstr "Litri</th>"
 
-#: templates/components/tab_veicoli.html:309
+#: templates/components/tab_veicoli.html:310
 #, fuzzy
 msgid "Price/L"
 msgstr "Aprile"
 
-#: templates/components/tab_veicoli.html:312
+#: templates/components/tab_veicoli.html:313
 msgid "Full?"
 msgstr "Pieno?"
 
-#: templates/components/tab_veicoli.html:327
+#: templates/components/tab_veicoli.html:328
 #, fuzzy
 msgid "Expenses Register"
 msgstr "Spese per Categoria"
 
-#: templates/components/tab_veicoli.html:328
+#: templates/components/tab_veicoli.html:329
 #, fuzzy
 msgid "New Expense"
 msgstr "Uscite"
 
-#: templates/components/tab_veicoli.html:335
-#: templates/components/tab_veicoli.html:361
+#: templates/components/tab_veicoli.html:336
+#: templates/components/tab_veicoli.html:362
 #: templates/components/tab_wallet.html:266
 msgid "Category"
 msgstr "Categoria"
 
-#: templates/components/tab_veicoli.html:337
-#: templates/components/tab_veicoli.html:363
+#: templates/components/tab_veicoli.html:338
+#: templates/components/tab_veicoli.html:364
 msgid "Kilometers"
 msgstr "Chilometri"
 
-#: templates/components/tab_veicoli.html:353
+#: templates/components/tab_veicoli.html:354
 #, fuzzy
 msgid "Incomes Register"
 msgstr "Entrate"
 
-#: templates/components/tab_veicoli.html:354
+#: templates/components/tab_veicoli.html:355
 #, fuzzy
 msgid "New Income"
 msgstr "Entrate"
 
-#: templates/components/tab_veicoli.html:379
+#: templates/components/tab_veicoli.html:380
 msgid "Maintenances Register"
 msgstr "Registro Manutenzioni"
 
-#: templates/components/tab_veicoli.html:380
+#: templates/components/tab_veicoli.html:381
 msgid "New Maintenance"
 msgstr "Nuova Manutenzione</button>"
 
-#: templates/components/tab_veicoli.html:390
+#: templates/components/tab_veicoli.html:391
 msgid "Provider"
 msgstr "Fornitore"
 
-#: templates/components/tab_veicoli.html:405
+#: templates/components/tab_veicoli.html:406
 msgid "Manage Parts and Works"
 msgstr "Gestione Ricambi e Lavori"
 
-#: templates/components/tab_veicoli.html:406
+#: templates/components/tab_veicoli.html:407
 msgid "Manage the list of parts and works types available for maintenance."
 msgstr ""
 "Gestisci la lista delle tipologie di ricambi e lavori disponibili per le "
 "manutenzioni."
 
-#: templates/components/tab_veicoli.html:409
+#: templates/components/tab_veicoli.html:410
 msgid "New part/work (e.g. Brake Pads)"
 msgstr "Nuovo ricambio/lavoro (es. Pastiglie Freni)"
 
-#: templates/components/tab_veicoli.html:410
-#: templates/components/tab_veicoli.html:425
-#: templates/components/tab_veicoli.html:440
+#: templates/components/tab_veicoli.html:411
+#: templates/components/tab_veicoli.html:426
+#: templates/components/tab_veicoli.html:441
 #, fuzzy
 msgid "Add"
 msgstr "Max DD:"
 
-#: templates/components/tab_veicoli.html:420
+#: templates/components/tab_veicoli.html:421
 #, fuzzy
 msgid "Manage Expense Categories"
 msgstr "Spese per Categoria"
 
-#: templates/components/tab_veicoli.html:421
+#: templates/components/tab_veicoli.html:422
 msgid "Manage the list of categories available for recording expenses."
 msgstr ""
 "Gestisci la lista delle categorie disponibili per la registrazione delle "
 "spese."
 
-#: templates/components/tab_veicoli.html:424
+#: templates/components/tab_veicoli.html:425
 msgid "New expense category (e.g. Parking)"
 msgstr "Nuova categoria spesa (es. Parcheggio)"
 
-#: templates/components/tab_veicoli.html:435
+#: templates/components/tab_veicoli.html:436
 msgid "Manage Income Categories"
 msgstr "Gestione Categorie Entrate"
 
-#: templates/components/tab_veicoli.html:436
+#: templates/components/tab_veicoli.html:437
 msgid "Manage the list of categories available for recording income."
 msgstr ""
 "Gestisci la lista delle categorie disponibili per la registrazione delle "
 "entrate."
 
-#: templates/components/tab_veicoli.html:439
+#: templates/components/tab_veicoli.html:440
 msgid "New income category (e.g. Deliveries)"
 msgstr "Nuova categoria entrata (es. Consegne)"
 
-#: templates/components/tab_veicoli.html:450
+#: templates/components/tab_veicoli.html:451
 msgid "Reminders and Deadlines"
 msgstr "Promemoria e Scadenze"
 
-#: templates/components/tab_veicoli.html:451
+#: templates/components/tab_veicoli.html:452
 msgid "New Reminder"
 msgstr "Nuovo Promemoria</button>"
 
-#: templates/components/tab_veicoli.html:463
+#: templates/components/tab_veicoli.html:464
 msgid "Total Expenses Distribution"
 msgstr "Distribuzione Spese Totali"
 
-#: templates/components/tab_veicoli.html:470
+#: templates/components/tab_veicoli.html:471
 #, fuzzy
 msgid "Fuel Consumption Trend"
 msgstr "Unità Consumo Acqua"
 
-#: templates/components/tab_veicoli.html:477
+#: templates/components/tab_veicoli.html:478
 msgid "Battery Capacity Trend"
 msgstr "Andamento Capacità Batteria"
 
-#: templates/components/tab_veicoli.html:484
+#: templates/components/tab_veicoli.html:485
 msgid "Annual Cost per Kilometer (€/km)"
 msgstr "Costo Annuale al Chilometro (€/km)"
 
-#: templates/components/tab_veicoli.html:491
+#: templates/components/tab_veicoli.html:492
 msgid "Annual Mileage"
 msgstr "Chilometraggio Annuale"
 
-#: templates/components/tab_veicoli.html:500
+#: templates/components/tab_veicoli.html:501
 #: templates/components/tab_wallet.html:154
 msgid "Expenses by Category"
 msgstr "Spese per Categoria"
 
-#: templates/components/tab_veicoli.html:502
+#: templates/components/tab_veicoli.html:503
 #, fuzzy
 msgid "Monthly"
 msgstr "Mese"
 
-#: templates/components/tab_veicoli.html:503
+#: templates/components/tab_veicoli.html:504
 #, fuzzy
 msgid "Annual"
 msgstr "Gennaio"
 
-#: templates/components/tab_veicoli.html:516
+#: templates/components/tab_veicoli.html:517
 #, fuzzy
 msgid "Expense Types"
 msgstr "Uscite"
 
-#: templates/components/tab_veicoli.html:522
+#: templates/components/tab_veicoli.html:523
 msgid "Maintenance Types"
 msgstr "Tipologie di Manutenzione"
 
-#: templates/components/tab_veicoli.html:534
+#: templates/components/tab_veicoli.html:535
 msgid "Total Annual Kilometers (all vehicles)"
 msgstr "Chilometri Annuali Totali (tutti i veicoli)"
 
-#: templates/components/tab_veicoli.html:540
+#: templates/components/tab_veicoli.html:541
 #, fuzzy
 msgid "Annual Expense by Category (all vehicles)"
 msgstr "Spese per Categoria"
 
-#: templates/components/tab_veicoli.html:550
-#: templates/components/tab_veicoli.html:871
+#: templates/components/tab_veicoli.html:551
+#: templates/components/tab_veicoli.html:872
 #, fuzzy
 msgid "New Vehicle"
 msgstr "Veicoli"
 
-#: templates/components/tab_veicoli.html:568
+#: templates/components/tab_veicoli.html:569
 msgid "Activity Type"
 msgstr "Tipo Attività"
 
-#: templates/components/tab_veicoli.html:586
-#: templates/components/tab_veicoli.html:668
-#: templates/components/tab_veicoli.html:721
-#: templates/components/tab_veicoli.html:764
+#: templates/components/tab_veicoli.html:587
+#: templates/components/tab_veicoli.html:669
+#: templates/components/tab_veicoli.html:722
+#: templates/components/tab_veicoli.html:765
 #, fuzzy
 msgid "Date *"
 msgstr "Data"
 
-#: templates/components/tab_veicoli.html:590
-#: templates/components/tab_veicoli.html:725
+#: templates/components/tab_veicoli.html:591
+#: templates/components/tab_veicoli.html:726
 msgid "Odometer (km) *"
 msgstr "Contachilometri (km) *"
 
-#: templates/components/tab_veicoli.html:591
+#: templates/components/tab_veicoli.html:592
 msgid "e.g., 45000"
 msgstr "Esempio: 45000"
 
-#: templates/components/tab_veicoli.html:596
+#: templates/components/tab_veicoli.html:597
 msgid "Fuel Type *"
 msgstr "Tipo Carburante *"
 
-#: templates/components/tab_veicoli.html:606
+#: templates/components/tab_veicoli.html:607
 msgid "Volume (Liters)"
 msgstr "Volume (Litri)"
 
-#: templates/components/tab_veicoli.html:607
-#: templates/components/tab_veicoli.html:740
+#: templates/components/tab_veicoli.html:608
+#: templates/components/tab_veicoli.html:741
 msgid "Automatically calculated"
 msgstr "Calcolato in automatico"
 
-#: templates/components/tab_veicoli.html:612
+#: templates/components/tab_veicoli.html:613
 #, fuzzy
 msgid "Price per Liter (€) *"
 msgstr "Prezzo Quota (€)"
 
-#: templates/components/tab_veicoli.html:613
+#: templates/components/tab_veicoli.html:614
 msgid "e.g., 1.849"
 msgstr "Esempio: 1.849"
 
-#: templates/components/tab_veicoli.html:616
+#: templates/components/tab_veicoli.html:617
 #, fuzzy
 msgid "Total Cost (€) *"
 msgstr "Costo Totale"
 
-#: templates/components/tab_veicoli.html:617
+#: templates/components/tab_veicoli.html:618
 msgid "e.g., 50.00"
 msgstr "Esempio: 50.00"
 
-#: templates/components/tab_veicoli.html:623
+#: templates/components/tab_veicoli.html:624
 msgid "Starting Battery"
 msgstr "Batteria all'avvio"
 
-#: templates/components/tab_veicoli.html:624
+#: templates/components/tab_veicoli.html:625
 #, fuzzy
 msgid "e.g., 20"
 msgstr "Esempio: 120"
 
-#: templates/components/tab_veicoli.html:627
+#: templates/components/tab_veicoli.html:628
 msgid "Ending Battery"
 msgstr "Batteria al termine"
 
-#: templates/components/tab_veicoli.html:634
+#: templates/components/tab_veicoli.html:635
 msgid "Full Tank (recommended for consumption calculation)"
 msgstr "Serbatoio Pieno (consigliato per calcolo consumi)"
 
-#: templates/components/tab_veicoli.html:640
+#: templates/components/tab_veicoli.html:641
 msgid "Missed previous refueling? (avoids efficiency calculation for this tank)"
 msgstr ""
 "Mancato rifornimento precedente? (evita calcolo efficienza per questo "
 "pieno)"
 
-#: templates/components/tab_veicoli.html:645
+#: templates/components/tab_veicoli.html:646
 msgid "Gas station (optional)"
 msgstr "Distributore di benzina (opzionale)"
 
-#: templates/components/tab_veicoli.html:646
+#: templates/components/tab_veicoli.html:647
 msgid "e.g., Eni, Q8"
 msgstr "Esempio: Eni, Q8"
-
-#: templates/components/tab_veicoli.html:649
-#: templates/components/tab_veicoli.html:702
-#: templates/components/tab_veicoli.html:751
-msgid "Driver (optional)"
-msgstr "Guidatore (opzionale)"
 
 #: templates/components/tab_veicoli.html:650
 #: templates/components/tab_veicoli.html:703
 #: templates/components/tab_veicoli.html:752
+msgid "Driver (optional)"
+msgstr "Guidatore (opzionale)"
+
+#: templates/components/tab_veicoli.html:651
+#: templates/components/tab_veicoli.html:704
+#: templates/components/tab_veicoli.html:753
 #, fuzzy
 msgid "Driver name"
 msgstr "Rinomina"
 
-#: templates/components/tab_veicoli.html:655
-#: templates/components/tab_veicoli.html:708
+#: templates/components/tab_veicoli.html:656
+#: templates/components/tab_veicoli.html:709
 msgid "Reason (optional)"
 msgstr "Motivo (opzionale)"
 
-#: templates/components/tab_veicoli.html:656
+#: templates/components/tab_veicoli.html:657
 msgid "e.g., Work trip"
 msgstr "Esempio: Viaggio lavoro"
-
-#: templates/components/tab_veicoli.html:659
-#: templates/components/tab_veicoli.html:712
-#: templates/components/tab_veicoli.html:755
-msgid "Payment method (optional)"
-msgstr "Metodo di pagamento (opzionale)"
 
 #: templates/components/tab_veicoli.html:660
 #: templates/components/tab_veicoli.html:713
 #: templates/components/tab_veicoli.html:756
+msgid "Payment method (optional)"
+msgstr "Metodo di pagamento (opzionale)"
+
+#: templates/components/tab_veicoli.html:661
+#: templates/components/tab_veicoli.html:714
+#: templates/components/tab_veicoli.html:757
 msgid "e.g., Card, Cash"
 msgstr "Esempio: Carta, Contanti"
 
-#: templates/components/tab_veicoli.html:672
+#: templates/components/tab_veicoli.html:673
 #, fuzzy
 msgid "Expense Category *"
 msgstr "Spese per Categoria"
 
-#: templates/components/tab_veicoli.html:674
+#: templates/components/tab_veicoli.html:675
 msgid "Insurance"
 msgstr "Assicurazione"
 
-#: templates/components/tab_veicoli.html:675
+#: templates/components/tab_veicoli.html:676
 msgid "Tax / Stamp Duty"
 msgstr "Bollo / Tasse"
 
-#: templates/components/tab_veicoli.html:676
+#: templates/components/tab_veicoli.html:677
 #, fuzzy
 msgid "Parking"
 msgstr "Attenzione:"
 
-#: templates/components/tab_veicoli.html:677
+#: templates/components/tab_veicoli.html:678
 #, fuzzy
 msgid "Toll"
 msgstr "Guadagno Totale"
 
-#: templates/components/tab_veicoli.html:678
+#: templates/components/tab_veicoli.html:679
 #, fuzzy
 msgid "Car Wash"
 msgstr "Liquidità"
 
-#: templates/components/tab_veicoli.html:679
+#: templates/components/tab_veicoli.html:680
 msgid "Fine"
 msgstr "Multa"
 
-#: templates/components/tab_veicoli.html:680
+#: templates/components/tab_veicoli.html:681
 msgid "Loan / Lease"
 msgstr "Finanziamento / Leasing"
 
-#: templates/components/tab_veicoli.html:681
+#: templates/components/tab_veicoli.html:682
 msgid "Tires"
 msgstr "Acquisto Pneumatici"
 
-#: templates/components/tab_veicoli.html:688
+#: templates/components/tab_veicoli.html:689
 #, fuzzy
 msgid "Expense Cost (€) *"
 msgstr "Uscite"
 
-#: templates/components/tab_veicoli.html:689
+#: templates/components/tab_veicoli.html:690
 msgid "e.g., 12.50"
 msgstr "Esempio: 12.50"
 
-#: templates/components/tab_veicoli.html:692
-#: templates/components/tab_veicoli.html:784
+#: templates/components/tab_veicoli.html:693
+#: templates/components/tab_veicoli.html:785
 msgid "Odometer (km, optional)"
 msgstr "Contachilometri (km, opzionale)"
 
-#: templates/components/tab_veicoli.html:693
+#: templates/components/tab_veicoli.html:694
 msgid "e.g., 45200"
 msgstr "Esempio: 45200"
 
-#: templates/components/tab_veicoli.html:698
+#: templates/components/tab_veicoli.html:699
 msgid "Local expense (optional)"
 msgstr "Spesa locale (opzionale)"
 
-#: templates/components/tab_veicoli.html:699
+#: templates/components/tab_veicoli.html:700
 msgid "e.g., Rome Car Wash"
 msgstr "Esempio: Autolavaggio Roma"
 
-#: templates/components/tab_veicoli.html:709
+#: templates/components/tab_veicoli.html:710
 #, fuzzy
 msgid "Reason for expense"
 msgstr "Spese Periodo"
 
-#: templates/components/tab_veicoli.html:726
+#: templates/components/tab_veicoli.html:727
 msgid "Odometer at time of maintenance"
 msgstr "Chilometri al momento della manutenzione"
 
-#: templates/components/tab_veicoli.html:731
+#: templates/components/tab_veicoli.html:732
 msgid "Maintenance Detail (Select parts/works and specify cost) *"
 msgstr "Dettaglio Manutenzione (Seleziona ricambi/lavori e specifica il costo) *"
 
-#: templates/components/tab_veicoli.html:739
+#: templates/components/tab_veicoli.html:740
 msgid "Maintenance Cost (€) *"
 msgstr "Costo Manutenzione (€) *"
 
-#: templates/components/tab_veicoli.html:745
+#: templates/components/tab_veicoli.html:746
 msgid "Workshop / Provider (optional)"
 msgstr "Officina / Fornitore (opzionale)"
 
-#: templates/components/tab_veicoli.html:746
+#: templates/components/tab_veicoli.html:747
 msgid "Workshop or dealership name"
 msgstr "Nome officina o concessionaria"
 
-#: templates/components/tab_veicoli.html:768
+#: templates/components/tab_veicoli.html:769
 #, fuzzy
 msgid "Income Category *"
 msgstr "Dati mancanti"
 
-#: templates/components/tab_veicoli.html:770
+#: templates/components/tab_veicoli.html:771
 msgid "Passenger Service (Taxi/Uber)"
 msgstr "Corse (NCC, Uber, Taxi)"
 
-#: templates/components/tab_veicoli.html:771
+#: templates/components/tab_veicoli.html:772
 msgid "Deliveries (Glovo, UberEats, etc.)"
 msgstr "Consegne (Glovo, Deliveroo, ecc.)"
 
-#: templates/components/tab_veicoli.html:772
+#: templates/components/tab_veicoli.html:773
 msgid "Mileage Reimbursement"
 msgstr "Rimborso chilometrico aziendale"
 
-#: templates/components/tab_veicoli.html:773
+#: templates/components/tab_veicoli.html:774
 #, fuzzy
 msgid "Rental"
 msgstr "Rinomina"
 
-#: templates/components/tab_veicoli.html:781
+#: templates/components/tab_veicoli.html:782
 msgid "Gross income realized"
 msgstr "Entrate lorde realizzate"
 
-#: templates/components/tab_veicoli.html:785
+#: templates/components/tab_veicoli.html:786
 msgid "e.g., 45350"
 msgstr "Esempio: 45350"
 
-#: templates/components/tab_veicoli.html:795
+#: templates/components/tab_veicoli.html:796
 msgid "Reminder Description *"
 msgstr "Descrizione Promemoria *"
 
-#: templates/components/tab_veicoli.html:797
+#: templates/components/tab_veicoli.html:798
 msgid "-- Select an item --"
 msgstr "-- Seleziona una voce --"
 
-#: templates/components/tab_veicoli.html:803
+#: templates/components/tab_veicoli.html:804
 msgid "Reminder Frequency *"
 msgstr "Frequenza Promemoria *"
 
-#: templates/components/tab_veicoli.html:805
+#: templates/components/tab_veicoli.html:806
 #, fuzzy
 msgid "Single (one time)"
 msgstr "Obbligazioni Singole"
 
-#: templates/components/tab_veicoli.html:806
+#: templates/components/tab_veicoli.html:807
 msgid "Repeated (recurring)"
 msgstr "Ripetuto (ricorrente)"
 
-#: templates/components/tab_veicoli.html:810
+#: templates/components/tab_veicoli.html:811
 #, fuzzy
 msgid "Alert Type *"
 msgstr "Tipo Asset:"
 
-#: templates/components/tab_veicoli.html:812
+#: templates/components/tab_veicoli.html:813
 msgid "Due by Date"
 msgstr "Scadenza per Data"
 
-#: templates/components/tab_veicoli.html:813
+#: templates/components/tab_veicoli.html:814
 msgid "Due by Odometer (Odo)"
 msgstr "Scadenza per Chilometri (Odo)"
 
-#: templates/components/tab_veicoli.html:814
+#: templates/components/tab_veicoli.html:815
 msgid "Both (whichever comes first)"
 msgstr "Entrambi (quello che arriva prima)"
 
-#: templates/components/tab_veicoli.html:820
+#: templates/components/tab_veicoli.html:821
 #, fuzzy
 msgid "Due Date"
 msgstr "Data Prezzo"
 
-#: templates/components/tab_veicoli.html:824
+#: templates/components/tab_veicoli.html:825
 msgid "Due Odometer (km)"
 msgstr "Chilometri Scadenza (km)"
 
-#: templates/components/tab_veicoli.html:825
+#: templates/components/tab_veicoli.html:826
 msgid "e.g., 60000"
 msgstr "Esempio: 60000"
 
-#: templates/components/tab_veicoli.html:830
+#: templates/components/tab_veicoli.html:831
 #, fuzzy
 msgid "Repeat every (Time)"
 msgstr "Andamento durante il tempo"
 
-#: templates/components/tab_veicoli.html:832
+#: templates/components/tab_veicoli.html:833
 msgid "e.g. 12"
 msgstr "Es: 12"
 
-#: templates/components/tab_veicoli.html:834
+#: templates/components/tab_veicoli.html:835
 msgid "Days"
 msgstr "Giorni"
 
-#: templates/components/tab_veicoli.html:835
+#: templates/components/tab_veicoli.html:836
 #, fuzzy
 msgid "Months"
 msgstr "Mese"
 
-#: templates/components/tab_veicoli.html:836
+#: templates/components/tab_veicoli.html:837
 #, fuzzy
 msgid "Years"
 msgstr "Anno"
 
-#: templates/components/tab_veicoli.html:841
+#: templates/components/tab_veicoli.html:842
 msgid "Repeat every (Kilometers)"
 msgstr "Ripeti ogni (Chilometri)"
 
-#: templates/components/tab_veicoli.html:842
+#: templates/components/tab_veicoli.html:843
 msgid "e.g. 15000"
 msgstr "Es: 15000"
 
-#: templates/components/tab_veicoli.html:847
+#: templates/components/tab_veicoli.html:848
 msgid "Next Date"
 msgstr "Prossima data"
 
-#: templates/components/tab_veicoli.html:855
+#: templates/components/tab_veicoli.html:856
 msgid "Notes / Additional details"
 msgstr "Note / Dettagli aggiuntivi"
 
-#: templates/components/tab_veicoli.html:856
+#: templates/components/tab_veicoli.html:857
 msgid "Write any additional notes here..."
 msgstr "Scrivi qui eventuali note aggiuntive..."
 
-#: templates/components/tab_veicoli.html:878
+#: templates/components/tab_veicoli.html:879
 msgid "Brand *"
 msgstr "Marca *"
 
-#: templates/components/tab_veicoli.html:879
+#: templates/components/tab_veicoli.html:880
 msgid "e.g., Fiat, Ford, Honda..."
 msgstr "Esempio: Fiat, Ford, Honda..."
 
-#: templates/components/tab_veicoli.html:882
+#: templates/components/tab_veicoli.html:883
 msgid "Model *"
 msgstr "Modello *"
 
-#: templates/components/tab_veicoli.html:883
+#: templates/components/tab_veicoli.html:884
 msgid "e.g., Panda, Fiesta, Civic..."
 msgstr "Esempio: Panda, Fiesta, Civic..."
 
-#: templates/components/tab_veicoli.html:888
+#: templates/components/tab_veicoli.html:889
 #, fuzzy
 msgid "Vehicle Type *"
 msgstr "Veicoli"
 
-#: templates/components/tab_veicoli.html:890
+#: templates/components/tab_veicoli.html:891
 msgid "Car"
 msgstr "Auto"
 
-#: templates/components/tab_veicoli.html:892
+#: templates/components/tab_veicoli.html:893
 msgid "Truck"
 msgstr "Camion"
 
-#: templates/components/tab_veicoli.html:893
+#: templates/components/tab_veicoli.html:894
 msgid "Van"
 msgstr "Furgone"
 
-#: templates/components/tab_veicoli.html:894
+#: templates/components/tab_veicoli.html:895
 msgid "Bicycle"
 msgstr "Bicicletta"
 
-#: templates/components/tab_veicoli.html:899
+#: templates/components/tab_veicoli.html:900
 msgid "Main Fuel *"
 msgstr "Carburante Principale *"
 
-#: templates/components/tab_veicoli.html:906
+#: templates/components/tab_veicoli.html:907
 msgid "None (Manual Bicycles)"
 msgstr "Nessuno (Bici Muscolari)"
 
-#: templates/components/tab_veicoli.html:913
+#: templates/components/tab_veicoli.html:914
 msgid "Battery Capacity"
 msgstr "Capacità Batteria"
 
-#: templates/components/tab_veicoli.html:914
+#: templates/components/tab_veicoli.html:915
 msgid "e.g., 500 (Wh) or 75 (kWh)"
 msgstr ""
 
-#: templates/components/tab_veicoli.html:917
+#: templates/components/tab_veicoli.html:918
 msgid "Battery Unit"
 msgstr "Unità Batteria"
 
-#: templates/components/tab_veicoli.html:926
+#: templates/components/tab_veicoli.html:927
 msgid "Battery Capacity (Ah) - Optional"
 msgstr "Capacità Batteria (Ah) - Opzionale"
 
-#: templates/components/tab_veicoli.html:927
+#: templates/components/tab_veicoli.html:928
 #, fuzzy
 msgid "e.g., 14"
 msgstr "Esempio: 45"
 
-#: templates/components/tab_veicoli.html:930
+#: templates/components/tab_veicoli.html:931
 msgid "Battery Voltage (V) - Optional"
 msgstr "Voltaggio Batteria (V) - Opzionale"
 
-#: templates/components/tab_veicoli.html:931
+#: templates/components/tab_veicoli.html:932
 #, fuzzy
 msgid "e.g., 36"
 msgstr "Esempio: 3.5"
 
-#: templates/components/tab_veicoli.html:936
+#: templates/components/tab_veicoli.html:937
 msgid "Plate (optional)"
 msgstr "Targa (opzionale)"
 
-#: templates/components/tab_veicoli.html:937
+#: templates/components/tab_veicoli.html:938
 msgid "e.g., AB 123 CD"
 msgstr "Esempio: AB 123 CD"
 
-#: templates/components/tab_veicoli.html:940
+#: templates/components/tab_veicoli.html:941
 msgid "Year of Manufacture (optional)"
 msgstr "Anno Fabbricazione (opzionale)"
 
-#: templates/components/tab_veicoli.html:941
+#: templates/components/tab_veicoli.html:942
 msgid "e.g., 2020"
 msgstr "Esempio: 2020"
 
-#: templates/components/tab_veicoli.html:946
+#: templates/components/tab_veicoli.html:947
 msgid "Initial Odometer (km) *"
 msgstr "Chilometri Iniziali (km) *"
 
-#: templates/components/tab_veicoli.html:950
+#: templates/components/tab_veicoli.html:951
 msgid "Tank Capacity (Liters / kWh / kg - optional)"
 msgstr "Capacità Serbatoio (Litri / kWh / kg - opzionale)"
 
-#: templates/components/tab_veicoli.html:951
+#: templates/components/tab_veicoli.html:952
 msgid "e.g., 45"
 msgstr "Esempio: 45"
 
-#: templates/components/tab_veicoli.html:957
+#: templates/components/tab_veicoli.html:958
 msgid "Archive this vehicle (hide it from lists and main dashboard)"
 msgstr ""
 "Archivia questo veicolo (nascondilo dalle liste e dalla dashboard "
 "principale)"
 
-#: templates/components/tab_veicoli.html:962
+#: templates/components/tab_veicoli.html:963
 #, fuzzy
 msgid "Save Vehicle"
 msgstr "Veicoli"
@@ -3791,6 +3909,21 @@ msgstr "Nota"
 msgid "Map Wallet CSV Columns"
 msgstr "Mappa Colonne CSV Wallet"
 
+msgid "Total Gross Work"
+msgstr "Lordo lavoro totale"
+
+msgid "Total Net Work"
+msgstr "Netto lavoro totale"
+
+msgid "Monthly Net Work Average"
+msgstr "Media netto lavoro"
+
+msgid "Average Work Payslip Breakdown"
+msgstr "Ripartizione media busta paga lavoro"
+
+msgid "Monthly Work Trend (Gross vs Net)"
+msgstr "Andamento mensile lavoro (Lordo vs Netto)"
+
 #~ msgid "Custom"
 #~ msgstr "Personalizzato"
 
@@ -3835,4 +3968,10 @@ msgstr "Mappa Colonne CSV Wallet"
 
 #~ msgid "Performance Analysis & Management"
 #~ msgstr "Analisi Performance & Gestione"
+
+#~ msgid "e.g., 2800.00"
+#~ msgstr "Es. 2800.00"
+
+#~ msgid "e.g., 1980.00"
+#~ msgstr "Es. 1980.00"
 

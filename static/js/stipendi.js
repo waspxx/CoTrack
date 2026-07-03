@@ -15,6 +15,8 @@ const stipState = {
 
 let chartStipDonut = null;
 let chartStipLine  = null;
+let chartStipLavoroDonut = null;
+let chartStipLavoroLine  = null;
 
 // ── THEME SYNC ────────────────────────────────────────────────────────────────
 function syncStipTheme() {
@@ -404,11 +406,15 @@ function renderStipDashboard() {
     document.getElementById('kpi-net-total').textContent   = fmtEur(netTotal);
     document.getElementById('kpi-net-avg').textContent     = fmtEur(netAvg);
 
-    // Update allowance KPI slot to show lordo lavoro average
-    const kpiAllow = document.getElementById('kpi-assegno-unico');
-    if (kpiAllow) kpiAllow.textContent = fmtEur(netLavoroAvg);
-    const kpiAllowLabel = kpiAllow ? kpiAllow.closest('.stat-card')?.querySelector('.stat-label') : null;
-    if (kpiAllowLabel) kpiAllowLabel.textContent = 'Media Netto Lavoro';
+    // Update Lordo/Netto Lavoro KPIs
+    const kpiGrossLavoro = document.getElementById('kpi-gross-lavoro-total');
+    if (kpiGrossLavoro) kpiGrossLavoro.textContent = fmtEur(grossLavoroTotal);
+
+    const kpiNetLavoro = document.getElementById('kpi-net-lavoro-total');
+    if (kpiNetLavoro) kpiNetLavoro.textContent = fmtEur(netLavoroTotal);
+
+    const kpiNetLavoroAvg = document.getElementById('kpi-net-lavoro-avg');
+    if (kpiNetLavoroAvg) kpiNetLavoroAvg.textContent = fmtEur(netLavoroAvg);
 
     document.getElementById('stip-dashboard-title').textContent = stipState.activePersonName || 'Dashboard Stipendi';
 
@@ -506,6 +512,59 @@ function renderStipCharts(data) {
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => '€' + v.toLocaleString('it-IT') }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    }
+
+    // Donut Lavoro: avg gross work breakdown (net work vs work deductions estimate)
+    const avgGrossLavoro = data.length ? data.reduce((a,s)=>a+calcolaLordoLavoro(s),0)/data.length : 0;
+    const avgNetLavoro   = data.length ? data.reduce((a,s)=>a+calcolaNettoLavoro(s),0)/data.length : 0;
+    const avgDedLavoro   = Math.max(0, avgGrossLavoro - avgNetLavoro);
+
+    const lavoroDonutCtx = document.getElementById('chart-stip-lavoro-donut');
+    if (lavoroDonutCtx) {
+        if (chartStipLavoroDonut) chartStipLavoroDonut.destroy();
+        chartStipLavoroDonut = new Chart(lavoroDonutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Netto Lavoro', 'Trattenute Lavoro'],
+                datasets: [{ data: [avgNetLavoro, avgDedLavoro], backgroundColor: ['#14b8a6','#f97316'], borderWidth: 0 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: { legend: { position: 'bottom', labels: { color: '#64748b', padding: 16, font: { size: 12 } } } }
+            }
+        });
+    }
+
+    // Line chart Lavoro: lordo vs netto lavoro per month
+    const lavoroLineCtx = document.getElementById('chart-stip-lavoro-line');
+    if (lavoroLineCtx) {
+        if (chartStipLavoroLine) chartStipLavoroLine.destroy();
+        chartStipLavoroLine = new Chart(lavoroLineCtx, {
+            type: 'line',
+            data: {
+                labels: sorted.map(s => s.month),
+                datasets: [
+                    {
+                        label: 'Lordo Lavoro', data: sorted.map(s => calcolaLordoLavoro(s)),
+                        borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.05)',
+                        fill: true, tension: 0.4, pointBackgroundColor: '#f97316', pointRadius: 4
+                    },
+                    {
+                        label: 'Netto Lavoro', data: sorted.map(s => calcolaNettoLavoro(s)),
+                        borderColor: '#14b8a6', backgroundColor: 'rgba(20,184,166,0.05)',
+                        fill: true, tension: 0.4, pointBackgroundColor: '#14b8a6', pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { color: '#64748b', font: { size: 12 } } } },
                 scales: {
                     x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
                     y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => '€' + v.toLocaleString('it-IT') }, grid: { color: 'rgba(0,0,0,0.05)' } }

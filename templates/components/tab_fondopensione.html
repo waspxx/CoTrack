@@ -81,9 +81,14 @@
 
             <!-- 1. DASHBOARD -->
             <section class="fp-tab-content active" id="fp-tab-dashboard">
-                <div class="dashboard-header">
-                    <h1 id="fp-dashboard-title">{{ _('Pension Fund Dashboard') }}</h1>
-                    <p class="description">{{ _('Summary of contributions paid and performance of your complementary pension fund.') }}</p>
+                <div class="dashboard-header" style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+                    <div>
+                        <h1 id="fp-dashboard-title" style="margin:0;">{{ _('Pension Fund Dashboard') }}</h1>
+                        <p class="description" style="margin: 4px 0 0 0;">{{ _('Summary of contributions paid and performance of your complementary pension fund.') }}</p>
+                    </div>
+                    <button class="btn btn-secondary" id="fp-btn-force-update" onclick="window.forzaAggiornamentoDatiStorici()" style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:0.9em; padding: 8px 14px; height:auto; margin-top:0;">
+                        🔄 {{ _('Aggiorna Dati Storici') }}
+                    </button>
                 </div>
 
                 <div class="stats-grid">
@@ -97,6 +102,22 @@
                         <div class="stat-content">
                             <span class="stat-label">{{ _('Total Paid') }}</span>
                             <h3 class="stat-value" id="fp-kpi-total">€ 0,00</h3>
+                            <span id="fp-kpi-total-spese" style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px; display: block;"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card fp-controvalore">
+                        <div class="stat-icon-wrapper" style="background-color: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" x2="12" y1="8" y2="16"></line>
+                                <line x1="8" x2="16" y1="12" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Controvalore') }}</span>
+                            <h3 class="stat-value" id="fp-kpi-controvalore" style="color: #3b82f6;">€ 0,00</h3>
+                            <span id="fp-kpi-controvalore-perf" style="font-size: 0.85em; font-weight: 600; margin-top: 2px; display: none;"></span>
+                            <span id="fp-kpi-controvalore-details" style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px; display: block;">0.00 quote</span>
                         </div>
                     </div>
                     <div class="stat-card fp-tfr">
@@ -149,6 +170,13 @@
                         <div class="chart-container" style="height:240px;">
                             <canvas id="chart-fp-bar"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:20px; margin-top:20px; margin-bottom:20px;">
+                    <h3>{{ _('Valuation Trend over Time') }}</h3>
+                    <div class="chart-container" style="height:300px; margin-top:15px;">
+                        <canvas id="chart-fp-trend"></canvas>
                     </div>
                 </div>
 
@@ -206,6 +234,18 @@
                                     <input type="number" id="fp-contrib-employer" step="0.01" min="0" placeholder="0.00">
                                 </div>
                                 <div class="form-group">
+                                    <label for="fp-contrib-numero-quote">{{ _('Numero Quote') }}</label>
+                                    <input type="number" id="fp-contrib-numero-quote" step="0.000001" min="0" placeholder="0.000000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fp-contrib-valore-quota">{{ _('Valore Quota (€)') }}</label>
+                                    <input type="number" id="fp-contrib-valore-quota" step="0.000001" min="0" placeholder="0.000000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fp-contrib-spese">{{ _('Spese (€)') }}</label>
+                                    <input type="number" id="fp-contrib-spese" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
                                     <label for="fp-contrib-notes">{{ _('Notes') }}</label>
                                     <input type="text" id="fp-contrib-notes" placeholder="{{ _('Optional') }}">
                                 </div>
@@ -255,11 +295,14 @@
                                         <th style="text-align:right;">{{ _('Worker') }}</th>
                                         <th style="text-align:right;">{{ _('Employer') }}</th>
                                         <th style="text-align:right;">{{ _('Total') }}</th>
+                                        <th style="text-align:right;">{{ _('Numero Quote') }}</th>
+                                        <th style="text-align:right;">{{ _('Valore Quota') }}</th>
+                                        <th style="text-align:right;">{{ _('Spese') }}</th>
                                         <th style="text-align:center;">{{ _('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="fp-contrib-table-body">
-                                    <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">{{ _('No contributions.') }}</td></tr>
+                                    <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px;">{{ _('No contributions.') }}</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -294,7 +337,8 @@
                 <input type="hidden" id="fp-fund-edit-id" value="">
                 <div class="form-group">
                     <label for="fp-fund-name">{{ _('Fund Name *') }}</label>
-                    <input type="text" id="fp-fund-name" placeholder="{{ _('e.g., Cometa Fund, Fonchim...') }}" required>
+                    <input type="text" id="fp-fund-name" placeholder="{{ _('e.g., Cometa Fund, Fonchim...') }}" list="scraped-funds-list" required>
+                    <datalist id="scraped-funds-list"></datalist>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -311,6 +355,18 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group" id="fp-fund-initial-compartment-group">
+                        <label for="fp-fund-initial-compartment">{{ _('Initial Compartment') }}</label>
+                        <select id="fp-fund-initial-compartment">
+                            <option value="">{{ _('Default') }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fp-fund-investing-link">{{ _('Investing.com Link (Historical Data)') }}</label>
+                        <input type="url" id="fp-fund-investing-link" placeholder="{{ _('e.g., https://it.investing.com/funds/amundi-secondapensione-espansione-historical-data') }}">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="fp-fund-notes">{{ _('Notes') }}</label>
                     <input type="text" id="fp-fund-notes" placeholder="{{ _('Optional') }}">
@@ -321,6 +377,7 @@
                 </div>
             </form>
         </div>
+    </div>
     <!-- PDF CONTRIBUTIONS REVIEW MODAL -->
     <div class="modal-overlay" id="fp-pdf-review-modal">
         <div class="modal-card" style="max-width: 750px;">
@@ -352,21 +409,6 @@
             <div class="form-actions" style="padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
                 <button class="btn btn-secondary" onclick="window.closeFPPdfReviewModal()" type="button">{{ _('Cancel') }}</button>
                 <button class="btn btn-primary" onclick="window.submitFPPdfImportedContributions()" type="button">{{ _('Import Selected') }}</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALE MAPPING FONDO PENSIONE CSV -->
-    <div id="fp-csv-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
-        <div style="background:white; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid #f1f3f5; padding-bottom:15px;">📊 {{ _('Map Pension Fund CSV Columns') }}</h3>
-            <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">{{ _('Select the corresponding column from your CSV file for each required field.') }}</p>
-            
-            <div id="fp-mapping-fields" style="display: flex; flex-direction: column; gap: 15px;"></div>
-            
-            <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
-                <button onclick="document.getElementById('fp-csv-mapping-modal').style.display='none'; document.getElementById('fp-custom-csv-file').value='';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
-                <button onclick="window.confermaMappingFondiCSV()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
             </div>
         </div>
     </div>
@@ -448,6 +490,37 @@
                 <button onclick="document.getElementById('fp-custom-pdf-modal').style.display='none';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
                 <button onclick="window.confirmFPCustomPdfImport()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Switch / Modifica Comparto -->
+    <div class="modal-overlay" id="fp-comparto-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="fp-comparto-modal-title">Switch Comparto</h2>
+                <button class="modal-close" onclick="window.closeCompartoModal()">×</button>
+            </div>
+            <form class="modal-form" id="fp-comparto-form" onsubmit="window.handleCompartoSubmit(event)">
+                <input type="hidden" id="fp-comparto-edit-id" value="">
+                <input type="hidden" id="fp-comparto-fund-id" value="">
+                <div class="form-group">
+                    <label for="fp-comparto-name">Nome Comparto *</label>
+                    <input type="text" id="fp-comparto-name" placeholder="es. Comparto Espansione, Comparto Bilanciato..." list="scraped-compartments-list" required>
+                    <datalist id="scraped-compartments-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label for="fp-comparto-link">Link Investing.com (Dati Storici)</label>
+                    <input type="url" id="fp-comparto-link" placeholder="es. https://it.investing.com/...">
+                </div>
+                <div class="form-group" id="fp-comparto-start-date-group">
+                    <label for="fp-comparto-start-date">Mese di Cambio / Decorrenza (YYYY-MM) *</label>
+                    <input type="month" id="fp-comparto-start-date">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.closeCompartoModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                </div>
+            </form>
         </div>
     </div>
 

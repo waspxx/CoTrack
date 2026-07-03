@@ -154,18 +154,43 @@
                             <h3 class="stat-value" id="kpi-net-avg">€ 0,00</h3>
                         </div>
                     </div>
-                    <div class="stat-card stip-allowance">
+                    <div class="stat-card stip-gross-lavoro">
                         <div class="stat-icon-wrapper">
                             <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                             </svg>
                         </div>
                         <div class="stat-content">
-                            <span class="stat-label">{{ _('Allowances (12m)') }}</span>
-                            <h3 class="stat-value" id="kpi-assegno-unico">€ 0,00</h3>
+                            <span class="stat-label">{{ _('Total Gross Work') }}</span>
+                            <h3 class="stat-value" id="kpi-gross-lavoro-total">€ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stip-net-lavoro">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                <line x1="12" x2="12" y1="11" y2="17"></line>
+                                <path d="M10 13h4"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Total Net Work') }}</span>
+                            <h3 class="stat-value" id="kpi-net-lavoro-total" style="color:var(--success-color);">€ 0,00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card stip-avg-lavoro">
+                        <div class="stat-icon-wrapper">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                <path d="M9 14h6M9 10h6M9 18h6"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{ _('Monthly Net Work Average') }}</span>
+                            <h3 class="stat-value" id="kpi-net-lavoro-avg">€ 0,00</h3>
                         </div>
                     </div>
                 </div>
@@ -181,6 +206,18 @@
                         <h3>{{ _('Monthly Net Trend') }}</h3>
                         <div class="chart-container" style="height:240px;">
                             <canvas id="chart-stip-line"></canvas>
+                        </div>
+                    </div>
+                    <div class="card report-card">
+                        <h3>{{ _('Average Work Payslip Breakdown') }}</h3>
+                        <div class="chart-container" style="height:240px;">
+                            <canvas id="chart-stip-lavoro-donut"></canvas>
+                        </div>
+                    </div>
+                    <div class="card report-card">
+                        <h3>{{ _('Monthly Work Trend (Gross vs Net)') }}</h3>
+                        <div class="chart-container" style="height:240px;">
+                            <canvas id="chart-stip-lavoro-line"></canvas>
                         </div>
                     </div>
                 </div>

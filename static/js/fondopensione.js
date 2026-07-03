@@ -8,11 +8,14 @@ const fpState = {
     subTab: 'dashboard',
     dateFilter: 'all-time',
     customDateFrom: '',
-    customDateTo: ''
+    customDateTo: '',
+    scrapedFunds: null,
+    selectedScrapedFund: null
 };
 
 let chartFPDonut = null;
 let chartFPBar   = null;
+let chartFPTrend = null;
 
 // ── THEME SYNC ────────────────────────────────────────────────────────────────
 function syncFPTheme() {
@@ -22,6 +25,52 @@ function syncFPTheme() {
                    document.documentElement.getAttribute('data-theme') === 'dark';
     tab.classList.toggle('dark-theme', isDark);
     tab.classList.toggle('light-theme', !isDark);
+}
+
+function populateScrapedFundsDatalist() {
+    const list = document.getElementById('scraped-funds-list');
+    if (!list || !fpState.scrapedFunds) return;
+    list.innerHTML = '';
+    fpState.scrapedFunds.forEach(fund => {
+        const option = document.createElement('option');
+        option.value = fund.nome;
+        list.appendChild(option);
+    });
+}
+
+function setupScrapedFundsAutocompleteListener() {
+    const nameInput = document.getElementById('fp-fund-name');
+    if (!nameInput) return;
+    
+    nameInput.addEventListener('input', () => {
+        const val = nameInput.value.trim();
+        const matched = fpState.scrapedFunds.find(f => f.nome.toLowerCase() === val.toLowerCase());
+        if (matched) {
+            fpState.selectedScrapedFund = matched;
+            
+            // Auto fill Manager/Provider
+            const providerInput = document.getElementById('fp-fund-provider');
+            if (providerInput && !providerInput.value) {
+                providerInput.value = matched.ente_o_promotore || '';
+            }
+            
+            // Auto fill Type
+            const typeSelect = document.getElementById('fp-fund-type');
+            if (typeSelect) {
+                if (matched.tipo === 'FPN') typeSelect.value = 'category';
+                else if (matched.tipo === 'FPA') typeSelect.value = 'open';
+                else if (matched.tipo === 'PIP') typeSelect.value = 'pip';
+            }
+            
+            // Auto fill Investing link with first compartment link
+            const linkInput = document.getElementById('fp-fund-investing-link');
+            if (linkInput && !linkInput.value && matched.comparti && matched.comparti.length > 0) {
+                linkInput.value = matched.comparti[0].link_dati_storici || '';
+            }
+        } else {
+            fpState.selectedScrapedFund = null;
+        }
+    });
 }
 
 // ── GROUP MANAGEMENT ──────────────────────────────────────────────────────────
@@ -94,6 +143,18 @@ window.eliminaGruppoFP = async function() {
 // ── DATA LOADING ──────────────────────────────────────────────────────────────
 window.caricaDatiFP = async function() {
     syncFPTheme();
+    if (!fpState.scrapedFunds) {
+        try {
+            const r = await fetch('/api/scraped_funds');
+            if (r.ok) {
+                fpState.scrapedFunds = await r.json();
+                populateScrapedFundsDatalist();
+                setupScrapedFundsAutocompleteListener();
+            }
+        } catch (e) {
+            console.error('Failed to load scraped funds:', e);
+        }
+    }
     initFPPeriodFilterListeners();
     if (!fpState.activeGroupId) await loadFPGroups();
     if (!fpState.activeGroupId) return;
@@ -109,7 +170,7 @@ window.caricaDatiFP = async function() {
         fpState.contributions = [];
     }
 
-    renderFPDashboard();
+    await renderFPDashboard();
     renderFPContribTable();
     renderFundsGrid();
 };
@@ -295,17 +356,97 @@ function initFPPeriodFilterListeners() {
     }
 }
 
-function renderFPDashboard() {
+async function renderFPDashboard() {
     const cs = getFilteredContributions();
     const totalTFR      = cs.reduce((a,c) => a + c.tfr, 0);
     const totalWorker   = cs.reduce((a,c) => a + c.worker_contrib, 0);
     const totalEmployer = cs.reduce((a,c) => a + c.employer_contrib, 0);
-    const totalAll      = cs.reduce((a,c) => a + c.total_value, 0);
+    const totalPaid     = totalTFR + totalWorker + totalEmployer;
+    const totalSpese    = cs.reduce((a,c) => a + (parseFloat(c.spese) || 0), 0);
+    const totalNet      = totalPaid - totalSpese;
 
-    document.getElementById('fp-kpi-total').textContent    = fmtEurFP(totalAll);
+    document.getElementById('fp-kpi-total').textContent    = fmtEurFP(totalPaid);
     document.getElementById('fp-kpi-tfr').textContent      = fmtEurFP(totalTFR);
     document.getElementById('fp-kpi-worker').textContent   = fmtEurFP(totalWorker);
     document.getElementById('fp-kpi-employer').textContent = fmtEurFP(totalEmployer);
+
+    const kpiTotalSpeseEl = document.getElementById('fp-kpi-total-spese');
+    if (kpiTotalSpeseEl) {
+        const pctSpese = totalPaid > 0 ? (totalSpese / totalPaid) * 100 : 0;
+        const labelSpese = window.Translations.expensesLabel || 'Spese';
+        kpiTotalSpeseEl.textContent = `${labelSpese}: ${fmtEurFP(totalSpese)} (${pctSpese.toFixed(2)}%)`;
+    }
+
+    // Default calculations if no historical data is loaded
+    let controvalore = 0;
+    const totalQuote = cs.reduce((a,c) => a + (parseFloat(c.numero_quote) || 0), 0);
+    const lastContribWithPrice = cs.find(c => (parseFloat(c.valore_quota) || 0) > 0);
+    const lastPrice = lastContribWithPrice ? parseFloat(lastContribWithPrice.valore_quota) : 0;
+    controvalore = totalQuote * lastPrice;
+    
+    let trendMonths = [];
+    let trendValuation = [];
+    let trendInvested = [];
+    let currentDetailsText = `${totalQuote.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} quote @ ${lastPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} €`;
+
+    if (fpState.activeFundId) {
+        try {
+            const vRes = await fetch(`/api/pension_funds/${fpState.activeFundId}/valuation_data`);
+            if (vRes.ok) {
+                const vData = await vRes.json();
+                if (vData.trend_months && vData.trend_months.length > 0) {
+                    controvalore = vData.current_val;
+                    trendMonths = vData.trend_months;
+                    trendValuation = vData.trend_valuation;
+                    trendInvested = vData.trend_invested;
+                    
+                    // Build detailed string for compartments
+                    if (vData.current_price_details && vData.current_price_details.length > 0) {
+                        const parts = vData.current_price_details.map(d => {
+                            if (d.quotes > 0) {
+                                return `${d.name}: ${d.quotes.toLocaleString('it-IT')} q. @ ${d.latest_price.toLocaleString('it-IT')} €`;
+                            }
+                            return '';
+                        }).filter(Boolean);
+                        if (parts.length > 0) {
+                            currentDetailsText = parts.join(' | ');
+                        } else {
+                            currentDetailsText = '0,00 quote';
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Errore nel recupero dati di controvalore storico:", e);
+        }
+    }
+
+    const kpiControvaloreEl = document.getElementById('fp-kpi-controvalore');
+    if (kpiControvaloreEl) {
+        kpiControvaloreEl.textContent = fmtEurFP(controvalore);
+        
+        // Rendimento / Gain
+        const perfEl = document.getElementById('fp-kpi-controvalore-perf');
+        if (perfEl) {
+            if (controvalore > 0 && totalPaid > 0) {
+                const diff = controvalore - totalPaid;
+                const pct = (diff / totalPaid) * 100;
+                const sign = diff >= 0 ? '+' : '';
+                const color = diff >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                perfEl.textContent = `${sign}${fmtEurFP(diff)} (${sign}${pct.toFixed(2)}%)`;
+                perfEl.style.color = color;
+                perfEl.style.display = 'block';
+            } else {
+                perfEl.style.display = 'none';
+            }
+        }
+
+        // Details: quote @ price or compartments info
+        const detailsEl = document.getElementById('fp-kpi-controvalore-details');
+        if (detailsEl) {
+            detailsEl.textContent = currentDetailsText;
+        }
+    }
 
     const activeFund = fpState.funds.find(f => f.id === fpState.activeFundId);
     document.getElementById('fp-dashboard-title').textContent = activeFund ? activeFund.name : 'Dashboard Fondo Pensione';
@@ -321,12 +462,99 @@ function renderFPDashboard() {
                 <td style="text-align:right;">${fmtEurFP(c.tfr)}</td>
                 <td style="text-align:right;">${fmtEurFP(c.worker_contrib)}</td>
                 <td style="text-align:right;">${fmtEurFP(c.employer_contrib)}</td>
-                <td style="text-align:right;font-weight:700;">${fmtEurFP(c.total_value)}</td>
+                <td style="text-align:right;font-weight:700;">${fmtEurFP(c.tfr + c.worker_contrib + c.employer_contrib)}</td>
                 <td>${c.notes||'–'}</td>
             </tr>`).join('');
     }
 
     renderFPCharts(cs);
+    renderFPHistoricalTrendChart(trendMonths, trendValuation, trendInvested);
+}
+
+function renderFPHistoricalTrendChart(months, valuation, invested) {
+    const trendCtx = document.getElementById('chart-fp-trend');
+    if (!trendCtx) return;
+    
+    if (chartFPTrend) chartFPTrend.destroy();
+    
+    if (!months || months.length === 0) {
+        chartFPTrend = null;
+        return;
+    }
+
+    chartFPTrend = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Controvalore (€)',
+                    data: valuation,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                    pointHoverRadius: 5
+                },
+                {
+                    label: 'Capitale Versato Netto (€)',
+                    data: invested,
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148, 163, 184, 0.05)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#64748b', font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += '€ ' + context.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 });
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#64748b', font: { size: 11 } },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: {
+                        color: '#64748b',
+                        font: { size: 11 },
+                        callback: v => '€ ' + v.toLocaleString('it-IT')
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        }
+    });
 }
 
 function renderFPCharts(cs) {
@@ -383,14 +611,25 @@ function renderFPContribTable() {
     const tbody = document.getElementById('fp-contrib-table-body');
     if (!tbody) return;
     const cs = getFilteredContributions();
+    
+    const fmtDec = (val, maxDec = 6) => {
+        return parseFloat(val || 0).toLocaleString('it-IT', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: maxDec 
+        });
+    };
+    
     tbody.innerHTML = cs.length === 0
-        ? `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noContributions || 'No contributions.'}</td></tr>`
+        ? `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noContributions || 'No contributions.'}</td></tr>`
         : cs.map(c => `<tr>
             <td>${c.month}</td>
             <td style="text-align:right;">${fmtEurFP(c.tfr)}</td>
             <td style="text-align:right;">${fmtEurFP(c.worker_contrib)}</td>
             <td style="text-align:right;">${fmtEurFP(c.employer_contrib)}</td>
-            <td style="text-align:right;font-weight:700;">${fmtEurFP(c.total_value)}</td>
+            <td style="text-align:right;font-weight:700;">${fmtEurFP(c.tfr + c.worker_contrib + c.employer_contrib)}</td>
+            <td style="text-align:right;">${fmtDec(c.numero_quote, 6)}</td>
+            <td style="text-align:right;">${c.valore_quota ? fmtDec(c.valore_quota, 4) + ' €' : '0,00 €'}</td>
+            <td style="text-align:right;">${fmtEurFP(c.spese)}</td>
             <td style="text-align:center;">
                 <button class="icon-btn" onclick="window.editFPContrib('${c.id}')" title="Modifica" style="margin-right:4px;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -412,11 +651,24 @@ window.handleFPContribSubmit = async function(e) {
     const worker   = parseFloat(document.getElementById('fp-contrib-worker').value)  || 0;
     const employer = parseFloat(document.getElementById('fp-contrib-employer').value)|| 0;
     const notes    = document.getElementById('fp-contrib-notes').value;
+    const nq       = parseFloat(document.getElementById('fp-contrib-numero-quote').value) || 0;
+    const vq       = parseFloat(document.getElementById('fp-contrib-valore-quota').value) || 0;
+    const spese    = parseFloat(document.getElementById('fp-contrib-spese').value)        || 0;
     const total    = tfr + worker + employer;
 
     const method = id ? 'PUT' : 'POST';
     const url    = id ? `/api/pension_contributions/${id}` : `/api/pension_funds/${fpState.activeFundId}/contributions`;
-    const body   = { month, tfr, worker_contrib: worker, employer_contrib: employer, total_value: total, notes };
+    const body   = { 
+        month, 
+        tfr, 
+        worker_contrib: worker, 
+        employer_contrib: employer, 
+        total_value: total, 
+        notes,
+        numero_quote: nq,
+        valore_quota: vq,
+        spese: spese
+    };
 
     const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     if (res.ok) {
@@ -442,6 +694,9 @@ window.editFPContrib = function(id) {
     document.getElementById('fp-contrib-tfr').value         = c.tfr;
     document.getElementById('fp-contrib-worker').value      = c.worker_contrib;
     document.getElementById('fp-contrib-employer').value    = c.employer_contrib;
+    document.getElementById('fp-contrib-numero-quote').value = c.numero_quote || 0;
+    document.getElementById('fp-contrib-valore-quota').value = c.valore_quota || 0;
+    document.getElementById('fp-contrib-spese').value        = c.spese || 0;
     document.getElementById('fp-contrib-notes').value       = c.notes || '';
     window.switchFPSubTab('contributi', null);
     document.getElementById('fp-contrib-form').scrollIntoView({ behavior:'smooth' });
@@ -461,6 +716,12 @@ window.deleteFPContrib = async function(id) {
 
 // ── FUND MODAL ────────────────────────────────────────────────────────────────
 window.openFundModal = function(id = null) {
+    fpState.selectedScrapedFund = null;
+    const compGroup = document.getElementById('fp-fund-initial-compartment-group');
+    if (compGroup) compGroup.style.display = 'none';
+    const compSelect = document.getElementById('fp-fund-initial-compartment');
+    if (compSelect) compSelect.innerHTML = '<option value="">Default</option>';
+    
     document.getElementById('fp-fund-form').reset();
     document.getElementById('fp-fund-edit-id').value = '';
     if (id) {
@@ -471,6 +732,7 @@ window.openFundModal = function(id = null) {
         document.getElementById('fp-fund-provider').value  = f.provider || '';
         document.getElementById('fp-fund-type').value      = f.fund_type;
         document.getElementById('fp-fund-notes').value     = f.notes || '';
+        document.getElementById('fp-fund-investing-link').value = f.investing_link || '';
         document.getElementById('fp-fund-modal-title').textContent = 'Modifica Fondo';
     } else {
         document.getElementById('fp-fund-modal-title').textContent = 'Nuovo Fondo Pensione';
@@ -487,10 +749,24 @@ window.handleFundSubmit = async function(e) {
     const provider = document.getElementById('fp-fund-provider').value;
     const type     = document.getElementById('fp-fund-type').value;
     const notes    = document.getElementById('fp-fund-notes').value;
+    const link     = document.getElementById('fp-fund-investing-link').value;
 
     const method = id ? 'PUT' : 'POST';
     const url    = id ? `/api/pension_funds/${id}` : `/api/pension_fund_groups/${fpState.activeGroupId}/funds`;
-    const body   = { name, provider, fund_type: type, notes };
+    
+    const body   = { name, provider, fund_type: type, notes, investing_link: link };
+    
+    // Attach compartment_name if it's a new fund and name matches the selected autocomplete fund
+    if (!id && fpState.selectedScrapedFund && fpState.selectedScrapedFund.nome.toLowerCase() === name.toLowerCase()) {
+        const compSelect = document.getElementById('fp-fund-initial-compartment');
+        if (compSelect) {
+            const idx = parseInt(compSelect.value);
+            const c = fpState.selectedScrapedFund.comparti[idx];
+            if (c) {
+                body.compartment_name = c.nome;
+            }
+        }
+    }
 
     const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     if (res.ok) {
@@ -519,22 +795,217 @@ function renderFundsGrid() {
     const typeLabels = { category:'Fondo di Categoria', open:'Fondo Aperto', pip:'PIP', other:'Altro' };
     container.innerHTML = fpState.funds.map(f => {
         const isActive = f.id === fpState.activeFundId;
-        return `<div class="fund-card">
-            <div class="fund-card-actions">
-                ${!isActive ? `<button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="document.getElementById('active-fund-select').value='${f.id}';window.handleFundChange({target:{value:'${f.id}'}})">Seleziona</button>` : '<span style="font-size:12px;font-weight:700;color:var(--primary-color);">Attivo</span>'}
-                <button class="icon-btn" onclick="window.openFundModal('${f.id}')" style="margin-left:6px;" title="Modifica">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button class="icon-btn btn-delete" onclick="window.deleteFund('${f.id}')" title="Elimina">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+        const compartmentsList = f.compartments || [];
+        return `<div class="fund-card" style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <div class="fund-card-name" style="font-weight:bold; font-size:1.1em;">${f.name}</div>
+                    <div class="fund-card-provider" style="font-size:0.85em; color:var(--text-muted);">${f.provider || 'Gestore non specificato'} · ${typeLabels[f.fund_type]||f.fund_type}</div>
+                </div>
+                <div class="fund-card-actions" style="display:flex; align-items:center; gap:6px;">
+                    ${!isActive ? `<button class="btn btn-secondary" style="padding:4px 8px;font-size:11px;height:auto;" onclick="document.getElementById('active-fund-select').value='${f.id}';window.handleFundChange({target:{value:'${f.id}'}})">Seleziona</button>` : '<span style="font-size:11px;font-weight:700;color:var(--success-color);">Attivo</span>'}
+                    <button class="icon-btn" onclick="window.openFundModal('${f.id}')" title="Modifica">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="icon-btn btn-delete" onclick="window.deleteFund('${f.id}')" title="Elimina">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
             </div>
-            <div class="fund-card-name">${f.name}</div>
-            <div class="fund-card-provider">${f.provider || 'Gestore non specificato'} · ${typeLabels[f.fund_type]||f.fund_type}</div>
-            ${f.notes ? `<div style="font-size:0.8em;color:var(--text-muted);margin-top:6px;">${f.notes}</div>` : ''}
+            ${f.notes ? `<div style="font-size:0.8em;color:var(--text-muted);">${f.notes}</div>` : ''}
+            
+            <!-- Sezione Comparti -->
+            <div class="fund-compartments-section" style="margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                 <div style="font-weight: 600; font-size: 0.85em; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <span>Comparti / Switch</span>
+                      <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px; height:auto;" onclick="window.openSwitchCompartoModal('${f.id}')">+ Switch</button>
+                 </div>
+                 <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8em;">
+                      ${compartmentsList.map(c => `
+                           <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--bg-body); border-radius: 6px; border: 1px solid var(--border-color);">
+                                <div style="max-width: 80%;">
+                                     <div style="font-weight: 600; color: var(--text-primary);">${c.name}</div>
+                                     <div style="font-size: 0.85em; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${c.investing_link || ''}">${c.investing_link || 'Nessun link'}</div>
+                                     <div style="font-size: 0.85em; color: var(--primary-color); font-weight: 600; margin-top:2px;">Da: ${c.start_date || 'Inizio'}</div>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                     <button class="icon-btn" style="padding:3px;" onclick="window.editComparto('${c.id}', '${f.id}')" title="Modifica">✏️</button>
+                                     ${c.start_date ? `<button class="icon-btn btn-delete" style="padding:3px;" onclick="window.deleteComparto('${c.id}', '${f.id}')" title="Elimina">🗑️</button>` : ''}
+                                </div>
+                           </div>
+                      `).join('')}
+                 </div>
+            </div>
         </div>`;
     }).join('');
 }
+
+window.openSwitchCompartoModal = function(fundId) {
+    console.log("openSwitchCompartoModal called for fundId:", fundId);
+    
+    // Autocomplete list for switch compartments
+    const fund = fpState.funds.find(f => f.id === fundId);
+    const compDatalist = document.getElementById('scraped-compartments-list');
+    const compNameInput = document.getElementById('fp-comparto-name');
+    const compLinkInput = document.getElementById('fp-comparto-link');
+    
+    if (compDatalist) compDatalist.innerHTML = '';
+    
+    let matchedScrapedFund = null;
+    if (fund && fpState.scrapedFunds) {
+        matchedScrapedFund = fpState.scrapedFunds.find(f => f.nome.toLowerCase() === fund.name.toLowerCase());
+        if (matchedScrapedFund && compDatalist) {
+            matchedScrapedFund.comparti.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.nome;
+                compDatalist.appendChild(opt);
+            });
+        }
+    }
+    
+    if (compNameInput && compLinkInput) {
+        const handleCompInput = () => {
+            const val = compNameInput.value.trim();
+            if (matchedScrapedFund) {
+                const matchedComp = matchedScrapedFund.comparti.find(c => c.nome.toLowerCase() === val.toLowerCase());
+                if (matchedComp) {
+                    compLinkInput.value = matchedComp.link_dati_storici || '';
+                }
+            }
+        };
+        if (compNameInput._handleCompInput) {
+            compNameInput.removeEventListener('input', compNameInput._handleCompInput);
+        }
+        compNameInput._handleCompInput = handleCompInput;
+        compNameInput.addEventListener('input', compNameInput._handleCompInput);
+    }
+
+    const form = document.getElementById('fp-comparto-form');
+    if (!form) {
+        console.error("Form fp-comparto-form not found!");
+        return;
+    }
+    form.reset();
+    document.getElementById('fp-comparto-edit-id').value = '';
+    document.getElementById('fp-comparto-fund-id').value = fundId;
+    document.getElementById('fp-comparto-modal-title').textContent = 'Aggiungi Comparto / Switch';
+    
+    const dateGroup = document.getElementById('fp-comparto-start-date-group');
+    if (dateGroup) dateGroup.style.display = 'block';
+    
+    const startDateInput = document.getElementById('fp-comparto-start-date');
+    if (startDateInput) startDateInput.setAttribute('required', 'true');
+    
+    const modal = document.getElementById('fp-comparto-modal');
+    if (modal) {
+        modal.classList.add('open');
+        console.log("Modal opened successfully:", modal);
+    } else {
+        console.error("Modal fp-comparto-modal not found!");
+    }
+};
+
+window.editComparto = function(compId, fundId) {
+    console.log("editComparto called for compId:", compId, "fundId:", fundId);
+    const form = document.getElementById('fp-comparto-form');
+    if (!form) {
+        console.error("Form fp-comparto-form not found!");
+        return;
+    }
+    form.reset();
+    
+    const f = fpState.funds.find(x => x.id === fundId);
+    if (!f) {
+        console.error("Fund not found for ID:", fundId);
+        return;
+    }
+    const c = (f.compartments || []).find(x => x.id === compId);
+    if (!c) {
+        console.error("Compartment not found for ID:", compId);
+        return;
+    }
+
+    document.getElementById('fp-comparto-edit-id').value = c.id;
+    document.getElementById('fp-comparto-fund-id').value = fundId;
+    document.getElementById('fp-comparto-name').value = c.name;
+    document.getElementById('fp-comparto-link').value = c.investing_link || '';
+    
+    const dateGroup = document.getElementById('fp-comparto-start-date-group');
+    const startDateInput = document.getElementById('fp-comparto-start-date');
+    
+    if (c.start_date === null) {
+        if (dateGroup) dateGroup.style.display = 'none';
+        if (startDateInput) startDateInput.removeAttribute('required');
+    } else {
+        if (dateGroup) dateGroup.style.display = 'block';
+        if (startDateInput) {
+            startDateInput.value = c.start_date;
+            startDateInput.setAttribute('required', 'true');
+        }
+    }
+    
+    document.getElementById('fp-comparto-modal-title').textContent = 'Modifica Comparto';
+    const modal = document.getElementById('fp-comparto-modal');
+    if (modal) {
+        modal.classList.add('open');
+    } else {
+        console.error("Modal fp-comparto-modal not found!");
+    }
+};
+
+window.closeCompartoModal = function() {
+    const modal = document.getElementById('fp-comparto-modal');
+    if (modal) {
+        modal.classList.remove('open');
+    }
+};
+
+window.handleCompartoSubmit = async function(e) {
+    e.preventDefault();
+    const compId = document.getElementById('fp-comparto-edit-id').value;
+    const fundId = document.getElementById('fp-comparto-fund-id').value;
+    const name = document.getElementById('fp-comparto-name').value;
+    const link = document.getElementById('fp-comparto-link').value;
+    const startDate = document.getElementById('fp-comparto-start-date').value;
+
+    const body = { name, investing_link: link };
+    let url = `/api/pension_funds/${fundId}/compartments`;
+    let method = 'POST';
+
+    if (compId) {
+        url = `/api/pension_compartments/${compId}`;
+        method = 'PUT';
+        const isDefault = document.getElementById('fp-comparto-start-date-group').style.display === 'none';
+        if (!isDefault) {
+            body.start_date = startDate;
+        }
+    } else {
+        body.start_date = startDate;
+    }
+
+    const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+        window.closeCompartoModal();
+        await window.caricaDatiFP();
+    } else {
+        alert('Errore durante il salvataggio del comparto.');
+    }
+};
+
+window.deleteComparto = async function(compId, fundId) {
+    if (!confirm('Sei sicuro di voler eliminare questo switch di comparto? Lo storico dei contributi prima di questa data verrà ri-associato al comparto precedente.')) return;
+    const res = await fetch(`/api/pension_compartments/${compId}`, { method: 'DELETE' });
+    if (res.ok) {
+        await window.caricaDatiFP();
+    } else {
+        alert('Errore durante l\'eliminazione del comparto.');
+    }
+};
 
 // ── PDF IMPORT & REVIEW ───────────────────────────────────────────────────────
 let parsedFPPdfContributions = [];
@@ -700,38 +1171,62 @@ window.submitFPPdfImportedContributions = async function() {
 let currentFPCsvFile = null;
 
 window.handleFPCSVUpload = async function(event) {
+    console.log("handleFPCSVUpload: Event triggered");
     let file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log("handleFPCSVUpload: No file selected");
+        return;
+    }
+    console.log("handleFPCSVUpload: Selected file", file.name, file.size);
     if (!fpState.activeFundId) {
+        console.warn("handleFPCSVUpload: No active fund selected in fpState");
         alert("Seleziona un fondo pensione prima di caricare.");
         event.target.value = '';
         return;
     }
+    console.log("handleFPCSVUpload: Active fund ID:", fpState.activeFundId);
     
     let formData = new FormData();
     formData.append("file", file);
     
     try {
+        console.log("handleFPCSVUpload: Fetching /api/preview_csv...");
         let res = await fetch('/api/preview_csv', { method: 'POST', body: formData });
+        console.log("handleFPCSVUpload: Received response status:", res.status);
         if (!res.ok) {
-            let err = await res.json();
-            alert(err.errore || "Errore nella lettura del file");
+            let errMsg = "Errore nella lettura del file";
+            try {
+                let err = await res.json();
+                errMsg = err.errore || errMsg;
+            } catch (jsonErr) {
+                errMsg = `Server error (${res.status}): ${res.statusText}`;
+            }
+            console.error("handleFPCSVUpload: Preview failed:", errMsg);
+            alert(errMsg);
             event.target.value = '';
             return;
         }
         let data = await res.json();
+        console.log("handleFPCSVUpload: Parsed headers:", data.headers);
+        console.log("handleFPCSVUpload: Parsed sample row:", data.sample);
         openFPMappingModal(file, data.headers, data.sample);
     } catch (e) {
-        alert("Errore di rete");
+        console.error("Errore durante l'upload del CSV:", e);
+        alert("Errore di rete o di lettura del file: " + e.message);
         event.target.value = '';
     }
 };
 
 function openFPMappingModal(file, headers, sample) {
+    console.log("openFPMappingModal: Initializing mapping UI...");
     currentFPCsvFile = file;
     let container = document.getElementById('fp-mapping-fields');
-    if (!container) return;
+    if (!container) {
+        console.error("openFPMappingModal: Element 'fp-mapping-fields' not found in DOM!");
+        return;
+    }
     container.innerHTML = '';
+
 
     const isIt = document.documentElement.lang === 'it';
     const dbFields = [
@@ -740,6 +1235,9 @@ function openFPMappingModal(file, headers, sample) {
         { id: 'worker_contrib', label: isIt ? 'Quota Dipendente (€)' : 'Worker Share (€)', required: false },
         { id: 'employer_contrib', label: isIt ? 'Quota Azienda (€)' : 'Employer Share (€)', required: false },
         { id: 'total_value', label: isIt ? 'Valore Totale (€)' : 'Total Value (€)', required: false },
+        { id: 'numero_quote', label: isIt ? 'Numero Quote' : 'Number of Shares', required: false },
+        { id: 'valore_quota', label: isIt ? 'Valore Quota' : 'Share Value', required: false },
+        { id: 'spese', label: isIt ? 'Spese / Quota Spese (€)' : 'Expenses (€)', required: false },
         { id: 'notes', label: isIt ? 'Note / Descrizione' : 'Notes / Description', required: false }
     ];
 
@@ -762,13 +1260,16 @@ function openFPMappingModal(file, headers, sample) {
         let bestMatch = '';
         let labelLower = field.id.toLowerCase();
         for (let i = 0; i < headers.length; i++) {
-            let hLower = headers[i].toLowerCase();
+            let hLower = (headers[i] || '').toLowerCase();
             if (hLower.includes(labelLower) || labelLower.includes(hLower) ||
                 (labelLower === 'month' && (hLower.includes('mese') || hLower.includes('month') || hLower.includes('data') || hLower.includes('date'))) ||
                 (labelLower === 'tfr' && (hLower.includes('tfr') || hLower.includes('trattamento'))) ||
                 (labelLower === 'worker_contrib' && (hLower.includes('dipendente') || hLower.includes('worker') || hLower.includes('lavoratore') || hLower.includes('aderente') || hLower.includes('c/dip'))) ||
                 (labelLower === 'employer_contrib' && (hLower.includes('azienda') || hLower.includes('employer') || hLower.includes('datore') || hLower.includes('c/az'))) ||
                 (labelLower === 'total_value' && (hLower.includes('totale') || hLower.includes('total') || hLower.includes('valore'))) ||
+                (labelLower === 'numero_quote' && (hLower.includes('numero quote') || hLower.includes('n. quote') || hLower.includes('numero_quote') || hLower.includes('num. quote'))) ||
+                (labelLower === 'valore_quota' && (hLower.includes('valore quota') || hLower.includes('prezzo quota') || hLower.includes('valore_quota') || hLower.includes('val. quota'))) ||
+                (labelLower === 'spese' && (hLower.includes('spese') || hLower.includes('commissioni') || hLower.includes('costo') || hLower.includes('quota spese'))) ||
                 (labelLower === 'notes' && (hLower.includes('note') || hLower.includes('descrizione') || hLower.includes('info')))
             ) {
                 bestMatch = headers[i];
@@ -778,7 +1279,14 @@ function openFPMappingModal(file, headers, sample) {
         if (bestMatch) select.value = bestMatch;
     });
 
-    document.getElementById('fp-csv-mapping-modal').style.display = 'flex';
+    const modalEl = document.getElementById('fp-csv-mapping-modal');
+    if (modalEl) {
+        console.log("openFPMappingModal: Found modal element. Current display:", modalEl.style.display);
+        modalEl.style.display = 'flex';
+        console.log("openFPMappingModal: Set display to flex. New display:", modalEl.style.display);
+    } else {
+        console.error("openFPMappingModal: Modal element 'fp-csv-mapping-modal' NOT found in DOM!");
+    }
 }
 
 window.confermaMappingFondiCSV = async function() {
@@ -788,6 +1296,9 @@ window.confermaMappingFondiCSV = async function() {
         worker_contrib: document.getElementById('fpmap_worker_contrib').value,
         employer_contrib: document.getElementById('fpmap_employer_contrib').value,
         total_value: document.getElementById('fpmap_total_value').value,
+        numero_quote: document.getElementById('fpmap_numero_quote').value,
+        valore_quota: document.getElementById('fpmap_valore_quota').value,
+        spese: document.getElementById('fpmap_spese').value,
         notes: document.getElementById('fpmap_notes').value
     };
 
@@ -804,14 +1315,20 @@ window.confermaMappingFondiCSV = async function() {
 
     try {
         let risposta = await fetch('/api/pension_funds/import_custom_csv?fund_id=' + fpState.activeFundId, { method: 'POST', body: formData });
-        let result = await risposta.json();
+        let result = {};
+        try {
+            result = await risposta.json();
+        } catch (jsonErr) {
+            result = { errore: `Server error (${risposta.status}): ${risposta.statusText}` };
+        }
         if (risposta.ok) {
-            alert(result.messaggio);
+            alert(result.messaggio || "Importazione completata.");
             await window.caricaDatiFP();
         } else {
             alert(result.errore || "Errore durante l'importazione.");
         }
     } catch (error) {
+        console.error("Errore durante l'importazione del CSV:", error);
         alert("Errore di rete durante l'importazione.");
     } finally {
         currentFPCsvFile = null;
@@ -1077,5 +1594,35 @@ window.clearFPHistory = async function() {
         }
     } catch (e) {
         alert('Errore di connessione.');
+    }
+};
+
+window.forzaAggiornamentoDatiStorici = async function() {
+    const fId = fpState.activeFundId;
+    if (!fId) {
+        alert('Seleziona un fondo pensione attivo prima di aggiornare.');
+        return;
+    }
+    const btn = document.getElementById('fp-btn-force-update');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '🔄 Aggiornamento...';
+    }
+    try {
+        const res = await fetch(`/api/pension_funds/${fId}/update_historical_data`, { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+            alert(`Aggiornamento completato con successo! ${data.updated_compartments} comparti aggiornati.`);
+            await window.caricaDatiFP();
+        } else {
+            alert(data.errore || 'Errore durante l\'aggiornamento dei dati storici.');
+        }
+    } catch (e) {
+        alert('Errore di connessione durante l\'aggiornamento.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '🔄 Aggiorna Dati Storici';
+        }
     }
 };

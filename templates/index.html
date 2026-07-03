@@ -94,14 +94,30 @@
             interestRateChange: {{ _('Interest Rate Change (TAN)') | tojson }},
             rateChange: {{ _('Interest Rate Change') | tojson }},
             fixedRateLabel: {{ _('Fixed') | tojson }},
-            variableRateLabel: {{ _('Variable') | tojson }}
+            variableRateLabel: {{ _('Variable') | tojson }},
+            expensesLabel: {{ _('Spese') | tojson }}
         };
     </script>
+    <!-- MODALE MAPPING FONDO PENSIONE CSV (body-level) -->
+    <div id="fp-csv-mapping-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); color: #212529;">
+            <h3 style="margin-top:0; color:var(--primary-color); border-bottom:2px solid #f1f3f5; padding-bottom:15px; text-align:left;">📊 {{ _('Map Pension Fund CSV Columns') }}</h3>
+            <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">{{ _('Select the corresponding column from your CSV file for each required field.') }}</p>
+            
+            <div id="fp-mapping-fields" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            
+            <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="document.getElementById('fp-csv-mapping-modal').style.display='none'; document.getElementById('fp-custom-csv-file').value='';" class="btn btn-secondary" style="padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="window.confermaMappingFondiCSV()" class="btn btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: var(--success-color);">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/veicoli.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/prestiti.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/stipendi.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/fondopensione.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=1.0.2"></script>
+    <script src="{{ url_for('static', filename='js/veicoli.js') }}?v=1.0.2"></script>
+    <script src="{{ url_for('static', filename='js/prestiti.js') }}?v=1.0.2"></script>
+    <script src="{{ url_for('static', filename='js/stipendi.js') }}?v=1.0.2"></script>
+    <script src="{{ url_for('static', filename='js/fondopensione.js') }}?v=1.0.2"></script>
 </body>
 </html>

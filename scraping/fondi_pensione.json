@@ -1,0 +1,2260 @@
+[
+    {
+        "nome": "Eurofer",
+        "tipo": "FPN",
+        "ente_o_promotore": "CCNL Mobilit\u00e0 Attivit\u00e0 Ferroviarie o CCNL del Gruppo ANAS",
+        "descrizione_ente_o_promotore": "",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/ccnl-mobilita-attivita-ferroviarie-o-ccnl-del-gruppo-anas/eurofer/",
+        "link_sito_ufficiale": "https://fondoeurofer.it",
+        "comparti": [
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/eurofer-bilanciato-historical-data"
+            },
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/eurofer-garantito-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/eurofer-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fopen",
+        "tipo": "FPN",
+        "ente_o_promotore": "I lavoratori dipendenti del gruppo Enel",
+        "descrizione_ente_o_promotore": "Fondo dedicato ai lavoratori del settore energia e petrolio, compresi i dipendenti Enel.\nOffre vantaggi fiscali, linee di investimento calibrate e supporto specialistico per un piano previdenziale solido.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/i-lavoratori-dipendenti-del-gruppo-enel/fopen/",
+        "link_sito_ufficiale": "https://www.fondofopen.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondofopen.it/valori-quota/"
+            },
+            {
+                "nome": "bilanciato obbligazionario",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.fondofopen.it/valori-quota/"
+            },
+            {
+                "nome": "bilanciato azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fondofopen.it/valori-quota/"
+            }
+        ]
+    },
+    {
+        "nome": "Previmoda",
+        "tipo": "FPN",
+        "ente_o_promotore": "Industria tessile-abbigliamento, delle calzature e degli altri settori industriali del sistema moda",
+        "descrizione_ente_o_promotore": "Fondo pensione complementare per i lavoratori del sistema moda, tessile e calzaturiero.\nConsente di costruire una pensione integrativa con linee di investimento tematiche e flessibili.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/industria-tessile-abbigliamento-delle-calzature-e-degli-altri-settori-industriali-del-sistema-moda/previmoda/",
+        "link_sito_ufficiale": "https://www.previmoda.it",
+        "comparti": [
+            {
+                "nome": "smeraldo bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.previmoda.it/comparto-smeraldo/"
+            },
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.previmoda.it/comparto-garantito/"
+            },
+            {
+                "nome": "rubino azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.previmoda.it/comparto-rubino/"
+            }
+        ]
+    },
+    {
+        "nome": "Previdenza Cooperativa",
+        "tipo": "FPN",
+        "ente_o_promotore": "Lavoratori, Soci e Dipendenti, delle Imprese Cooperative e dei lavoratori dipendenti addetti ai lavori di sistemazione idraulico forestale e idraulico agraria",
+        "descrizione_ente_o_promotore": "Fondo complementare riservato ai soci e dipendenti delle cooperative e ai lavoratori del sistema idraulico-forestale.\nSi basa su un modello mutualistico, con costi contenuti e supporto su misura per ogni fase della carriera.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-soci-e-dipendenti-delle-imprese-cooperative-e-dei-lavoratori-dipendenti-addetti-ai-lavori-di-sistemazione-idraulico-forestale-e-idraulico-agraria/previdenza-cooperativa/",
+        "link_sito_ufficiale": "https://www.previdenzacooperativa.it",
+        "comparti": [
+            {
+                "nome": "sicuro",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.previdenzacooperativa.it/comparto-sicuro/"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.previdenzacooperativa.it/comparto-dinamico/"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.previdenzacooperativa.it/comparto-bilanciato/"
+            }
+        ]
+    },
+    {
+        "nome": "Arco",
+        "tipo": "FPN",
+        "ente_o_promotore": "Legno, sughero, mobile, arredamento e Boschivi forestali, Laterizi e manufatti in cemento, Lapidei, Maniglie.",
+        "descrizione_ente_o_promotore": "Fondo pensione complementare per le imprese del settore legno, arredamento e materiali da costruzione.\nOffre soluzioni di investimento diversificate e consulenza su misura per proteggere il capitale nel lungo periodo.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/legno-sughero-mobile-arredamento-e-boschivi-forestali-laterizi-e-manufatti-in-cemento-lapidei-maniglie/arco/",
+        "link_sito_ufficiale": "https://www.fondoarco.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/arco-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato prudente",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/arco-bilanciato-prudente-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fondaereo",
+        "tipo": "FPN",
+        "ente_o_promotore": "Naviganti del Trasporto Aereo \u2013 Piloti e Assistenti di Volo",
+        "descrizione_ente_o_promotore": "Fondo complementare per i lavoratori del trasporto aereo, inclusi piloti e assistenti di volo.\nOffre linee di investimento dedicate, rendimenti competitivi e supporto contrattuale specializzato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/naviganti-del-trasporto-aereo-piloti-e-assistenti-di-volo/fondaereo/",
+        "link_sito_ufficiale": "https://www.fondaereo.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/fondaereo-garantito-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fondoposte",
+        "tipo": "FPN",
+        "ente_o_promotore": "Personale di Poste Italiane S.p.A. e delle Societ\u00e0 controllate che ne applicano il contratto nazionale",
+        "descrizione_ente_o_promotore": "Fondo pensione complementare per i dipendenti di Poste Italiane S.p.A. e delle controllate.\nOffre percorsi di investimento diversificati, rendimenti trasparenti e moduli di adesione digitali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/personale-di-poste-italiane-spa-e-delle-societa-controllate-che-ne-applicano-il-contratto-nazionale/fondoposte/",
+        "link_sito_ufficiale": "https://www.fondoposte.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/fondoposte-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/fondoposte-bilanciato-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Perseo Sirio",
+        "tipo": "FPN",
+        "ente_o_promotore": "Pubblica Amministrazione e della Sanit\u00e0",
+        "descrizione_ente_o_promotore": "Fondo pensione negoziale per i lavoratori della Pubblica Amministrazione e del comparto sanitario.\nConsente di versare TFR e contributi volontari, con opzioni di rendita flessibili e vantaggi fiscali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/pubblica-amministrazione-e-della-sanita/perseo-sirio/",
+        "link_sito_ufficiale": "https://www.fondoperseosirio.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondoperseosirio.it/la-quota-associativa-annuale-di-fondo-perseo-sirio-si-riduce-da-15-a-13-euro/"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fondoperseosirio.it/la-quota-associativa-annuale-di-fondo-perseo-sirio-si-riduce-da-15-a-13-euro/"
+            }
+        ]
+    },
+    {
+        "nome": "Byblos",
+        "tipo": "FPN",
+        "ente_o_promotore": "aziende Grafiche Editoriali della Carta e del cartone",
+        "descrizione_ente_o_promotore": "Fondo dedicato ai lavoratori delle industrie della carta, del cartone e delle aziende grafiche ed editoriali.\nConsente di integrare la pensione con versamenti aggiuntivi e offre trasparenza sui rendimenti e sui costi.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/aziende-grafiche-editoriali-della-carta-e-del-cartone/byblos/",
+        "link_sito_ufficiale": "https://www.fondobyblos.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/byblos-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/byblos-bilanciato-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/byblos-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fon.te.",
+        "tipo": "FPN",
+        "ente_o_promotore": "aziende del terziario commercio turismo e servizi",
+        "descrizione_ente_o_promotore": "Terzo fondo negoziale italiano per le aziende del terziario, commercio, turismo e servizi.\nConta quasi 300.000 iscritti, gestisce miliardi di euro e offre linee di investimento flessibili e vantaggi fiscali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/aziende-del-terziario-commercio-turismo-e-servizi/fonte/",
+        "link_sito_ufficiale": "https://fondofonte.it",
+        "comparti": [
+            {
+                "nome": "conservativo",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondofonte.it/gestione-finanziaria/i-valori-quota-dei-comparti/comparto-garantito/"
+            },
+            {
+                "nome": "sviluppo",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.fondofonte.it/gestione-finanziaria/i-valori-quota-dei-comparti/comparto-bilanciato/"
+            },
+            {
+                "nome": "crescita",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/fonte-crescita-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/fonte-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Prevaer",
+        "tipo": "FPN",
+        "ente_o_promotore": "dipendenti dalle Aziende del Trasporto Aereo e dei settori affini",
+        "descrizione_ente_o_promotore": "",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/dipendenti-dalle-aziende-del-trasporto-aereo-e-dei-settori-affini/prevaer/",
+        "link_sito_ufficiale": "https://prevaer.it",
+        "comparti": [
+            {
+                "nome": "linea garantita",
+                "codice": "GAR",
+                "link_dati_storici": "https://prevaer.it"
+            },
+            {
+                "nome": "linea prudente",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://prevaer.it"
+            },
+            {
+                "nome": "linea crescita",
+                "codice": "BIL",
+                "link_dati_storici": "https://prevaer.it"
+            }
+        ]
+    },
+    {
+        "nome": "Previambiente",
+        "tipo": "FPN",
+        "ente_o_promotore": "dipendenti del settore pubblico o privato dell\u2019Igiene Ambientale e dei Settori affini",
+        "descrizione_ente_o_promotore": "Fondo previdenziale per i lavoratori dell'igiene ambientale e settori affini.\nOffre strumenti di risparmio a lungo termine con vantaggi fiscali e gestione dedicata.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/dipendenti-del-settore-pubblico-o-privato-delligiene-ambientale-e-dei-settori-affini/previambiente/",
+        "link_sito_ufficiale": "https://www.previambiente.it",
+        "comparti": [
+            {
+                "nome": "bilanciato",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/previambiente-bilanciato-historical-data"
+            },
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/previambiente-garantito-historical-data"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.previambiente.it"
+            }
+        ]
+    },
+    {
+        "nome": "Pegaso",
+        "tipo": "FPN",
+        "ente_o_promotore": "dipendenti delle imprese di servizi di pubblica utilit\u00e0.",
+        "descrizione_ente_o_promotore": "Fondo dedicato ai dipendenti delle aziende di servizi pubblici (acqua, energia, rifiuti).\nSi caratterizza per un'ampia gamma di linee di investimento e supporto fiscale dedicato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/dipendenti-delle-imprese-di-servizi-di-pubblica-utilita/pegaso/",
+        "link_sito_ufficiale": "https://fondopegaso.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/pegaso-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/pegaso-bilanciato-historical-data"
+            },
+            {
+                "nome": "crescita",
+                "codice": "AZN",
+                "link_dati_storici": "https://fondopegaso.it/sai-che-puoi-aumentare-la-tua-aliquota-contributiva/"
+            }
+        ]
+    },
+    {
+        "nome": "Fondenergia",
+        "tipo": "FPN",
+        "ente_o_promotore": "energia",
+        "descrizione_ente_o_promotore": "",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/energia/fondenergia/",
+        "link_sito_ufficiale": "https://www.fondenergia.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/fondenergia-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/fondenergia-bilanciato-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/fondenergia-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fondosanit\u00e0",
+        "tipo": "FPN",
+        "ente_o_promotore": "esercenti le professioni sanitarie",
+        "descrizione_ente_o_promotore": "Fondo riservato ai professionisti sanitari (medici, infermieri, farmacisti).\nGarantisce una previdenza integrativa con vantaggi fiscali e servizi pensati per il settore healthcare.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/esercenti-le-professioni-sanitarie/fondosanita/",
+        "link_sito_ufficiale": "https://www.fondosanita.it",
+        "comparti": [
+            {
+                "nome": "scudo",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.fondosanita.it/il-fondo/rendimenti-vq"
+            },
+            {
+                "nome": "progressione",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.fondosanita.it/il-fondo/rendimenti-vq"
+            },
+            {
+                "nome": "espansione",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fondosanita.it/il-fondo/rendimenti-vq"
+            }
+        ]
+    },
+    {
+        "nome": "Telemaco",
+        "tipo": "FPN",
+        "ente_o_promotore": "i lavoratori operai, impiegati e quadri delle aziende che applicano il CCNL delle Telecomunicazioni",
+        "descrizione_ente_o_promotore": "Fondo complementare per i lavoratori delle telecomunicazioni.\nOffre gestione professionale dei contributi, trasparenza sui costi e soluzioni digitali per monitorare il portafoglio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/i-lavoratori-operai-impiegati-e-quadri-delle-aziende-che-applicano-il-ccnl-delle-telecomunicazioni/telemaco/",
+        "link_sito_ufficiale": "https://www.fondotelemaco.it",
+        "comparti": [
+            {
+                "nome": "bilanciato dinamico",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.fondotelemaco.it/la-gestione-finanziaria/i-valori-quota/"
+            },
+            {
+                "nome": "prudente",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/telemaco-prudente-historical-data"
+            },
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/telemaco-garantito-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Prevedi",
+        "tipo": "FPN",
+        "ente_o_promotore": "imprese industriali ed artigiane edili ed affini",
+        "descrizione_ente_o_promotore": "Fondo negoziale per i dipendenti delle imprese edili e artigiane del settore costruzioni.\nPropone soluzioni personalizzate di investimento e costi di gestione trasparenti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/imprese-industriali-ed-artigiane-edili-ed-affini/prevedi/",
+        "link_sito_ufficiale": "https://www.prevedi.it",
+        "comparti": [
+            {
+                "nome": "sicurezza",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/prevedi-sicurezza-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/prevedi-bilanciato-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Mediafond",
+        "tipo": "FPN",
+        "ente_o_promotore": "imprese radio televisive private e dell'industria dello spettacolo in generale",
+        "descrizione_ente_o_promotore": "Fondo pensione complementare per i lavoratori delle emittenti radio-televisive e dello spettacolo.\nOffre versamenti flessibili, costi chiari e strumenti digitali per monitorare l'evoluzione dei rendimenti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/imprese-radio-televisive-private-e-dellindustria-dello-spettacolo-in-generale/mediafond/",
+        "link_sito_ufficiale": "https://www.mediafond.it",
+        "comparti": [
+            {
+                "nome": "comparto obbligazionario",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.mediafond.it/grafici/tabella.php?c=240"
+            },
+            {
+                "nome": "comparto garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.mediafond.it/grafici/tabella.php?c=223"
+            },
+            {
+                "nome": "comparto azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.mediafond.it/grafici/tabella.php?c=241"
+            }
+        ]
+    },
+    {
+        "nome": "Fonchim",
+        "tipo": "FPN",
+        "ente_o_promotore": "industria chimica e farmaceutica e dei settori affini",
+        "descrizione_ente_o_promotore": "Fondo complementare creato per i dipendenti dell'industria chimica, farmaceutica e affini.\nOffre linee di investimento personalizzabili e strumenti di monitoraggio dei rendimenti in tempo reale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/industria-chimica-e-farmaceutica-e-dei-settori-affini/fonchim/",
+        "link_sito_ufficiale": "https://www.fonchim.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fonchim.it/grafici/quota.json.php"
+            },
+            {
+                "nome": "stabilit\u00e0",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.fonchim.it/grafici/quota.json.php"
+            },
+            {
+                "nome": "crescita",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fonchim.it/grafici/quota.json.php"
+            }
+        ]
+    },
+    {
+        "nome": "Concreto",
+        "tipo": "FPN",
+        "ente_o_promotore": "industria del cemento, della calce e suoi derivati, del gesso e relativi manufatti, delle malte e dei materiali di base per le costruzioni.",
+        "descrizione_ente_o_promotore": "Fondo pensato per i lavoratori del settore dei materiali da costruzione, dal cemento al lapideo.\nOffre una gestione professionale dei contributi e condizioni vantaggiose su costi e flessibilit\u00e0.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/industria-del-cemento-della-calce-e-suoi-derivati-del-gesso-e-relativi-manufatti-delle-malte-e-dei-materiali-di-base-per-le-costruzioni/concreto/",
+        "link_sito_ufficiale": "https://www.fondoconcreto.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/concreto-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/concreto-bilanciato-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Cometa",
+        "tipo": "FPN",
+        "ente_o_promotore": "industria metalmeccanica, della installazione di impianti e dei settori affini",
+        "descrizione_ente_o_promotore": "Terzo fondo negoziale italiano, creato per i lavoratori del comparto metalmeccanico e impiantistico.\nSi distingue per un'ampia base di adesioni, rendimenti storici superiori al TFR e vantaggi fiscali dedicati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/industria-metalmeccanica-della-installazione-di-impianti-e-dei-settori-affini/cometa/",
+        "link_sito_ufficiale": "https://www.cometafondo.it",
+        "comparti": [
+            {
+                "nome": "monetario plus",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/monetario-plus/"
+            },
+            {
+                "nome": "tfr silente",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/reddito/"
+            },
+            {
+                "nome": "reddito",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/reddito/"
+            }
+        ]
+    },
+    {
+        "nome": "Astri",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori del settore autostrade, strade, trasporti e infrastrutture",
+        "descrizione_ente_o_promotore": "Fondo pensione negoziale per chi opera nel trasporto su strada, autostradale e ferroviario.\nConsente di accumulare TFR e contributi volontari, garantendo vantaggi fiscali e piani di investimento dedicati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-del-settore-autostrade-strade-trasporti-e-infrastrutture/astri/",
+        "link_sito_ufficiale": "https://www.astrifondopensione.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/astri-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/astri-bilanciato-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Alifond",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori dell'industria alimentare e settori affini",
+        "descrizione_ente_o_promotore": "Fondo pensione negoziale dedicato ai lavoratori dell'industria alimentare e dei settori affini.\nPermette di versare TFR e contributi volontari, offrendo vantaggi fiscali e gestione professionale dei risparmi.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-dellindustria-alimentare-e-settori-affini/alifond/",
+        "link_sito_ufficiale": "https://www.alifond.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/alifond-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/alifond-bilanciato-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/alifond-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Espero",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori della scuola",
+        "descrizione_ente_o_promotore": "Fondo pensione complementare dedicato ai docenti e al personale amministrativo delle scuole.\nOffre rendimenti stabili, protezione del capitale e costi trasparenti, con moduli di adesione semplificati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-della-scuola/espero/",
+        "link_sito_ufficiale": "https://www.fondoespero.it",
+        "comparti": [
+            {
+                "nome": "garanzia",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondoespero.it/grafici/tabella.php?c=92"
+            },
+            {
+                "nome": "crescita",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.fondoespero.it/grafici/tabella.php?c=91"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fondoespero.it/grafici/tabella.php?c=1467"
+            }
+        ]
+    },
+    {
+        "nome": "Priamo",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori dipendenti addetti ai servizi di Trasporto Pubblico ed ai lavoratori dei settori affini",
+        "descrizione_ente_o_promotore": "Fondo dedicato ai dipendenti del trasporto pubblico locale e settori collegati.\nOffre piani di investimento modulabili e vantaggi fiscali per chi opera nel mobility management.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-dipendenti-addetti-ai-servizi-di-trasporto-pubblico-ed-ai-lavoratori-dei-settori-affini/priamo/",
+        "link_sito_ufficiale": "https://www.fondopriamo.it",
+        "comparti": [
+            {
+                "nome": "garantito protezione",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/priamo-garantito-protezione-historical-data"
+            },
+            {
+                "nome": "bilanciato sviluppo",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/priamo-bilanciato-sviluppo-historical-data"
+            },
+            {
+                "nome": "bilanciato prudenza",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/priamo-bilanciato-prudenza-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Foncer",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori dipendenti dell\u2019industria della ceramica e di materiali refrattari",
+        "descrizione_ente_o_promotore": "Fondo pensione per i lavoratori del comparto ceramico e refrattario.\nGarantisce una gestione dedicata dei contributi e condizioni vantaggiose su rendimenti e costi di adesione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-dipendenti-dellindustria-della-ceramica-e-di-materiali-refrattari/foncer/",
+        "link_sito_ufficiale": "https://www.foncer.it",
+        "comparti": [
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/foncer-garantito-historical-data"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/foncer-bilanciato-historical-data"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/foncer-dinamico-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Fondapi",
+        "tipo": "FPN",
+        "ente_o_promotore": "lavoratori e alle imprese che prevedono uno dei seguenti contratti collettivi per le piccole e medie imprese: Metalmeccanico, Chimico, Tessile, Grafico, Alimentare, Edile, Informatico, Laterizi e cemento, Lapidei, Servizi alle imprese, Calce e gesso.",
+        "descrizione_ente_o_promotore": "Fondo pensione negoziale riservato a dipendenti e datori delle piccole e medie imprese (PMI).\nCopre settori come metalmeccanico, chimico, tessile, grafico, alimentare, edile e servizi, con costi agevolati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/lavoratori-e-alle-imprese-che-prevedono-uno-dei-seguenti-contratti-collettivi-per-le-piccole-e-medie-imprese-metalmeccanico-chimico-tessile-grafico-alimentare-edile-informatico-laterizi-e-cemento-lapidei-servizi-alle-imprese-calce-e-gesso/fondapi/",
+        "link_sito_ufficiale": "https://www.fondapi.it",
+        "comparti": [
+            {
+                "nome": "garanzia",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondapi.it/investimento/comparti-e-rendimenti/comparto-garanzia/"
+            },
+            {
+                "nome": "prudente",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/fondapi-prudente-historical-data"
+            },
+            {
+                "nome": "crescita",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/fondapi-crescita-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Agrifondo",
+        "tipo": "FPN",
+        "ente_o_promotore": "personale delle imprese agricole",
+        "descrizione_ente_o_promotore": "",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/personale-delle-imprese-agricole/agrifondo/",
+        "link_sito_ufficiale": "https://agrifondo.it",
+        "comparti": [
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/agrifondo-bilanciato-historical-data"
+            },
+            {
+                "nome": "garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://it.investing.com/funds/agrifondo-garantito-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Quadri e capi Fiat",
+        "tipo": "FPN",
+        "ente_o_promotore": "professional dei gruppi STELLANTIS e CNH",
+        "descrizione_ente_o_promotore": "Fondo pensione per i dirigenti e quadri dei principali gruppi automobilistici (Stellantis, CNH).\nSi distingue per piani dedicati, rendimenti target e servizi di consulenza executive.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/professional-dei-gruppi-stellantis-e-cnh/quadri-e-capi-fiat/",
+        "link_sito_ufficiale": "https://www.fondoquadrifiat.it",
+        "comparti": [
+            {
+                "nome": "stabilita'",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondoquadrifiat.it"
+            },
+            {
+                "nome": "reddito",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.fondoquadrifiat.it"
+            },
+            {
+                "nome": "crescita",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.fondoquadrifiat.it"
+            }
+        ]
+    },
+    {
+        "nome": "Gomma Plastica",
+        "tipo": "FPN",
+        "ente_o_promotore": "settore gomma, cavi elettrici e affini e materie plastiche",
+        "descrizione_ente_o_promotore": "Fondo pensione per i lavoratori dell'industria della gomma, cavi elettrici e materie plastiche.\nConsente di accumulare risparmio previdenziale con gestione professionale e costi contenuti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-negoziali/settore-gomma-cavi-elettrici-e-affini-e-materie-plastiche/gomma-plastica/",
+        "link_sito_ufficiale": "https://www.fondogommaplastica.it",
+        "comparti": [
+            {
+                "nome": "conservativo con garanzia",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.fondogommaplastica.it/gestione-finanziaria/quote-e-patrimonio/quote-e-patrimonio/"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.fondogommaplastica.it/gestione-finanziaria/quote-e-patrimonio/quote-e-patrimonio/"
+            },
+            {
+                "nome": "dinamico",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.fondogommaplastica.it/gestione-finanziaria/quote-e-patrimonio/quote-e-patrimonio/"
+            }
+        ]
+    },
+    {
+        "nome": "Allianz Insieme",
+        "tipo": "FPA",
+        "ente_o_promotore": "Allianz",
+        "descrizione_ente_o_promotore": "Multinazionale tedesca leader nel settore assicurativo e asset management.\nPropone polizze vita, sanitarie e investimenti con un'ampia rete di consulenti e strumenti digitali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/allianz/allianz-insieme/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "linea obbligazionaria lungo termine",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "linea obbligazionaria",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "linea bilanciata",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/allianz-insieme-linea-bilanciata-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Allianz Previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Allianz",
+        "descrizione_ente_o_promotore": "Multinazionale tedesca leader nel settore assicurativo e asset management.\nPropone polizze vita, sanitarie e investimenti con un'ampia rete di consulenti e strumenti digitali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/allianz/allianz-previdenza/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "linea bilanciata",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/allianz-previdenza-linea-bilanciata-historical-data"
+            },
+            {
+                "nome": "linea obbligazionaria lungo termine",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "linea azionaria",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/allianz-previdenza-linea-azionaria-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Amundi Core pension",
+        "tipo": "FPA",
+        "ente_o_promotore": "Amundi",
+        "descrizione_ente_o_promotore": "Primo asset manager europeo e uno dei principali a livello mondiale.\nPropone fondi comuni, ETF e soluzioni di investimento su misura per clienti retail e istituzionali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/amundi/amundi-core-pension/",
+        "link_sito_ufficiale": "https://www.corepension.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario misto",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.corepension.it/ricerca-quote-0"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.corepension.it/ricerca-quote-0"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.corepension.it/ricerca-quote-0"
+            }
+        ]
+    },
+    {
+        "nome": "Amundi Secondapensione",
+        "tipo": "FPA",
+        "ente_o_promotore": "Amundi",
+        "descrizione_ente_o_promotore": "Primo asset manager europeo e uno dei principali a livello mondiale.\nPropone fondi comuni, ETF e soluzioni di investimento su misura per clienti retail e istituzionali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/amundi/amundi-secondapensione/",
+        "link_sito_ufficiale": "https://www.secondapensione.it",
+        "comparti": [
+            {
+                "nome": "prudente esg",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.secondapensione.it/ricerca-quote"
+            },
+            {
+                "nome": "bilanciata esg",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.secondapensione.it/ricerca-quote"
+            },
+            {
+                "nome": "espansione esg",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.secondapensione.it/ricerca-quote"
+            },
+            {
+                "nome": "garantita esg",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.secondapensione.it/ricerca-quote"
+            }
+        ]
+    },
+    {
+        "nome": "Anima Arti e mestieri",
+        "tipo": "FPA",
+        "ente_o_promotore": "Anima",
+        "descrizione_ente_o_promotore": "Gruppo italiano di asset management indipendente.\nSpecializzato in fondi comuni, gestioni patrimoniali e prodotti previdenziali innovativi.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/anima/anima-arti-e-mestieri/",
+        "link_sito_ufficiale": "https://www.animasgr.it",
+        "comparti": [
+            {
+                "nome": "crescita 25+",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.animasgr.it/IT/investitore-privato/prodotti/pagine/quotazioni-e-performance.aspx?ShowFavoritesOnly=1&force=1"
+            },
+            {
+                "nome": "rivalutazione 10+",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.animasgr.it/IT/investitore-privato/prodotti/pagine/quotazioni-e-performance.aspx?ShowFavoritesOnly=1&force=1"
+            },
+            {
+                "nome": "conservazione 3+",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.animasgr.it/IT/investitore-privato/prodotti/pagine/quotazioni-e-performance.aspx?ShowFavoritesOnly=1&force=1"
+            }
+        ]
+    },
+    {
+        "nome": "Arca Previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Arca",
+        "descrizione_ente_o_promotore": "Societ\u00e0 di gestione del risparmio italiana con una lunga tradizione.\nOffre fondi comuni aperti e soluzioni personalizzate per la protezione e la crescita del capitale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/arca/arca-previdenza/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "rendita sostenibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "obiettivo tfr",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/arca-previdenza-obiettivo-tfr-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Assimoco Il melograno",
+        "tipo": "FPA",
+        "ente_o_promotore": "Assimoco",
+        "descrizione_ente_o_promotore": "Compagnia assicurativa italiana cooperativa.\nFornisce polizze vita, infortuni e servizi di welfare integrato per famiglie e imprese.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/assimoco/assimoco-il-melograno/",
+        "link_sito_ufficiale": "https://www.assimoco.it",
+        "comparti": [
+            {
+                "nome": "prudente",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://it.investing.com/funds/assimoco-il-melograno-prudente-historical-data"
+            },
+            {
+                "nome": "equilibrata",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/assimoco-il-melograno-equilibrata-historical-data"
+            },
+            {
+                "nome": "dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/assimoco-il-melograno-dinamica-historical-data"
+            },
+            {
+                "nome": "garantita",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/assimoco-il-melograno-garantita-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Axa Previdenza per te",
+        "tipo": "FPA",
+        "ente_o_promotore": "Axa",
+        "descrizione_ente_o_promotore": "Colosso francese con un'offerta completa di assicurazioni vita, salute e investimenti.\nPunta su innovazione digitale e servizi personalizzati per la protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/axa/axa-previdenza-per-te/",
+        "link_sito_ufficiale": "https://www.axa-mps.it",
+        "comparti": [
+            {
+                "nome": "moneta",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "stabilit\u00e0",
+                "codice": "BIL",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "crescita",
+                "codice": "AZN",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "garantita",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            }
+        ]
+    },
+    {
+        "nome": "Azimut Previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Azimut",
+        "descrizione_ente_o_promotore": "Primo gruppo indipendente di asset management in Italia.\nOffre fondi, gestioni patrimoniali e consulenza finanziaria personalizzata.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/azimut/azimut-previdenza/",
+        "link_sito_ufficiale": "https://backend.azimut.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://backend.azimut.it/az-galaxy-az-navigator"
+            },
+            {
+                "nome": "crescita",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/azimut-previdenza-crescita-historical-data"
+            },
+            {
+                "nome": "equilibrato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/azimut-previdenza-equilibrato-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Azimut Sustainable future",
+        "tipo": "FPA",
+        "ente_o_promotore": "Azimut",
+        "descrizione_ente_o_promotore": "Primo gruppo indipendente di asset management in Italia.\nOffre fondi, gestioni patrimoniali e consulenza finanziaria personalizzata.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/azimut/azimut-sustainable-future/",
+        "link_sito_ufficiale": "https://backend.azimut.it",
+        "comparti": [
+            {
+                "nome": "bilanciato accrescitivo",
+                "codice": "BIL",
+                "link_dati_storici": "https://backend.azimut.it/az-galaxy-az-navigator"
+            }
+        ]
+    },
+    {
+        "nome": "Bcc Aureo",
+        "tipo": "FPA",
+        "ente_o_promotore": "Bcc",
+        "descrizione_ente_o_promotore": "Rete di banche locali con soluzioni bancassurance dedicate.\nDistribuisce piani previdenziali e polizze vita in collaborazione con partner assicurativi.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/bcc/bcc-aureo/",
+        "link_sito_ufficiale": "https://www.bccrisparmioeprevidenza.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario esg",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.bccrisparmioeprevidenza.it/it-IT/Pagine/Performance-dei-fondi.aspx"
+            },
+            {
+                "nome": "bilanciato esg",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.bccrisparmioeprevidenza.it/it-IT/Pagine/Performance-dei-fondi.aspx"
+            },
+            {
+                "nome": "azionario esg",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.bccrisparmioeprevidenza.it/it-IT/Pagine/Performance-dei-fondi.aspx"
+            },
+            {
+                "nome": "garantito esg",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.bccrisparmioeprevidenza.it/it-IT/Pagine/Performance-dei-fondi.aspx"
+            }
+        ]
+    },
+    {
+        "nome": "Bim Vita",
+        "tipo": "FPA",
+        "ente_o_promotore": "Bim Vita",
+        "descrizione_ente_o_promotore": "Joint venture di banche popolari italiane per il ramo vita.\nSpecializzata in polizze vita e risparmio gestito con approccio consulenziale territoriale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/bim-vita/bim-vita/",
+        "link_sito_ufficiale": "https://www.bimvita.it",
+        "comparti": [
+            {
+                "nome": "equity",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/bim-vita-equity-historical-data"
+            },
+            {
+                "nome": "bond",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://it.investing.com/funds/bim-vita-bond-historical-data"
+            },
+            {
+                "nome": "bilanciata globale",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/bim-vita-bilanciata-globale-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Cnp",
+        "tipo": "FPA",
+        "ente_o_promotore": "Cnp Unicredit",
+        "descrizione_ente_o_promotore": "Joint venture tra CNP Assurances e Unicredit, dedicata alla bancassurance.\nOffre piani pensionistici e polizze vita distribuiti attraverso la rete bancaria.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/cnp-unicredit/cnp/",
+        "link_sito_ufficiale": "https://gruppocnp.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            }
+        ]
+    },
+    {
+        "nome": "Destinazione Futuro Credemvita",
+        "tipo": "FPA",
+        "ente_o_promotore": "Credem",
+        "descrizione_ente_o_promotore": "Gruppo bancario-assicurativo italiano con soluzioni vita, danni e previdenza.\nCaratterizzato da un approccio consulenziale integrato banca\u2013assicurazione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/credem/credemprevidenza/",
+        "link_sito_ufficiale": "https://www.credemvita.it",
+        "comparti": [
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://performance.credemvita.it/"
+            },
+            {
+                "nome": "evoluto",
+                "codice": "AZN",
+                "link_dati_storici": "https://performance.credemvita.it/"
+            },
+            {
+                "nome": "prudente garantito",
+                "codice": "GAR",
+                "link_dati_storici": "https://performance.credemvita.it/"
+            }
+        ]
+    },
+    {
+        "nome": "Credit Agricole vita",
+        "tipo": "FPA",
+        "ente_o_promotore": "Cr\u00e8dit Agricole",
+        "descrizione_ente_o_promotore": "Gruppo francese con forte presenza in Italia, propone assicurazioni vita e risparmio.\nConiuga solidit\u00e0 finanziaria e consulenza personalizzata attraverso il network bancario.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/credit-agricole/credit-agricole-vita/",
+        "link_sito_ufficiale": "https://www.ca-vita.it",
+        "comparti": [
+            {
+                "nome": "linea moderata",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.ca-vita.it/investimento/ca-vita-rendimento-sostenibile"
+            },
+            {
+                "nome": "linea dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.ca-vita.it/portale-valorizzazioni"
+            }
+        ]
+    },
+    {
+        "nome": "Euregio Pensplan",
+        "tipo": "FPA",
+        "ente_o_promotore": "Euregio",
+        "descrizione_ente_o_promotore": "Compagnia assicurativa specializzata in welfare e previdenza territoriale.\nRivolta a imprese e lavoratori, con piani su misura per benefici fiscali e sociali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/euregio/euregio-pensplan/",
+        "link_sito_ufficiale": "https://fondopensioneprofi.com",
+        "comparti": [
+            {
+                "nome": "ethical life short term",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://fondopensioneprofi.com/valore-e-rendimento"
+            },
+            {
+                "nome": "ethical life conservative",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://fondopensioneprofi.com/valore-e-rendimento"
+            },
+            {
+                "nome": "ethical life growth",
+                "codice": "BIL",
+                "link_dati_storici": "https://fondopensioneprofi.com/valore-e-rendimento"
+            },
+            {
+                "nome": "ethical life high growth",
+                "codice": "AZN",
+                "link_dati_storici": "https://fondopensioneprofi.com/valore-e-rendimento"
+            }
+        ]
+    },
+    {
+        "nome": "Fideuram",
+        "tipo": "FPA",
+        "ente_o_promotore": "Fideuram",
+        "descrizione_ente_o_promotore": "Divisione private banking di Intesa Sanpaolo.\nIntegra servizi di investimento e polizze previdenziali per clientela alto patrimonio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/fideuram/fideuram/",
+        "link_sito_ufficiale": "https://www.fideuramvita.it",
+        "comparti": [
+            {
+                "nome": "sicurezza",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://it.investing.com/funds/fideuram-sicurezza-historical-data"
+            },
+            {
+                "nome": "equilibrio",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/fideuram-equilibrio-historical-data"
+            },
+            {
+                "nome": "valore",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/fideuram-valore-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Generali Global",
+        "tipo": "FPA",
+        "ente_o_promotore": "Generali",
+        "descrizione_ente_o_promotore": "Uno dei maggiori gruppi assicurativi al mondo, fondato in Italia nel 1831.\nOffre polizze vita, danni e previdenza con un'ampia rete di agenzie e servizi digitali avanzati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/generali/generali-global/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "real return",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "multiasset",
+                "codice": "BIL",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "azionario globale",
+                "codice": "AZN",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "obbligazionario breve termine",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            }
+        ]
+    },
+    {
+        "nome": "Groupama Programma open",
+        "tipo": "FPA",
+        "ente_o_promotore": "Groupama",
+        "descrizione_ente_o_promotore": "Assicuratore francese cooperativo, presente in Italia con polizze vita e gestioni patrimoniali.\nValorizza l'approccio mutualistico e il legame con il territorio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/groupama/groupama-programma-open/",
+        "link_sito_ufficiale": "https://cdn.groupama.it",
+        "comparti": [
+            {
+                "nome": "nuovo obbligazionario etico",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://cdn.groupama.it"
+            },
+            {
+                "nome": "prevalentemente azionario etico",
+                "codice": "AZN",
+                "link_dati_storici": "https://cdn.groupama.it"
+            },
+            {
+                "nome": "bilanciato etico",
+                "codice": "BIL",
+                "link_dati_storici": "https://cdn.groupama.it"
+            }
+        ]
+    },
+    {
+        "nome": "Hdi Azione di previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Hdi",
+        "descrizione_ente_o_promotore": "Parte del gruppo tedesco Talanx, specializzata in assicurazioni danni e vita.\nPropone coperture auto, casa e piani previdenziali con forte focus su digitalizzazione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/hdi/hdi-azione-di-previdenza/",
+        "link_sito_ufficiale": "https://hdiassicurazioni.youser.tech",
+        "comparti": [
+            {
+                "nome": "equilibrata",
+                "codice": "BIL",
+                "link_dati_storici": "https://hdiassicurazioni.youser.tech"
+            },
+            {
+                "nome": "dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/hdi-azione-di-previdenza-dinamica-historical-data"
+            },
+            {
+                "nome": "prudente",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://it.investing.com/funds/hdi-azione-di-previdenza-prudente-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Helvetia Soluzione previdente",
+        "tipo": "FPA",
+        "ente_o_promotore": "Helvetia",
+        "descrizione_ente_o_promotore": "Compagnia assicurativa svizzera con oltre 160 anni di storia.\nPropone prodotti vita, risparmio e investimenti con garanzie solide e servizio clienti dedicato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/helvetia/helvetia-soluzione-previdente/",
+        "link_sito_ufficiale": "https://www.helvetia.com",
+        "comparti": [
+            {
+                "nome": "linea 2 prudente",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.helvetia.com"
+            },
+            {
+                "nome": "linea 4 dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.helvetia.com"
+            },
+            {
+                "nome": "linea 1 garantita",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.helvetia.com"
+            }
+        ]
+    },
+    {
+        "nome": "Intesa Il mio domani",
+        "tipo": "FPA",
+        "ente_o_promotore": "Intesa San Paolo",
+        "descrizione_ente_o_promotore": "Gruppo bancario con una forte divisione assicurativa in partnership con Generali.\nOffre piani pensionistici e polizze vita integrati ai servizi finanziari della banca.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/intesa-san-paolo/intesa-il-mio-domani/",
+        "link_sito_ufficiale": "https://www.intesasanpaoloassicurazioni.com",
+        "comparti": [
+            {
+                "nome": "linea breve termine",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            },
+            {
+                "nome": "linea lungo termine",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/archivio-informative-periodiche-sfdr.html"
+            },
+            {
+                "nome": "linea lungo termine esg",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            }
+        ]
+    },
+    {
+        "nome": "Intesa Ubi Previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Intesa San Paolo",
+        "descrizione_ente_o_promotore": "Gruppo bancario con una forte divisione assicurativa in partnership con Generali.\nOffre piani pensionistici e polizze vita integrati ai servizi finanziari della banca.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/intesa-san-paolo/intesa-ubi-previdenza/",
+        "link_sito_ufficiale": "https://www.intesa-ubi-previdenza.it",
+        "comparti": []
+    },
+    {
+        "nome": "Intesa giustiniano",
+        "tipo": "FPA",
+        "ente_o_promotore": "Intesa San Paolo",
+        "descrizione_ente_o_promotore": "Gruppo bancario con una forte divisione assicurativa in partnership con Generali.\nOffre piani pensionistici e polizze vita integrati ai servizi finanziari della banca.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/intesa-san-paolo/intesa-giustiniano/",
+        "link_sito_ufficiale": "https://www.intesasanpaoloassicurazioni.com",
+        "comparti": [
+            {
+                "nome": "monetaria",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            }
+        ]
+    },
+    {
+        "nome": "Itas Plurifonds",
+        "tipo": "FPA",
+        "ente_o_promotore": "Itas",
+        "descrizione_ente_o_promotore": "Cooperativa assicurativa trentina, attiva dal 1821.\nPropone polizze vita, danni e servizi di welfare mutualistico per soci e clienti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/itas/itas-plurifonds/",
+        "link_sito_ufficiale": "https://www.gruppoitas.it",
+        "comparti": [
+            {
+                "nome": "activitas",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.gruppoitas.it"
+            },
+            {
+                "nome": "soliditas",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.gruppoitas.it"
+            },
+            {
+                "nome": "serenitas",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.gruppoitas.it"
+            }
+        ]
+    },
+    {
+        "nome": "Mediolanum Previgest",
+        "tipo": "FPA",
+        "ente_o_promotore": "Mediolanum",
+        "descrizione_ente_o_promotore": "Gruppo italiano noto per Banca Mediolanum e Generali Italia come partner assicurativo.\nOffre soluzioni vita, previdenza e investimento con un approccio consulenziale personalizzato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/mediolanum/mediolanum-previgest/",
+        "link_sito_ufficiale": "https://www.mediolanumgestionefondi.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.mediolanumgestionefondi.it#desktop-menu"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.mediolanumgestionefondi.it#desktop-menu"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.mediolanumgestionefondi.it#desktop-menu"
+            }
+        ]
+    },
+    {
+        "nome": "Raiffeisen",
+        "tipo": "FPA",
+        "ente_o_promotore": "Raiffeisen",
+        "descrizione_ente_o_promotore": "Rete di banche cooperative austriache con offerte assicurative.\nTramite Raiffeisen Vita propone piani pensionistici e coperture vita e salute.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/raiffeisen/raiffeisen/",
+        "link_sito_ufficiale": "https://www.raiffeisenpensionsfonds.it",
+        "comparti": [
+            {
+                "nome": "safe",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.raiffeisen.it/de/top-navi/anmeldeseite-meine-versicherungen.html"
+            },
+            {
+                "nome": "activity",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.raiffeisen.it/de/top-navi/anmeldeseite-meine-versicherungen.html"
+            },
+            {
+                "nome": "guaranty",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.raiffeisen.it/de/top-navi/anmeldeseite-meine-versicherungen.html"
+            }
+        ]
+    },
+    {
+        "nome": "Reale Mutua Teseo",
+        "tipo": "FPA",
+        "ente_o_promotore": "Reale Mutua",
+        "descrizione_ente_o_promotore": "Assicurazione cooperativa con oltre 180 anni di storia.\nPropone polizze vita, danni e previdenza con vantaggi mutualistici e orientamento al socio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/reale-mutua/reale-mutua-teseo/",
+        "link_sito_ufficiale": "https://serviziappsoci.grupporealemutua.it",
+        "comparti": [
+            {
+                "nome": "garantita etica",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://it.investing.com/funds/reale-mutua-teseo-garantita-etica-historical-data"
+            },
+            {
+                "nome": "bilanciata etica",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/reale-mutua-teseo-bilanciata-etica-historical-data"
+            },
+            {
+                "nome": "sviluppo etica",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/reale-mutua-teseo-sviluppo-etica-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Sella Eurorisparmio",
+        "tipo": "FPA",
+        "ente_o_promotore": "Sella",
+        "descrizione_ente_o_promotore": "Banca Sella e Sella Vita offrono soluzioni assicurative integrate.\nPiani vita e previdenza con servizi digitali e consulenza diretta dalla banca.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/sella/sella-eurorisparmio/",
+        "link_sito_ufficiale": "https://www.sellasgr.it",
+        "comparti": [
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.sellasgr.it/it/quotazioni"
+            },
+            {
+                "nome": "bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://it.investing.com/funds/sella-eurorisparmio-bilanciato-historical-data"
+            },
+            {
+                "nome": "azionario internazionale",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.sellasgr.it/it/quotazioni"
+            }
+        ]
+    },
+    {
+        "nome": "Unipolsai Previdenza",
+        "tipo": "FPA",
+        "ente_o_promotore": "Unipolsai",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo italiano leader nei rami danni e vita.\nFornisce prodotti previdenziali, gestioni separate e servizi digitali evoluti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/unipolsai/unipolsai-previdenza/",
+        "link_sito_ufficiale": "https://www.unipol.it",
+        "comparti": [
+            {
+                "nome": "bilanciato dinamico",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.unipol.it"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.unipol.it"
+            },
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.unipol.it"
+            }
+        ]
+    },
+    {
+        "nome": "Vera Vita",
+        "tipo": "FPA",
+        "ente_o_promotore": "Vera Assicurazioni",
+        "descrizione_ente_o_promotore": "Compagnia digitale del gruppo Zurich, specializzata in polizze vita e risparmio.\nSottoscrizione rapida online e costi competitivi per piccole e medie esigenze.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/vera-assicurazioni/vera-vita/",
+        "link_sito_ufficiale": "https://www.veravitaassicurazioni.it",
+        "comparti": [
+            {
+                "nome": "popolare-mix",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            },
+            {
+                "nome": "popolare-bond",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            }
+        ]
+    },
+    {
+        "nome": "Vittoria Formula lavoro",
+        "tipo": "FPA",
+        "ente_o_promotore": "Vittoria Assicurazioni",
+        "descrizione_ente_o_promotore": "Compagnia italiana specializzata in polizze auto, casa e previdenza.\nOffre prodotti vita e gestioni separati con elevato grado di personalizzazione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/vittoria-assicurazioni/vittoria-formula-lavoro/",
+        "link_sito_ufficiale": "https://storage.googleapis.com",
+        "comparti": [
+            {
+                "nome": "previdenza equilibrata",
+                "codice": "BIL",
+                "link_dati_storici": "https://storage.googleapis.com"
+            },
+            {
+                "nome": "previdenza capitalizzata",
+                "codice": "AZN",
+                "link_dati_storici": "https://storage.googleapis.com"
+            },
+            {
+                "nome": "previdenza garantita",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://storage.googleapis.com"
+            }
+        ]
+    },
+    {
+        "nome": "Zurich Contribution",
+        "tipo": "FPA",
+        "ente_o_promotore": "Zurich",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo svizzero globale con presenza capillare in Italia.\nOffre soluzioni vita, previdenza e investimenti con un mix di solidit\u00e0 e innovazione digitale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/zurich/zurich-contribution/",
+        "link_sito_ufficiale": "https://logowik.com",
+        "comparti": [
+            {
+                "nome": "conservativa",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://it.investing.com/funds/zurich-contribution-conservativa-historical-data"
+            },
+            {
+                "nome": "dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://it.investing.com/funds/zurich-contribution-dinamica-historical-data"
+            }
+        ]
+    },
+    {
+        "nome": "Zurich Zed omnifund",
+        "tipo": "FPA",
+        "ente_o_promotore": "Zurich",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo svizzero globale con presenza capillare in Italia.\nOffre soluzioni vita, previdenza e investimenti con un mix di solidit\u00e0 e innovazione digitale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/fondi-pensione-aperti/zurich/zurich-zed-omnifund/",
+        "link_sito_ufficiale": "https://logowik.com",
+        "comparti": [
+            {
+                "nome": "bilanciata 30",
+                "codice": "BIL",
+                "link_dati_storici": "https://logowik.com"
+            },
+            {
+                "nome": "obbligazionaria",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://logowik.com"
+            },
+            {
+                "nome": "azionaria",
+                "codice": "AZN",
+                "link_dati_storici": "https://logowik.com"
+            },
+            {
+                "nome": "garantita",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://logowik.com"
+            }
+        ]
+    },
+    {
+        "nome": "Alleanza Alleata previdenza",
+        "tipo": "PIP",
+        "ente_o_promotore": "Alleanza",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo italiano con oltre 130 anni di esperienza nella protezione vita e previdenza.\nOffre soluzioni modulari e consulenza dedicata per garantire serenit\u00e0 finanziaria a ogni fase della vita.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/alleanza/alleanza-alleata-previdenza/",
+        "link_sito_ufficiale": "https://cdn.alleanza.it",
+        "comparti": [
+            {
+                "nome": "alleata garantita",
+                "codice": "GAR",
+                "link_dati_storici": "https://cdn.alleanza.it"
+            },
+            {
+                "nome": "alleata bilanciata",
+                "codice": "BIL",
+                "link_dati_storici": "https://cdn.alleanza.it"
+            },
+            {
+                "nome": "alleata azionaria",
+                "codice": "AZN",
+                "link_dati_storici": "https://cdn.alleanza.it"
+            }
+        ]
+    },
+    {
+        "nome": "Allianz Orizzonte Previdenza",
+        "tipo": "PIP",
+        "ente_o_promotore": "Allianz",
+        "descrizione_ente_o_promotore": "Multinazionale tedesca leader nel settore assicurativo e asset management.\nPropone polizze vita, sanitarie e investimenti con un'ampia rete di consulenti e strumenti digitali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/allianz/allianz-orizzonte-previdenza/",
+        "link_sito_ufficiale": "https://www.allianzbank.it",
+        "comparti": [
+            {
+                "nome": "azionario globale",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.allianzbank.it"
+            },
+            {
+                "nome": "formula sicura",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.allianzbank.it"
+            },
+            {
+                "nome": "formula moderata",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.allianzbank.it"
+            },
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.allianzbank.it"
+            }
+        ]
+    },
+    {
+        "nome": "Athora Futuro previdenza",
+        "tipo": "PIP",
+        "ente_o_promotore": "Athora",
+        "descrizione_ente_o_promotore": "Specialista paneuropeo in assicurazioni vita e rendite.\nSi distingue per prodotti pensionistici flessibili e partnership con istituzioni finanziarie locali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/athora/athora-futuro-previdenza/",
+        "link_sito_ufficiale": "https://www.athora.it",
+        "comparti": [
+            {
+                "nome": "athora futuro flessibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.athora.it/sostenibilita/charity/"
+            },
+            {
+                "nome": "athora futuro azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.athora.it/sostenibilita/charity/"
+            },
+            {
+                "nome": "athora italia - linea valore",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.athora.it/sostenibilita/charity/"
+            }
+        ]
+    },
+    {
+        "nome": "Axa Mia pensione",
+        "tipo": "PIP",
+        "ente_o_promotore": "Axa",
+        "descrizione_ente_o_promotore": "Colosso francese con un'offerta completa di assicurazioni vita, salute e investimenti.\nPunta su innovazione digitale e servizi personalizzati per la protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/axa/axa-mia-pensione/",
+        "link_sito_ufficiale": "https://www.axa.it",
+        "comparti": [
+            {
+                "nome": "gestiriv previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.axa.it/valorizzazioni-e-rendimenti"
+            },
+            {
+                "nome": "previdenza euro small cap",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.axa.it/valorizzazioni-e-rendimenti"
+            }
+        ]
+    },
+    {
+        "nome": "Axa Mps Previdenza attiva",
+        "tipo": "PIP",
+        "ente_o_promotore": "Axa",
+        "descrizione_ente_o_promotore": "Colosso francese con un'offerta completa di assicurazioni vita, salute e investimenti.\nPunta su innovazione digitale e servizi personalizzati per la protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/axa/axa-mps-previdenza-attiva/",
+        "link_sito_ufficiale": "https://www.axa-mps.it",
+        "comparti": [
+            {
+                "nome": "mpv previdenza aggressivo",
+                "codice": "AZN",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "mpv previdenza equilibrato",
+                "codice": "BIL",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "mpv previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            }
+        ]
+    },
+    {
+        "nome": "Axa Mps Previdenza personale",
+        "tipo": "PIP",
+        "ente_o_promotore": "Axa",
+        "descrizione_ente_o_promotore": "Colosso francese con un'offerta completa di assicurazioni vita, salute e investimenti.\nPunta su innovazione digitale e servizi personalizzati per la protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/axa/axa-mps-previdenza-personale/",
+        "link_sito_ufficiale": "https://www.axa-mps.it",
+        "comparti": [
+            {
+                "nome": "mpv previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "mpv previdenza equilibrato",
+                "codice": "BIL",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            },
+            {
+                "nome": "mpv previdenza aggressivo",
+                "codice": "AZN",
+                "link_dati_storici": "https://preventivo-assicurazione-auto.axa.it/mps/"
+            }
+        ]
+    },
+    {
+        "nome": "Cardif Bnl Pianopensione",
+        "tipo": "PIP",
+        "ente_o_promotore": "Cardif",
+        "descrizione_ente_o_promotore": "Societ\u00e0 del gruppo BNP Paribas, focalizzata su prodotti vita e credit protection.\nLeader in Italia nelle polizze abbinate ai prestiti e nelle soluzioni previdenziali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/cardif/cardif-bnl-pianopensione/",
+        "link_sito_ufficiale": "https://www.simplybiz.eu",
+        "comparti": [
+            {
+                "nome": "valorprevi",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.simplybiz.eu"
+            },
+            {
+                "nome": "valorplus",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.simplybiz.eu"
+            }
+        ]
+    },
+    {
+        "nome": "Cnp Top pension",
+        "tipo": "PIP",
+        "ente_o_promotore": "Cnp Unicredit",
+        "descrizione_ente_o_promotore": "Joint venture tra CNP Assurances e Unicredit, dedicata alla bancassurance.\nOffre piani pensionistici e polizze vita distribuiti attraverso la rete bancaria.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/cnp-unicredit/cnp-top-pension/",
+        "link_sito_ufficiale": "https://gruppocnp.it",
+        "comparti": [
+            {
+                "nome": "cnp pip azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            },
+            {
+                "nome": "cnp pip bilanciato",
+                "codice": "BIL",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            },
+            {
+                "nome": "cnp pip obbligazionario",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            },
+            {
+                "nome": "gepi",
+                "codice": "GAR",
+                "link_dati_storici": "https://quotes.gruppocnp.it/quotes/#/"
+            }
+        ]
+    },
+    {
+        "nome": "Credemvita Futura",
+        "tipo": "PIP",
+        "ente_o_promotore": "Credem",
+        "descrizione_ente_o_promotore": "Gruppo bancario-assicurativo italiano con soluzioni vita, danni e previdenza.\nCaratterizzato da un approccio consulenziale integrato banca\u2013assicurazione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/credem/credemvita-futura/",
+        "link_sito_ufficiale": "https://www.intesasanpaoloassicurazioni.com",
+        "comparti": [
+            {
+                "nome": "obbligazionario",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            },
+            {
+                "nome": "azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            },
+            {
+                "nome": "flessibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/archivio-informative-periodiche-sfdr.html"
+            }
+        ]
+    },
+    {
+        "nome": "Cr\u00e8dit Agricole Vita pensione pi\u00f9",
+        "tipo": "PIP",
+        "ente_o_promotore": "Cr\u00e8dit Agricole",
+        "descrizione_ente_o_promotore": "Gruppo francese con forte presenza in Italia, propone assicurazioni vita e risparmio.\nConiuga solidit\u00e0 finanziaria e consulenza personalizzata attraverso il network bancario.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/credit-agricole/credit-agricole-vita-pensione-piu/",
+        "link_sito_ufficiale": "https://www.ca-vita.it",
+        "comparti": [
+            {
+                "nome": "cr\u00e9dit agricole vita previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.ca-vita.it/portale-valorizzazioni"
+            }
+        ]
+    },
+    {
+        "nome": "Cr\u00e8dit Agricole Vita progetto",
+        "tipo": "PIP",
+        "ente_o_promotore": "Cr\u00e8dit Agricole",
+        "descrizione_ente_o_promotore": "Gruppo francese con forte presenza in Italia, propone assicurazioni vita e risparmio.\nConiuga solidit\u00e0 finanziaria e consulenza personalizzata attraverso il network bancario.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/credit-agricole/credit-agricole-vita-progetto/",
+        "link_sito_ufficiale": "https://www.ca-vita.it",
+        "comparti": [
+            {
+                "nome": "cr\u00e9dit agricole vita previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.ca-vita.it/portale-valorizzazioni"
+            },
+            {
+                "nome": "progetto previdenza 2035",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.ca-vita.it/investimento/ca-vita-rendimento-sostenibile"
+            }
+        ]
+    },
+    {
+        "nome": "Generali Generazione previdente",
+        "tipo": "PIP",
+        "ente_o_promotore": "Generali",
+        "descrizione_ente_o_promotore": "Uno dei maggiori gruppi assicurativi al mondo, fondato in Italia nel 1831.\nOffre polizze vita, danni e previdenza con un'ampia rete di agenzie e servizi digitali avanzati.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/generali/generali-generazione-previdente/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "generali azione sostenibile",
+                "codice": "AZN",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "generali scelta sostenibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            }
+        ]
+    },
+    {
+        "nome": "Genertellife Bg Previdenza attiva",
+        "tipo": "PIP",
+        "ente_o_promotore": "Genertel",
+        "descrizione_ente_o_promotore": "Brand vita di Generali, specializzato in prodotti assicurativi e previdenziali.\nConiuga soluzioni modulari e innovazione digitale per un'esperienza cliente semplice e trasparente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/genertel/genertellife-bg-previdenza-attiva/",
+        "link_sito_ufficiale": "https://www.genertellife-bg-previdenza-attiva.it",
+        "comparti": []
+    },
+    {
+        "nome": "Pensione integrativa Genertel",
+        "tipo": "PIP",
+        "ente_o_promotore": "Genertel",
+        "descrizione_ente_o_promotore": "Brand vita di Generali, specializzato in prodotti assicurativi e previdenziali.\nConiuga soluzioni modulari e innovazione digitale per un'esperienza cliente semplice e trasparente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/genertel/previdenza-integrativa-genertel/",
+        "link_sito_ufficiale": "https://www.genertel.it",
+        "comparti": [
+            {
+                "nome": "lva azionario previdenza",
+                "codice": "AZN",
+                "link_dati_storici": "https://private.genertel.it/journey/quotation"
+            },
+            {
+                "nome": "ri.alto previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://private.genertel.it/journey/quotation"
+            }
+        ]
+    },
+    {
+        "nome": "Groupama Programma per te",
+        "tipo": "PIP",
+        "ente_o_promotore": "Groupama",
+        "descrizione_ente_o_promotore": "Assicuratore francese cooperativo, presente in Italia con polizze vita e gestioni patrimoniali.\nValorizza l'approccio mutualistico e il legame con il territorio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/groupama/groupama-programma-per-te/",
+        "link_sito_ufficiale": "https://cdn.groupama.it",
+        "comparti": [
+            {
+                "nome": "valorepiu' previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://cdn.groupama.it"
+            },
+            {
+                "nome": "valorepi\u00f9 azionario previdenza",
+                "codice": "AZN",
+                "link_dati_storici": "https://cdn.groupama.it"
+            }
+        ]
+    },
+    {
+        "nome": "Helvetia Aequa",
+        "tipo": "PIP",
+        "ente_o_promotore": "Helvetia",
+        "descrizione_ente_o_promotore": "Compagnia assicurativa svizzera con oltre 160 anni di storia.\nPropone prodotti vita, risparmio e investimenti con garanzie solide e servizio clienti dedicato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/helvetia/helvetia-aequa/",
+        "link_sito_ufficiale": "https://www.helvetia.com",
+        "comparti": [
+            {
+                "nome": "helvetia multimanager flessibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.helvetia.com"
+            },
+            {
+                "nome": "helvetia multimanager equity",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.helvetia.com"
+            },
+            {
+                "nome": "hv previrend",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.helvetia.com"
+            }
+        ]
+    },
+    {
+        "nome": "Intesa Il mio futuro",
+        "tipo": "PIP",
+        "ente_o_promotore": "Intesa San Paolo",
+        "descrizione_ente_o_promotore": "Gruppo bancario con una forte divisione assicurativa in partnership con Generali.\nOffre piani pensionistici e polizze vita integrati ai servizi finanziari della banca.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/intesa-san-paolo/intesa-il-mio-futuro/",
+        "link_sito_ufficiale": "https://www.intesasanpaoloassicurazioni.com",
+        "comparti": [
+            {
+                "nome": "ev previ",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/rendimenti-e-quotazioni.html"
+            },
+            {
+                "nome": "medio termine",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.intesasanpaoloassicurazioni.com/it/prodotti-e-rendimenti/archivio-informative-periodiche-sfdr.html"
+            }
+        ]
+    },
+    {
+        "nome": "Italiana Domani sicuro plus",
+        "tipo": "PIP",
+        "ente_o_promotore": "Italiana Assicurazioni",
+        "descrizione_ente_o_promotore": "Societ\u00e0 assicurativa italiana indipendente, specializzata in vita e protezione del reddito.\nPunta su prodotti innovativi e una rete di consulenti territoriali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/italiana-assicurazioni/italiana-domani-sicuro-plus/",
+        "link_sito_ufficiale": "https://serviziappsoci.grupporealemutua.it",
+        "comparti": [
+            {
+                "nome": "prefin futuro",
+                "codice": "GAR",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            },
+            {
+                "nome": "previdenza futuro aggressiva",
+                "codice": "AZN",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            }
+        ]
+    },
+    {
+        "nome": "Italiana Feelgood",
+        "tipo": "PIP",
+        "ente_o_promotore": "Italiana Assicurazioni",
+        "descrizione_ente_o_promotore": "Societ\u00e0 assicurativa italiana indipendente, specializzata in vita e protezione del reddito.\nPunta su prodotti innovativi e una rete di consulenti territoriali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/italiana-assicurazioni/italiana-feelgood/",
+        "link_sito_ufficiale": "https://serviziappsoci.grupporealemutua.it",
+        "comparti": [
+            {
+                "nome": "italiana linea prudente",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            },
+            {
+                "nome": "italiana linea equilibrio",
+                "codice": "BIL",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            },
+            {
+                "nome": "italiana linea futuro",
+                "codice": "AZN",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            }
+        ]
+    },
+    {
+        "nome": "Italiana Planner",
+        "tipo": "PIP",
+        "ente_o_promotore": "Italiana Assicurazioni",
+        "descrizione_ente_o_promotore": "Societ\u00e0 assicurativa italiana indipendente, specializzata in vita e protezione del reddito.\nPunta su prodotti innovativi e una rete di consulenti territoriali.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/italiana-assicurazioni/italiana-planner/",
+        "link_sito_ufficiale": "https://www.italiana.it",
+        "comparti": [
+            {
+                "nome": "italiana linea previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://realefoundation.org/it/emergenza-covid-19/aiuti-concreti-per-l39emergenza-covid-19-9.html"
+            }
+        ]
+    },
+    {
+        "nome": "Mediolanum Taxbenefit new",
+        "tipo": "PIP",
+        "ente_o_promotore": "Mediolanum",
+        "descrizione_ente_o_promotore": "Gruppo italiano noto per Banca Mediolanum e Generali Italia come partner assicurativo.\nOffre soluzioni vita, previdenza e investimento con un approccio consulenziale personalizzato.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/mediolanum/mediolanum-taxbenefit-new/",
+        "link_sito_ufficiale": "https://www.mediolanumvita.it",
+        "comparti": [
+            {
+                "nome": "challenge provident fund 1",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.mediolanumvita.it#desktop-menu"
+            },
+            {
+                "nome": "challenge provident fund 2",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.mediolanumvita.it#desktop-menu"
+            },
+            {
+                "nome": "challenge provident fund 3",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.mediolanumvita.it#desktop-menu"
+            }
+        ]
+    },
+    {
+        "nome": "Moneyfarm Piano pensione",
+        "tipo": "PIP",
+        "ente_o_promotore": "Moneyfarm",
+        "descrizione_ente_o_promotore": "Robo-advisor italiano specializzato in investimenti e pianificazione finanziaria.\nPropone portafogli diversificati con costi trasparenti e gestione digitale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/moneyfarm/moneyfarm-piano-pensione/",
+        "link_sito_ufficiale": "https://uahiouxbrrhrvvmgxvmo.supabase.co",
+        "comparti": [
+            {
+                "nome": "mfm linea prudente",
+                "codice": "BIL",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            },
+            {
+                "nome": "mfm linea intraprendente",
+                "codice": "AZN",
+                "link_dati_storici": "https://uahiouxbrrhrvvmgxvmo.supabase.co"
+            }
+        ]
+    },
+    {
+        "nome": "Nobis Pensione futura",
+        "tipo": "PIP",
+        "ente_o_promotore": "Nobis",
+        "descrizione_ente_o_promotore": "Societ\u00e0 emergente focalizzata su assicurazioni digitali e soluzioni on-demand.\nSemplicit\u00e0 e rapidit\u00e0 di sottoscrizione tramite app per una protezione smart.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/nobis/nobis-pensione-futura/",
+        "link_sito_ufficiale": "https://www.nobis.it",
+        "comparti": [
+            {
+                "nome": "pensione futura linea dinamica",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.nobis.it/chi-siamo/mission-e-valori/"
+            },
+            {
+                "nome": "pensione futura linea garantita",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.nobis.it/chi-siamo/mission-e-valori/"
+            }
+        ]
+    },
+    {
+        "nome": "Posta Previdenza valore",
+        "tipo": "PIP",
+        "ente_o_promotore": "Poste Italiane",
+        "descrizione_ente_o_promotore": "Gruppo pubblico con divisione assicurativa Poste Vita.\nLeader nelle soluzioni vita e previdenza distribuite tramite l'ampia rete postale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/poste-italiane/posta-previdenza-valore/",
+        "link_sito_ufficiale": "https://www.media.poste.it",
+        "comparti": [
+            {
+                "nome": "posta pensione",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.media.poste.it"
+            },
+            {
+                "nome": "poste vita previdenza flessibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.media.poste.it"
+            }
+        ]
+    },
+    {
+        "nome": "Reale Mutua Cento stelle reale",
+        "tipo": "PIP",
+        "ente_o_promotore": "Reale Mutua",
+        "descrizione_ente_o_promotore": "Assicurazione cooperativa con oltre 180 anni di storia.\nPropone polizze vita, danni e previdenza con vantaggi mutualistici e orientamento al socio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/reale-mutua/reale-mutua-cento-stelle-reale/",
+        "link_sito_ufficiale": "https://serviziappsoci.grupporealemutua.it",
+        "comparti": [
+            {
+                "nome": "reale linea prudente",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            },
+            {
+                "nome": "reale linea equilibrio",
+                "codice": "BIL",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            },
+            {
+                "nome": "reale linea futuro",
+                "codice": "AZN",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            }
+        ]
+    },
+    {
+        "nome": "Reale Mutua Cento stelle taxplan",
+        "tipo": "PIP",
+        "ente_o_promotore": "Reale Mutua",
+        "descrizione_ente_o_promotore": "Assicurazione cooperativa con oltre 180 anni di storia.\nPropone polizze vita, danni e previdenza con vantaggi mutualistici e orientamento al socio.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/reale-mutua/reale-mutua-cento-stelle-taxplan/",
+        "link_sito_ufficiale": "https://serviziappsoci.grupporealemutua.it",
+        "comparti": [
+            {
+                "nome": "previdenza reale",
+                "codice": "GAR",
+                "link_dati_storici": "https://serviziappsoci.grupporealemutua.it"
+            }
+        ]
+    },
+    {
+        "nome": "Sara Libero domani",
+        "tipo": "PIP",
+        "ente_o_promotore": "Sara",
+        "descrizione_ente_o_promotore": "Societ\u00e0 italiana storica nel ramo danni e vita.\nOffre polizze auto, moto e soluzioni previdenziali attraverso una rete agenziale capillare.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/sara/sara-libero-domani/",
+        "link_sito_ufficiale": "https://www.sara.it",
+        "comparti": [
+            {
+                "nome": "sara previfuturo - comparto obbligazionario europeo",
+                "codice": "OBB PURO",
+                "link_dati_storici": "https://www.sara.it"
+            },
+            {
+                "nome": "sara previfuturo - comparto azionario internazionale",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.sara.it"
+            },
+            {
+                "nome": "futuro&previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.sara.it"
+            }
+        ]
+    },
+    {
+        "nome": "Unicredit Allianz pip crv",
+        "tipo": "PIP",
+        "ente_o_promotore": "Unicredit",
+        "descrizione_ente_o_promotore": "Banca con divisione assicurativa CNP Unicredit per prodotti vita e previdenza.\nIntegra servizi bancari e assicurativi per soluzioni complete di protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/unicredit/unicredit-allianz-pip-crv/",
+        "link_sito_ufficiale": "https://www.unicreditallianzvita.it",
+        "comparti": [
+            {
+                "nome": "creditras previ",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.unicreditallianzvita.it"
+            },
+            {
+                "nome": "creditras previdenza equity",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.unicreditallianzvita.it"
+            }
+        ]
+    },
+    {
+        "nome": "Unicredit Pensione PIP CNP",
+        "tipo": "PIP",
+        "ente_o_promotore": "Unicredit",
+        "descrizione_ente_o_promotore": "Banca con divisione assicurativa CNP Unicredit per prodotti vita e previdenza.\nIntegra servizi bancari e assicurativi per soluzioni complete di protezione del cliente.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/unicredit/unicredit-pensione-pip-cnp/",
+        "link_sito_ufficiale": "https://www.unicreditlife.it",
+        "comparti": [
+            {
+                "nome": "seniorvita previdenziale",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.unicreditlife.it/valori-e-quotazioni"
+            },
+            {
+                "nome": "previdenza equity",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.unicreditlife.it/valori-e-quotazioni"
+            }
+        ]
+    },
+    {
+        "nome": "Unipolsai Previdenza futura",
+        "tipo": "PIP",
+        "ente_o_promotore": "Unipolsai",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo italiano leader nei rami danni e vita.\nFornisce prodotti previdenziali, gestioni separate e servizi digitali evoluti.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/unipolsai/unipolsai-previdenza-futura/",
+        "link_sito_ufficiale": "https://www.unipol.it",
+        "comparti": [
+            {
+                "nome": "previglobale",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.unipol.it"
+            },
+            {
+                "nome": "previattiva unipol",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.unipol.it"
+            }
+        ]
+    },
+    {
+        "nome": "Vera Vita Pensione sicura",
+        "tipo": "PIP",
+        "ente_o_promotore": "Vera Assicurazioni",
+        "descrizione_ente_o_promotore": "Compagnia digitale del gruppo Zurich, specializzata in polizze vita e risparmio.\nSottoscrizione rapida online e costi competitivi per piccole e medie esigenze.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/vera-assicurazioni/vera-vita-pensione-sicura/",
+        "link_sito_ufficiale": "https://www.veravitaassicurazioni.it",
+        "comparti": [
+            {
+                "nome": "popolare vita previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            },
+            {
+                "nome": "popolare vita bilanciato global",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            },
+            {
+                "nome": "popolare vita prudente",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            },
+            {
+                "nome": "popolare vita value",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.veravitaassicurazioni.it"
+            }
+        ]
+    },
+    {
+        "nome": "Pip Vittoria Assicurazioni",
+        "tipo": "PIP",
+        "ente_o_promotore": "Vittoria Assicurazioni",
+        "descrizione_ente_o_promotore": "Compagnia italiana specializzata in polizze auto, casa e previdenza.\nOffre prodotti vita e gestioni separati con elevato grado di personalizzazione.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/vittoria-assicurazioni/pip-vittoria-assicurazioni/",
+        "link_sito_ufficiale": "https://storage.googleapis.com",
+        "comparti": [
+            {
+                "nome": "fondo vittoria previdenza",
+                "codice": "GAR",
+                "link_dati_storici": "https://storage.googleapis.com"
+            },
+            {
+                "nome": "fondo vittoria previdenza flessibile",
+                "codice": "BIL",
+                "link_dati_storici": "https://storage.googleapis.com"
+            }
+        ]
+    },
+    {
+        "nome": "Zurich Programma Pensione",
+        "tipo": "PIP",
+        "ente_o_promotore": "Zurich",
+        "descrizione_ente_o_promotore": "Gruppo assicurativo svizzero globale con presenza capillare in Italia.\nOffre soluzioni vita, previdenza e investimenti con un mix di solidit\u00e0 e innovazione digitale.",
+        "link": "https://www.ciaoelsa.com/schede-fondo/piani-individuali-pensionistici/zurich/zurich-programma-pensione/",
+        "link_sito_ufficiale": "https://www.zurich.it",
+        "comparti": [
+            {
+                "nome": "zurich pension esg azionario",
+                "codice": "AZN",
+                "link_dati_storici": "https://www.zurich.it/gruppo-zurich/zurich-italia/i-nostri-valori"
+            },
+            {
+                "nome": "zurich pension esg flex 4",
+                "codice": "BIL",
+                "link_dati_storici": "https://www.zurich.it/gruppo-zurich/zurich-italia/i-nostri-valori"
+            },
+            {
+                "nome": "zurich pension esg protetto",
+                "codice": "OBB MISTO",
+                "link_dati_storici": "https://www.zurich.it/gruppo-zurich/zurich-italia/i-nostri-valori"
+            }
+        ]
+    }
+]

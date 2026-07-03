@@ -707,17 +707,67 @@ def init_db():
 
     conn.execute('''
         CREATE TABLE IF NOT EXISTS pension_contributions (
-            id            TEXT    PRIMARY KEY,
-            fund_id       TEXT    NOT NULL,
-            month         TEXT    NOT NULL,
-            tfr           REAL    NOT NULL DEFAULT 0,
-            worker_contrib REAL   NOT NULL DEFAULT 0,
-            employer_contrib REAL NOT NULL DEFAULT 0,
-            total_value   REAL    NOT NULL DEFAULT 0,
-            notes         TEXT,
+            id               TEXT    PRIMARY KEY,
+            fund_id          TEXT    NOT NULL,
+            month            TEXT    NOT NULL,
+            tfr              REAL    NOT NULL DEFAULT 0,
+            worker_contrib   REAL    NOT NULL DEFAULT 0,
+            employer_contrib REAL    NOT NULL DEFAULT 0,
+            total_value      REAL    NOT NULL DEFAULT 0,
+            notes            TEXT,
+            numero_quote     REAL    NOT NULL DEFAULT 0,
+            valore_quota     REAL    NOT NULL DEFAULT 0,
+            spese            REAL    NOT NULL DEFAULT 0,
             FOREIGN KEY (fund_id) REFERENCES pension_funds (id) ON DELETE CASCADE
         )
     ''')
+
+    # Creation of pension fund compartments and prices tables
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS pension_fund_compartments (
+            id             TEXT    PRIMARY KEY,
+            fund_id        TEXT    NOT NULL,
+            name           TEXT    NOT NULL,
+            investing_link TEXT,
+            start_date     TEXT,
+            FOREIGN KEY (fund_id) REFERENCES pension_funds (id) ON DELETE CASCADE
+        )
+    ''')
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS pension_fund_prices (
+            compartment_id TEXT    NOT NULL,
+            date           TEXT    NOT NULL,
+            price          REAL    NOT NULL,
+            PRIMARY KEY (compartment_id, date),
+            FOREIGN KEY (compartment_id) REFERENCES pension_fund_compartments (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Migration: add new columns if they don't exist
+    for col, coldef in [
+        ('numero_quote', 'REAL NOT NULL DEFAULT 0'),
+        ('valore_quota', 'REAL NOT NULL DEFAULT 0'),
+        ('spese',        'REAL NOT NULL DEFAULT 0'),
+    ]:
+        try:
+            conn.execute(f'ALTER TABLE pension_contributions ADD COLUMN {col} {coldef}')
+        except Exception:
+            pass
+
+    # Migration: ensure every pension fund has at least a default compartment
+    try:
+        funds = conn.execute("SELECT id, name FROM pension_funds").fetchall()
+        for f in funds:
+            comp_count = conn.execute("SELECT COUNT(*) FROM pension_fund_compartments WHERE fund_id=?", (f['id'],)).fetchone()[0]
+            if comp_count == 0:
+                import time
+                cid = f"pfc-{int(time.time()*1000)}"
+                conn.execute("INSERT INTO pension_fund_compartments (id, fund_id, name, investing_link, start_date) VALUES (?, ?, ?, NULL, NULL)",
+                             (cid, f['id'], f['name']))
+    except Exception as e:
+        print("Error migrating pension fund compartments:", e)
+
 
     try:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_salaries_group ON salaries(salary_group_id)")
@@ -1334,9 +1384,106 @@ def send_daily_reminders():
             except Exception as e:
                 print(f"Errore durante l'invio dell'email promemoria a {email}: {e}")
 
+def parse_investing_date(date_str):
+    date_str = date_str.strip()
+    m = re.match(r'(\d{1,2})[\./-](\d{1,2})[\./-](\d{4})', date_str)
+    if m:
+        day, month, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        return f"{year}-{month:02d}-{day:02d}"
+    m = re.match(r'(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})', date_str)
+    if m:
+        year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        return f"{year}-{month:02d}-{day:02d}"
+    months_map = {
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+        'gen': 1, 'mag': 5, 'giu': 6, 'lug': 7, 'ago': 8, 'set': 9,
+        'ott': 10, 'dic': 12
+    }
+    clean_str = date_str.replace(',', ' ').lower()
+    parts = clean_str.split()
+    if len(parts) == 3:
+        month_val = None
+        day_val = None
+        year_val = None
+        for part in parts:
+            if part.isdigit():
+                val = int(part)
+                if val > 1900:
+                    year_val = val
+                else:
+                    day_val = val
+            else:
+                for m_name, m_num in months_map.items():
+                    if part.startswith(m_name):
+                        month_val = m_num
+                        break
+        if year_val and month_val and day_val:
+            return f"{year_val}-{month_val:02d}-{day_val:02d}"
+    return None
+
+def parse_investing_price(price_str):
+    price_str = price_str.strip()
+    if not price_str:
+        return 0.0
+    if ',' in price_str and '.' in price_str:
+        if price_str.index(',') > price_str.index('.'):
+            price_str = price_str.replace('.', '').replace(',', '.')
+        else:
+            price_str = price_str.replace(',', '')
+    elif ',' in price_str:
+        if price_str.count(',') == 1:
+            price_str = price_str.replace(',', '.')
+        else:
+            price_str = price_str.replace(',', '')
+    try:
+        return float(price_str)
+    except ValueError:
+        return 0.0
+
+def find_historical_table(soup):
+    tables = soup.find_all('table')
+    for table in tables:
+        headers = [th.get_text(strip=True).lower() for th in table.find_all('th')]
+        if len(headers) >= 2:
+            is_date = headers[0] in ['data', 'date', 'datum', 'date.']
+            is_price = headers[1] in ['ultimo', 'price', 'close', 'ultimo val.', 'valore', 'schluß']
+            if is_date and is_price:
+                return table
+    for table in tables:
+        rows = table.find_all('tr')
+        if len(rows) > 1:
+            first_tds = [td.get_text(strip=True) for td in rows[1].find_all('td')]
+            if len(first_tds) >= 2:
+                if parse_investing_date(first_tds[0]):
+                    return table
+    return None
+
+def scrape_and_save_prices(compartment_id, link):
+    from scraping.scrape_engine import scrape_pension_fund_prices
+    def get_conn():
+        return get_db_connection()
+    try:
+        count = scrape_pension_fund_prices(compartment_id, link, get_conn)
+        print(f"Scraped and saved {count} prices for compartment {compartment_id}")
+        return count > 0
+    except Exception as e:
+        print(f"Exception in scrape_and_save_prices: {e}")
+        return False
+
+def update_pension_fund_prices_job():
+    print("Running scheduled pension fund prices update job...")
+    conn = get_db_connection()
+    comps = conn.execute("SELECT id, investing_link FROM pension_fund_compartments WHERE investing_link IS NOT NULL AND investing_link != ''").fetchall()
+    conn.close()
+    for comp in comps:
+        print(f"Updating prices for compartment {comp['id']} from {comp['investing_link']}...")
+        scrape_and_save_prices(comp['id'], comp['investing_link'])
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
 scheduler.add_job(func=send_daily_reminders, trigger="cron", hour=8, minute=0)
+scheduler.add_job(func=update_pension_fund_prices_job, trigger="cron", day=10, hour=2, minute=0)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
@@ -1930,31 +2077,35 @@ def preview_csv():
         return jsonify({"errore": _("No file selected")}), 400
 
     if file and file.filename.endswith('.csv'):
-        raw_content = file.stream.read()
         try:
-            content = raw_content.decode("utf-8-sig")
-        except UnicodeDecodeError:
-            content = raw_content.decode("latin1")
+            raw_content = file.stream.read()
+            try:
+                content = raw_content.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                content = raw_content.decode("latin1")
+                
+            lines = [line for line in content.splitlines() if line.strip()]
+            if not lines:
+                return jsonify({"errore": _("The uploaded file is empty.")}), 400
+                
+            header_line = lines[0]
+            delimiter = ';' if header_line.count(';') >= header_line.count(',') else ','
             
-        lines = [line for line in content.splitlines() if line.strip()]
-        if not lines:
-            return jsonify({"errore": _("The uploaded file is empty.")}), 400
+            stream = StringIO('\n'.join(lines), newline=None)
+            csv_reader = csv.reader(stream, delimiter=delimiter)
             
-        header_line = lines[0]
-        delimiter = ';' if header_line.count(';') >= header_line.count(',') else ','
-        
-        stream = StringIO('\n'.join(lines), newline=None)
-        csv_reader = csv.reader(stream, delimiter=delimiter)
-        
-        try:
-            headers = next(csv_reader)
-            sample_row = next(csv_reader, [])
-        except StopIteration:
-            return jsonify({"errore": _("CSV format error.")}), 400
-            
-        return jsonify({"headers": headers, "sample": sample_row, "delimiter": delimiter}), 200
+            try:
+                headers = next(csv_reader)
+                sample_row = next(csv_reader, [])
+            except StopIteration:
+                return jsonify({"errore": _("CSV format error.")}), 400
+                
+            return jsonify({"headers": headers, "sample": sample_row, "delimiter": delimiter}), 200
+        except Exception as e:
+            return jsonify({"errore": f"Errore durante l'analisi del CSV: {str(e)}"}), 400
 
     return jsonify({"errore": _("Invalid file format. Expected CSV.")}), 400
+
 
 @app.route('/api/import_custom_csv', methods=['POST'])
 def import_custom_csv():
@@ -4958,6 +5109,19 @@ def pension_fund_group_detail(group_id):
     conn.close()
     return jsonify(dict(row))
 
+@app.route('/api/scraped_funds', methods=['GET'])
+def get_scraped_funds():
+    if 'user_id' not in session:
+        return jsonify({"errore": "Non autenticato"}), 401
+    json_path = os.path.join(app.root_path, 'scraping', 'fondi_pensione.json')
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            return jsonify({"errore": str(e)}), 500
+    return jsonify([])
+
 @app.route('/api/pension_fund_groups/<int:group_id>/funds', methods=['GET', 'POST'])
 def pension_funds_route(group_id):
     if 'user_id' not in session:
@@ -4972,13 +5136,56 @@ def pension_funds_route(group_id):
         fid = f"pf-{int(time.time()*1000)}"
         conn.execute("INSERT INTO pension_funds (id, pension_fund_group_id, name, provider, fund_type, notes) VALUES (?,?,?,?,?,?)",
                      (fid, group_id, data.get('name',''), data.get('provider',''), data.get('fund_type','category'), data.get('notes','')))
+        # Create compartments
+        compartments_data = data.get('compartments', [])
+        if compartments_data:
+            for idx, c_info in enumerate(compartments_data):
+                cid = f"pfc-{int(time.time()*1000) + idx}"
+                c_name = c_info.get('name', 'Default')
+                c_link = c_info.get('investing_link', '').strip()
+                conn.execute("INSERT INTO pension_fund_compartments (id, fund_id, name, investing_link, start_date) VALUES (?, ?, ?, ?, NULL)",
+                             (cid, fid, c_name, c_link or None))
+                if c_link:
+                    threading.Thread(target=scrape_and_save_prices, args=(cid, c_link)).start()
+            conn.commit()
+            
+            row = conn.execute("SELECT * FROM pension_funds WHERE id=?", (fid,)).fetchone()
+            fund_dict = dict(row)
+            first_comp = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=?", (fid,)).fetchone()
+            fund_dict['investing_link'] = first_comp['investing_link'] if first_comp else None
+            fund_dict['compartments'] = [dict(c) for c in conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=?", (fid,)).fetchall()]
+            conn.close()
+            return jsonify(fund_dict), 201
+            
+        cid = f"pfc-{int(time.time()*1000)}"
+        investing_link = data.get('investing_link', '').strip()
+        c_name = data.get('compartment_name') or data.get('name', 'Default')
+        conn.execute("INSERT INTO pension_fund_compartments (id, fund_id, name, investing_link, start_date) VALUES (?, ?, ?, ?, NULL)",
+                     (cid, fid, c_name, investing_link or None))
         conn.commit()
+        
+        # Trigger scraping in a background thread so the user request doesn't hang
+        if investing_link:
+            threading.Thread(target=scrape_and_save_prices, args=(cid, investing_link)).start()
+            
         row = conn.execute("SELECT * FROM pension_funds WHERE id=?", (fid,)).fetchone()
+        fund_dict = dict(row)
+        fund_dict['investing_link'] = investing_link
+        fund_dict['compartments'] = [dict(conn.execute("SELECT * FROM pension_fund_compartments WHERE id=?", (cid,)).fetchone())]
         conn.close()
-        return jsonify(dict(row)), 201
+        return jsonify(fund_dict), 201
+        
     rows = conn.execute("SELECT * FROM pension_funds WHERE pension_fund_group_id=? ORDER BY name", (group_id,)).fetchall()
+    res = []
+    for r in rows:
+        fund_dict = dict(r)
+        comps = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=? ORDER BY start_date ASC", (r['id'],)).fetchall()
+        default_comp = next((c for c in comps if c['start_date'] is None), None)
+        fund_dict['investing_link'] = default_comp['investing_link'] if default_comp else None
+        fund_dict['compartments'] = [dict(c) for c in comps]
+        res.append(fund_dict)
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    return jsonify(res)
 
 @app.route('/api/pension_funds/<fund_id>', methods=['PUT', 'DELETE'])
 def pension_fund_detail(fund_id):
@@ -4997,10 +5204,32 @@ def pension_fund_detail(fund_id):
     data = request.json
     conn.execute("UPDATE pension_funds SET name=?, provider=?, fund_type=?, notes=? WHERE id=?",
                  (data.get('name',''), data.get('provider',''), data.get('fund_type','category'), data.get('notes',''), fund_id))
+    
+    # Update default compartment link
+    investing_link = data.get('investing_link', '').strip()
+    default_comp = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=? AND start_date IS NULL", (fund_id,)).fetchone()
+    if default_comp:
+        conn.execute("UPDATE pension_fund_compartments SET name=?, investing_link=? WHERE id=?", (data.get('name',''), investing_link or None, default_comp['id']))
+        # Trigger scraping if link changed or was added
+        if investing_link and investing_link != default_comp['investing_link']:
+            threading.Thread(target=scrape_and_save_prices, args=(default_comp['id'], investing_link)).start()
+    else:
+        # Create if missing
+        cid = f"pfc-{int(time.time()*1000)}"
+        conn.execute("INSERT INTO pension_fund_compartments (id, fund_id, name, investing_link, start_date) VALUES (?, ?, ?, ?, NULL)",
+                     (cid, fund_id, data.get('name', 'Default'), investing_link or None))
+        if investing_link:
+            threading.Thread(target=scrape_and_save_prices, args=(cid, investing_link)).start()
+            
     conn.commit()
     row = conn.execute("SELECT * FROM pension_funds WHERE id=?", (fund_id,)).fetchone()
+    fund_dict = dict(row)
+    comps = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=? ORDER BY start_date ASC", (fund_id,)).fetchall()
+    default_comp = next((c for c in comps if c['start_date'] is None), None)
+    fund_dict['investing_link'] = default_comp['investing_link'] if default_comp else None
+    fund_dict['compartments'] = [dict(c) for c in comps]
     conn.close()
-    return jsonify(dict(row))
+    return jsonify(fund_dict)
 
 @app.route('/api/pension_funds/<fund_id>/contributions', methods=['GET', 'POST'])
 def pension_contributions_route(fund_id):
@@ -5014,8 +5243,13 @@ def pension_contributions_route(fund_id):
         wc  = float(data.get('worker_contrib', 0))
         ec  = float(data.get('employer_contrib', 0))
         tv  = float(data.get('total_value', tfr + wc + ec))
-        conn.execute("INSERT INTO pension_contributions (id, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes) VALUES (?,?,?,?,?,?,?,?)",
-                     (cid, fund_id, data.get('month',''), tfr, wc, ec, tv, data.get('notes','')))
+        nq  = float(data.get('numero_quote', 0))
+        vq  = float(data.get('valore_quota', 0))
+        spese = float(data.get('spese', 0))
+        conn.execute("""INSERT INTO pension_contributions 
+                       (id, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes, numero_quote, valore_quota, spese) 
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                     (cid, fund_id, data.get('month',''), tfr, wc, ec, tv, data.get('notes',''), nq, vq, spese))
         conn.commit()
         row = conn.execute("SELECT * FROM pension_contributions WHERE id=?", (cid,)).fetchone()
         conn.close()
@@ -5039,12 +5273,331 @@ def pension_contribution_detail(contrib_id):
     wc  = float(data.get('worker_contrib', 0))
     ec  = float(data.get('employer_contrib', 0))
     tv  = float(data.get('total_value', tfr + wc + ec))
-    conn.execute("UPDATE pension_contributions SET month=?, tfr=?, worker_contrib=?, employer_contrib=?, total_value=?, notes=? WHERE id=?",
-                 (data.get('month',''), tfr, wc, ec, tv, data.get('notes',''), contrib_id))
+    nq  = float(data.get('numero_quote', 0))
+    vq  = float(data.get('valore_quota', 0))
+    spese = float(data.get('spese', 0))
+    conn.execute("""UPDATE pension_contributions 
+                   SET month=?, tfr=?, worker_contrib=?, employer_contrib=?, total_value=?, notes=?, numero_quote=?, valore_quota=?, spese=? 
+                   WHERE id=?""",
+                 (data.get('month',''), tfr, wc, ec, tv, data.get('notes',''), nq, vq, spese, contrib_id))
     conn.commit()
     row = conn.execute("SELECT * FROM pension_contributions WHERE id=?", (contrib_id,)).fetchone()
     conn.close()
     return jsonify(dict(row))
+
+@app.route('/api/pension_funds/<fund_id>/compartments', methods=['GET', 'POST'])
+def pension_fund_compartments_route(fund_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": "Non autenticato"}), 401
+    conn = get_db_connection()
+    f = conn.execute("SELECT pf.* FROM pension_funds pf JOIN pension_fund_groups pg ON pf.pension_fund_group_id=pg.id WHERE pf.id=? AND pg.user_id=?", (fund_id, session['user_id'])).fetchone()
+    if not f:
+        conn.close()
+        return jsonify({"errore": "Fondo non trovato"}), 404
+    
+    if request.method == 'POST':
+        data = request.json
+        cid = f"pfc-{int(time.time()*1000)}"
+        name = data.get('name', '').strip()
+        link = data.get('investing_link', '').strip()
+        start_date = data.get('start_date', '').strip() or None
+        
+        conn.execute("INSERT INTO pension_fund_compartments (id, fund_id, name, investing_link, start_date) VALUES (?, ?, ?, ?, ?)",
+                     (cid, fund_id, name, link, start_date))
+        conn.commit()
+        if link:
+            threading.Thread(target=scrape_and_save_prices, args=(cid, link)).start()
+        row = conn.execute("SELECT * FROM pension_fund_compartments WHERE id=?", (cid,)).fetchone()
+        conn.close()
+        return jsonify(dict(row)), 201
+
+    rows = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=? ORDER BY start_date ASC", (fund_id,)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/pension_compartments/<comp_id>', methods=['PUT', 'DELETE'])
+def pension_compartment_detail(comp_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": "Non autenticato"}), 401
+    conn = get_db_connection()
+    # verify ownership
+    comp = conn.execute("""
+        SELECT pc.* FROM pension_fund_compartments pc
+        JOIN pension_funds pf ON pc.fund_id=pf.id
+        JOIN pension_fund_groups pg ON pf.pension_fund_group_id=pg.id
+        WHERE pc.id=? AND pg.user_id=?
+    """, (comp_id, session['user_id'])).fetchone()
+    if not comp:
+        conn.close()
+        return jsonify({"errore": "Comparto non trovato"}), 404
+    
+    if request.method == 'DELETE':
+        if comp['start_date'] is None:
+            conn.close()
+            return jsonify({"errore": "Non puoi eliminare il comparto principale"}), 400
+        conn.execute("DELETE FROM pension_fund_compartments WHERE id=?", (comp_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"ok": True})
+        
+    data = request.json
+    name = data.get('name', '').strip()
+    link = data.get('investing_link', '').strip()
+    
+    if comp['start_date'] is None:
+        conn.execute("UPDATE pension_fund_compartments SET name=?, investing_link=? WHERE id=?",
+                     (name, link, comp_id))
+    else:
+        start_date = data.get('start_date', '').strip() or None
+        conn.execute("UPDATE pension_fund_compartments SET name=?, investing_link=?, start_date=? WHERE id=?",
+                     (name, link, start_date, comp_id))
+                     
+    conn.commit()
+    
+    # Scrape if link changed
+    if link and link != comp['investing_link']:
+        threading.Thread(target=scrape_and_save_prices, args=(comp_id, link)).start()
+        
+    row = conn.execute("SELECT * FROM pension_fund_compartments WHERE id=?", (comp_id,)).fetchone()
+    conn.close()
+    return jsonify(dict(row))
+
+
+@app.route('/api/pension_funds/<fund_id>/valuation_data')
+def pension_fund_valuation_data(fund_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": "Non autenticato"}), 401
+    
+    conn = get_db_connection()
+    # verify ownership
+    f = conn.execute("SELECT pf.* FROM pension_funds pf JOIN pension_fund_groups pg ON pf.pension_fund_group_id=pg.id WHERE pf.id=? AND pg.user_id=?", (fund_id, session['user_id'])).fetchone()
+    if not f:
+        conn.close()
+        return jsonify({"errore": "Fondo non trovato"}), 404
+        
+    contributions = conn.execute("SELECT * FROM pension_contributions WHERE fund_id=? ORDER BY month ASC", (fund_id,)).fetchall()
+    compartments = conn.execute("SELECT * FROM pension_fund_compartments WHERE fund_id=? ORDER BY start_date ASC", (fund_id,)).fetchall()
+    
+    # fetch all prices for these compartments
+    prices_raw = conn.execute("""
+        SELECT p.* FROM pension_fund_prices p
+        JOIN pension_fund_compartments c ON p.compartment_id=c.id
+        WHERE c.fund_id=?
+        ORDER BY p.date ASC
+    """, (fund_id,)).fetchall()
+    conn.close()
+    
+    # Organize prices by compartment_id
+    prices_by_comp = {}
+    for c in compartments:
+        prices_by_comp[c['id']] = []
+    for p in prices_raw:
+        if p['compartment_id'] in prices_by_comp:
+            prices_by_comp[p['compartment_id']].append((p['date'], p['price']))
+            
+    # helper to find active compartment at month (format: YYYY-MM)
+    def get_active_compartment(month_str):
+        active = None
+        for c in compartments:
+            if c['start_date'] is None or c['start_date'] <= month_str:
+                active = c
+        return active
+
+    # helper to find price of a compartment in a given month (YYYY-MM)
+    def get_price_for_month(comp_id, month_str):
+        comp_prices = prices_by_comp.get(comp_id, [])
+        if not comp_prices:
+            return 0.0
+        # prices in this month
+        month_prices = [p for p in comp_prices if p[0].startswith(month_str)]
+        if month_prices:
+            return month_prices[-1][1] # latest in month
+        # latest before this month
+        prev_prices = [p for p in comp_prices if p[0] < month_str]
+        if prev_prices:
+            return prev_prices[-1][1]
+        # fallback to earliest after this month
+        next_prices = [p for p in comp_prices if p[0] > month_str]
+        if next_prices:
+            return next_prices[0][1]
+        return 0.0
+
+    # If no contributions, return empty
+    if not contributions:
+        return jsonify({
+            "current_val": 0.0,
+            "current_price_details": [],
+            "trend_months": [],
+            "trend_valuation": [],
+            "trend_invested": []
+        })
+        
+    start_month = contributions[0]['month']
+    import datetime
+    now_month = datetime.datetime.now().strftime("%Y-%m")
+    
+    if len(start_month) != 7 or '-' not in start_month:
+        start_month = "2020-01"
+        
+    months = []
+    curr_y, curr_m = map(int, start_month.split('-'))
+    end_y, end_m = map(int, now_month.split('-'))
+    loop_guard = 0
+    while (curr_y < end_y or (curr_y == end_y and curr_m <= end_m)) and loop_guard < 1200:
+        months.append(f"{curr_y}-{curr_m:02d}")
+        curr_m += 1
+        if curr_m > 12:
+            curr_m = 1
+            curr_y += 1
+        loop_guard += 1
+
+    # Track accumulated quotes per compartment
+    accumulated_quotes = {}
+    for c in compartments:
+        accumulated_quotes[c['id']] = 0.0
+        
+    trend_valuation = []
+    trend_invested = []
+    cumulative_invested = 0.0
+    
+    contrib_by_month = {}
+    for cb in contributions:
+        if cb['month'] not in contrib_by_month:
+            contrib_by_month[cb['month']] = []
+        contrib_by_month[cb['month']].append(cb)
+
+    for m in months:
+        # Check if the user has manually registered the switch/conversion in this month
+        # via a negative quote transaction (liquidation/sale)
+        has_manual_switch = False
+        if m in contrib_by_month:
+            for cb in contrib_by_month[m]:
+                if cb['numero_quote'] < 0:
+                    has_manual_switch = True
+                    break
+
+        # 1. Handle Compartment Switch (Conversion) - only if not manually registered
+        if not has_manual_switch:
+            for c in compartments:
+                if c['start_date'] == m:
+                    P_new = get_price_for_month(c['id'], m)
+                    if P_new > 0:
+                        for c_old_id, quotes in list(accumulated_quotes.items()):
+                            if c_old_id != c['id'] and quotes > 0:
+                                P_old = get_price_for_month(c_old_id, m)
+                                if P_old > 0:
+                                    converted = quotes * P_old / P_new
+                                    accumulated_quotes[c['id']] += converted
+                                    accumulated_quotes[c_old_id] = 0.0
+
+        # 2. Process Contributions in month m (if any)
+        if m in contrib_by_month:
+            for cb in contrib_by_month[m]:
+                gross_contrib = cb['tfr'] + cb['worker_contrib'] + cb['employer_contrib']
+                net_contrib = gross_contrib - cb['spese']
+                cumulative_invested += net_contrib
+                
+                c_active = get_active_compartment(m)
+                if c_active:
+                    quotes_bought = cb['numero_quote']
+                    
+                    if quotes_bought < 0:
+                        # Manual switch liquidation: associate with the compartment active BEFORE this month
+                        y_p, m_p = map(int, m.split('-'))
+                        m_p -= 1
+                        if m_p == 0:
+                            m_p = 12
+                            y_p -= 1
+                        prev_month_str = f"{y_p}-{m_p:02d}"
+                        c_prev = get_active_compartment(prev_month_str)
+                        comp_id = c_prev['id'] if c_prev else c_active['id']
+                    else:
+                        comp_id = c_active['id']
+                        
+                    if quotes_bought == 0 and net_contrib > 0:
+                        price_m = get_price_for_month(comp_id, m)
+                        if price_m > 0:
+                            quotes_bought = net_contrib / price_m
+                    accumulated_quotes[comp_id] += quotes_bought
+
+        # 3. Calculate Valuation in month m
+        val_m = 0.0
+        for comp_id, quotes in accumulated_quotes.items():
+            if quotes > 0:
+                price_m = get_price_for_month(comp_id, m)
+                val_m += quotes * price_m
+                
+        trend_valuation.append(round(val_m, 2))
+        trend_invested.append(round(cumulative_invested, 2))
+
+    current_details = []
+    latest_val = 0.0
+    conn = get_db_connection()
+    for c in compartments:
+        quotes = accumulated_quotes.get(c['id'], 0.0)
+        latest_price_row = conn.execute("SELECT price, date FROM pension_fund_prices WHERE compartment_id=? ORDER BY date DESC LIMIT 1", (c['id'],)).fetchone()
+        
+        price = latest_price_row['price'] if latest_price_row else 0.0
+        date_str = latest_price_row['date'] if latest_price_row else None
+        
+        val = quotes * price
+        latest_val += val
+        
+        current_details.append({
+            "id": c['id'],
+            "name": c['name'],
+            "quotes": round(quotes, 4),
+            "latest_price": price,
+            "latest_date": date_str,
+            "value": round(val, 2),
+            "investing_link": c['investing_link'],
+            "start_date": c['start_date']
+        })
+    conn.close()
+
+    return jsonify({
+        "current_val": round(latest_val, 2),
+        "current_price_details": current_details,
+        "trend_months": months,
+        "trend_valuation": trend_valuation,
+        "trend_invested": trend_invested
+    })
+
+@app.route('/api/pension_funds/<fund_id>/update_historical_data', methods=['POST'])
+def force_update_pension_fund_prices(fund_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": "Non autenticato"}), 401
+    conn = get_db_connection()
+    f = conn.execute("SELECT pf.* FROM pension_funds pf JOIN pension_fund_groups pg ON pf.pension_fund_group_id=pg.id WHERE pf.id=? AND pg.user_id=?", (fund_id, session['user_id'])).fetchone()
+    if not f:
+        conn.close()
+        return jsonify({"errore": "Fondo non trovato"}), 404
+        
+    comps = conn.execute("SELECT id, name, investing_link FROM pension_fund_compartments WHERE fund_id=?", (fund_id,)).fetchall()
+    
+    updated_comps = 0
+    errors = []
+    for comp in comps:
+        if comp['investing_link']:
+            try:
+                success = scrape_and_save_prices(comp['id'], comp['investing_link'])
+                if success:
+                    updated_comps += 1
+                else:
+                    errors.append(f"Impossibile scaricare i dati per {comp['name']}. Verifica il link.")
+            except Exception as e:
+                errors.append(f"Errore durante l'aggiornamento di {comp['name']}: {str(e)}")
+    
+    conn.close()
+    if errors and updated_comps == 0:
+        return jsonify({"ok": False, "errore": "; ".join(errors)}), 400
+        
+    return jsonify({
+        "ok": True, 
+        "updated_compartments": updated_comps,
+        "warnings": errors if errors else None
+    })
 
 @app.route('/api/pension_funds/parse_pdf', methods=['POST'])
 def parse_pension_pdf():
@@ -5275,17 +5828,30 @@ def import_custom_salaries_csv():
         skipped_duplicates = 0
         
         for row in csv_reader:
-            month = (row.get(mapping.get('month')) or '').strip()
+            month_val = (row.get(mapping.get('month')) or '').strip()
             if person_name_override:
                 person_name = person_name_override.strip()
             else:
                 person_name = (row.get(mapping.get('person_name')) or '').strip()
-            if not month or not person_name:
+            if not month_val or not person_name:
+                continue
+                
+            # Normalize to YYYY-MM
+            month = ""
+            date_str_clean = month_val.replace('T', ' ').split(' ')[0]
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y', '%Y-%m'):
+                try:
+                    month = datetime.strptime(date_str_clean, fmt).strftime('%Y-%m')
+                    break
+                except ValueError:
+                    pass
+                    
+            if not month:
                 continue
                 
             def parse_float(val):
                 if not val: return 0.0
-                val = val.replace('€', '').replace('$', '').strip()
+                val = str(val).replace('€', '').replace('$', '').strip()
                 if '.' in val and ',' in val:
                     val = val.replace('.', '').replace(',', '.')
                 elif ',' in val:
@@ -5349,19 +5915,49 @@ def import_custom_pension_csv():
     conn = get_db_connection()
     try:
         stream = StringIO('\n'.join(lines), newline=None)
-        csv_reader = csv.DictReader(stream, delimiter=delimiter)
+        raw_reader = csv.reader(stream, delimiter=delimiter)
+        try:
+            headers = next(raw_reader)
+            sample_row = next(raw_reader, [])
+        except StopIteration:
+            return jsonify({"errore": _("CSV format error.")}), 400
+            
+        if len(headers) == 16 and len(sample_row) == 17:
+            if headers[3] == 'Trimestre Comp.' and headers[4] == 'Cod. Fisc. Azienda':
+                headers.insert(3, 'Anno Comp.')
+                
+        rows_to_process = []
+        if sample_row:
+            rows_to_process.append(dict(zip(headers, sample_row)))
+        for r in raw_reader:
+            if r:
+                rows_to_process.append(dict(zip(headers, r)))
+                
         import random
         imported = 0
         updated = 0
         
-        for row in csv_reader:
-            month = (row.get(mapping.get('month')) or '').strip()
+        for row in rows_to_process:
+            month_val = (row.get(mapping.get('month')) or '').strip()
+            if not month_val:
+                continue
+                
+            # Normalize to YYYY-MM
+            month = ""
+            date_str_clean = month_val.replace('T', ' ').split(' ')[0]
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y', '%Y-%m'):
+                try:
+                    month = datetime.strptime(date_str_clean, fmt).strftime('%Y-%m')
+                    break
+                except ValueError:
+                    pass
+                    
             if not month:
                 continue
                 
             def parse_float(val):
                 if not val: return 0.0
-                val = val.replace('€', '').replace('$', '').strip()
+                val = str(val).replace('€', '').replace('$', '').strip()
                 if '.' in val and ',' in val:
                     val = val.replace('.', '').replace(',', '.')
                 elif ',' in val:
@@ -5377,19 +5973,31 @@ def import_custom_pension_csv():
                 total_value = tfr + worker_contrib + employer_contrib
             notes = (row.get(mapping.get('notes')) or '').strip()
             
-            existing = conn.execute("SELECT id FROM pension_contributions WHERE fund_id=? AND month=?", (fund_id, month)).fetchone()
-            if existing:
-                conn.execute("UPDATE pension_contributions SET tfr=?, worker_contrib=?, employer_contrib=?, total_value=?, notes=? WHERE id=?",
-                             (tfr, worker_contrib, employer_contrib, total_value, notes, existing['id']))
-                updated += 1
+            numero_quote = parse_float(row.get(mapping.get('numero_quote')))
+            valore_quota = parse_float(row.get(mapping.get('valore_quota')))
+            spese = parse_float(row.get(mapping.get('spese')))
+            
+            existing_duplicate = conn.execute(
+                """SELECT id FROM pension_contributions 
+                   WHERE fund_id=? AND month=? AND abs(tfr - ?)<0.01 AND abs(worker_contrib - ?)<0.01 
+                   AND abs(employer_contrib - ?)<0.01 AND abs(total_value - ?)<0.01""",
+                (fund_id, month, tfr, worker_contrib, employer_contrib, total_value)
+            ).fetchone()
+            
+            if existing_duplicate:
+                updated += 1  # count as skipped/existing duplicate
             else:
                 cid = f"pc-{int(time.time()*1000)}-{random.randint(1000, 9999)}"
-                conn.execute("INSERT INTO pension_contributions (id, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes) VALUES (?,?,?,?,?,?,?,?)",
-                             (cid, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes))
+                conn.execute(
+                    """INSERT INTO pension_contributions 
+                       (id, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes, numero_quote, valore_quota, spese) 
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                    (cid, fund_id, month, tfr, worker_contrib, employer_contrib, total_value, notes, numero_quote, valore_quota, spese)
+                )
                 imported += 1
                 
         conn.commit()
-        return jsonify({"messaggio": f"Importazione completata: {imported} contributi importati, {updated} aggiornati."})
+        return jsonify({"messaggio": f"Importazione completata: {imported} contributi importati, {updated} duplicati ignorati."})
     except Exception as e:
         print(f"Error in import_custom_pension_csv: {e}")
         return jsonify({"errore": f"Errore durante l'importazione: {str(e)}"}), 500
