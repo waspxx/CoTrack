@@ -3855,6 +3855,10 @@ def import_wallet_csv():
                     
                     if is_transfer:
                         t_type = 'Transfer'
+                        if any(kw in rt_lower for kw in ['expense', 'spesa', 'uscita', 'preleva', 'prelievo', 'debit', 'outflow']):
+                            if amount > 0: amount = -amount
+                        elif any(kw in rt_lower for kw in ['income', 'entrata', 'ricarica', 'deposito', 'versamento', 'credit', 'inflow']):
+                            if amount < 0: amount = -amount
                     else:
                         if 'expense' in rt_lower or 'spesa' in rt_lower or 'uscita' in rt_lower:
                             t_type = 'Expense'
@@ -3986,7 +3990,12 @@ def import_custom_wallet_csv():
             
             is_transfer = any(kw in rt_lower or kw in cat_lower for kw in ['transfer', 'trasferiment', 'trasferisci', 'preleva', 'giroconto'])
             
-            if is_transfer: t_type = 'Transfer'
+            if is_transfer:
+                t_type = 'Transfer'
+                if any(kw in rt_lower for kw in ['expense', 'spesa', 'uscita', 'preleva', 'prelievo', 'debit', 'outflow']):
+                    if amount > 0: amount = -amount
+                elif any(kw in rt_lower for kw in ['income', 'entrata', 'ricarica', 'deposito', 'versamento', 'credit', 'inflow']):
+                    if amount < 0: amount = -amount
             else:
                 if 'expense' in rt_lower or 'spesa' in rt_lower or 'uscita' in rt_lower:
                     t_type = 'Expense'
