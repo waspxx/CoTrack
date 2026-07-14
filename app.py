@@ -824,7 +824,7 @@ def generate_snapshot_for_portfolio(portfolio_id):
         fetch_ticker = isin_to_ticker[isin]
         
         prezzo_reale = None
-        if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', fetch_ticker) and fetch_ticker.startswith('IT'):
+        if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', fetch_ticker):
              data_btp = get_tv_hist_cached(fetch_ticker)
              if data_btp is not None and not data_btp.empty and 'close' in data_btp.columns:
                  prezzo_reale = float(data_btp['close'].iloc[-1])
@@ -912,7 +912,7 @@ def get_portfolio_snapshot_at_date(portfolio_id, target_date=None):
             if row:
                 prezzo_reale = row['price']
         else:
-            if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', fetch_ticker) and fetch_ticker.startswith('IT'):
+            if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', fetch_ticker):
                  data_btp = get_tv_hist_cached(fetch_ticker)
                  if data_btp is not None and not data_btp.empty and 'close' in data_btp.columns:
                      prezzo_reale = float(data_btp['close'].iloc[-1])
@@ -3278,9 +3278,12 @@ def ottieni_prezzo(ticker):
     ticker = ticker.strip().upper()
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    # Controllo ISIN per BTP
+    # Controllo ISIN per BTP ed altre obbligazioni
     if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker):
-        if ticker.startswith('IT'):
+        if not ticker.startswith('IT'):
+            ticker = resolve_ticker_from_isin(ticker)
+            
+        if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker):
             try:
                 # Recupera i dati storici completi dalla cache (o li scarica se non presenti/scaduti)
                 data_btp = get_tv_hist_cached(ticker)
@@ -3290,8 +3293,6 @@ def ottieni_prezzo(ticker):
                     return jsonify({"prezzo": float(prezzo), "data": data_ultima})
             except Exception as e:
                 print(f"Errore tvdatafeed (live) per {ticker}: {e}")
-        else:
-            ticker = resolve_ticker_from_isin(ticker)
             
     # Fallback su Yahoo Finance
     try:
@@ -3347,7 +3348,6 @@ def historical_performance():
         fetch_ticker = isin_to_fetch_ticker_map.get(isin, isin)
         
         is_bond = (
-            isin.startswith('IT') and 
             re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', isin) and
             isin in obbligazioni_singole_isin
         )
