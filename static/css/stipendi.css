@@ -438,3 +438,5 @@
     #tab-stipendi .main-content { padding: 16px; }
     #tab-stipendi .form-row { grid-template-columns: 1fr; }
 }
+
+#tab-stipendi .hidden { display: none !important; }

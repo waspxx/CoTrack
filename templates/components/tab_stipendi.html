@@ -33,6 +33,14 @@
                 </div>
             </div>
 
+            <!-- Filtro Contributo Persone Gruppo -->
+            <div id="stip-group-members-filter" class="hidden" style="margin-top: 16px; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                <label class="nav-label" style="padding-left: 4px;">{{ _('Contributo Persone') }}</label>
+                <div id="stip-group-members-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 0 8px;">
+                    <!-- Popolato dinamicamente da JS -->
+                </div>
+            </div>
+
             <!-- Filtro Periodo -->
             <div class="period-filter-container" style="margin-top: 16px; width: 100%;">
                 <label class="nav-label" for="stip-period-filter-select">{{ _('Periodo') }}</label>
@@ -220,6 +228,12 @@
                             <canvas id="chart-stip-lavoro-line"></canvas>
                         </div>
                     </div>
+                    <div class="card report-card" style="grid-column: 1 / -1;">
+                        <h3>{{ _('Andamento Annuale (Lordo, Netto, Lordo Lavoro, Netto Lavoro)') }}</h3>
+                        <div class="chart-container" style="height:280px;">
+                            <canvas id="chart-stip-annuale"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card" style="padding:20px;">
@@ -257,6 +271,10 @@
                             <h3>{{ _('Record Payslip') }}</h3>
                             <form id="stip-salary-form" onsubmit="window.handleSalarySubmit(event)" style="margin-top:15px;display:flex;flex-direction:column;gap:14px;">
                                 <input type="hidden" id="stip-edit-id" value="">
+                                <div class="form-group" id="stip-form-person-group" style="display: none;">
+                                    <label for="stip-form-person">{{ _('Person *') }}</label>
+                                    <select id="stip-form-person"></select>
+                                </div>
                                 <div class="form-group">
                                     <label for="stip-month">{{ _('Month *') }}</label>
                                     <input type="month" id="stip-month" required>

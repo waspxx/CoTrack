@@ -42,6 +42,7 @@ async function handleReload() {
     if (gaugeFlussoObj) { gaugeFlussoObj.destroy(); gaugeFlussoObj = null; }
     if (gaugeSpeseObj) { gaugeSpeseObj.destroy(); gaugeSpeseObj = null; }
     if (trendSaldoObj) { trendSaldoObj.destroy(); trendSaldoObj = null; }
+    if (graficoRisparmioPercentualeObj) { graficoRisparmioPercentualeObj.destroy(); graficoRisparmioPercentualeObj = null; }
 
     // Mostra i messaggi di caricamento in modo più visibile
     document.getElementById('graficoAndamento').style.display = 'none';
@@ -2440,6 +2441,7 @@ function formatNumShort(num) {
 // --- WALLET LOGIC ---
 let graficoWalletMensileObj = null;
 let graficoWalletCategorieObj = null;
+let graficoRisparmioPercentualeObj = null;
 let transazioniWalletGlobal = [];
 let contiWalletGlobal = [];
 let activeContiWallet = [];
@@ -3195,6 +3197,123 @@ function aggiornaDashboardWallet() {
     });
 
     document.getElementById('trend-saldo-kpi').innerText = formatEuro(totaleSaldoFinale);
+
+    // ── CALCOLO MEDIE E RISPARMIO ULTIMI 12 MESI ──────────────────────────────
+    const last12Months = [];
+    const today = new Date();
+    for (let i = 11; i >= 0; i--) {
+        const temp = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const yyyy = temp.getFullYear();
+        const mm = String(temp.getMonth() + 1).padStart(2, '0');
+        last12Months.push(`${yyyy}-${mm}`);
+    }
+
+    const l12Data = {};
+    last12Months.forEach(m => {
+        l12Data[m] = { income: 0, expense: 0 };
+    });
+
+    transazioni.forEach(t => {
+        let conto = t.account || "Sconosciuto";
+        if (activeContiWallet.length > 0 && !activeContiWallet.includes(conto)) return;
+
+        let dataStr = t.data_operazione || t.date;
+        if (!dataStr) return;
+        let mese = dataStr.substring(0, 7);
+        
+        if (l12Data[mese] !== undefined) {
+            let importo = parseFloat(t.amount) || 0;
+            let isTransfer = t.type === 'Transfer' ||
+                (t.type && t.type.toLowerCase().match(/(transfer|trasferiment|trasferisci|preleva|giroconto)/)) ||
+                (t.category && t.category.toLowerCase().match(/(transfer|trasferiment|trasferisci|preleva|giroconto)/));
+
+            if (!isTransfer) {
+                if (t.type === 'Income') {
+                    l12Data[mese].income += importo;
+                } else if (t.type === 'Expense') {
+                    l12Data[mese].expense += Math.abs(importo);
+                }
+            }
+        }
+    });
+
+    let l12TotalIncome = 0;
+    let l12TotalExpense = 0;
+    let l12SavingsPct = [];
+
+    last12Months.forEach(m => {
+        const inc = l12Data[m].income;
+        const exp = l12Data[m].expense;
+        const sav = inc - exp;
+        l12TotalIncome += inc;
+        l12TotalExpense += exp;
+        
+        const pct = inc > 0 ? (sav / inc) * 100 : (sav < 0 ? -100 : 0);
+        l12SavingsPct.push(pct);
+    });
+
+    const l12AvgIncome = l12TotalIncome / 12;
+    const l12AvgExpense = l12TotalExpense / 12;
+    const l12AvgSavings = (l12TotalIncome - l12TotalExpense) / 12;
+
+    const avgEntrateEl = document.getElementById('wallet-avg-entrate');
+    const avgUsciteEl = document.getElementById('wallet-avg-uscite');
+    const avgRisparmioEl = document.getElementById('wallet-avg-risparmio');
+    const savingsPctKpiEl = document.getElementById('risparmio-pct-kpi');
+
+    if (avgEntrateEl) avgEntrateEl.innerText = formatEuro(l12AvgIncome);
+    if (avgUsciteEl) avgUsciteEl.innerText = formatEuro(l12AvgExpense);
+    if (avgRisparmioEl) avgRisparmioEl.innerText = formatEuro(l12AvgSavings);
+    
+    const overall12mPct = l12TotalIncome > 0 ? ((l12TotalIncome - l12TotalExpense) / l12TotalIncome) * 100 : 0;
+    if (savingsPctKpiEl) savingsPctKpiEl.innerText = overall12mPct.toFixed(1) + '%';
+
+    const ctxRisparmio = document.getElementById('graficoRisparmioPercentuale');
+    if (ctxRisparmio) {
+        if (graficoRisparmioPercentualeObj !== null) graficoRisparmioPercentualeObj.destroy();
+        graficoRisparmioPercentualeObj = new Chart(ctxRisparmio.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: last12Months,
+                datasets: [{
+                    label: 'Risparmio %',
+                    data: l12SavingsPct,
+                    borderColor: '#20c997',
+                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#20c997'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'Risparmio: ' + ctx.raw.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#64748b', font: { size: 10 } } },
+                    y: {
+                        display: true,
+                        ticks: {
+                            callback: function(v) { return v.toFixed(0) + '%'; },
+                            color: '#64748b',
+                            font: { size: 10 }
+                        },
+                        grid: { borderDash: [5, 5], color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function openPdfMappingModal(text) {

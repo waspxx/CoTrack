@@ -143,6 +143,35 @@
                     <div class="progress-bar-bg"><div class="progress-bar-fill" style="background: #dc3545; width: 0%;" id="bar-uscite"></div></div>
                 </div>
             </div>
+
+            <!-- Medie Ultimi 12 Mesi -->
+            <div class="widget-box">
+                <div class="widget-header">{{ _('Medie Ultimi 12 Mesi') }} <div class="widget-header-actions"><span title="Seleziona layout">⊞</span> <span title="Rimuovi">🗑️</span></div></div>
+                <div style="display: flex; flex-direction: column; justify-content: space-around; flex: 1; margin-top: 5px; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px;">
+                        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Media Entrate') }}</span>
+                        <span id="wallet-avg-entrate" style="font-size: 1.1em; font-weight: bold; color: #28a745;">€0,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px;">
+                        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Media Uscite') }}</span>
+                        <span id="wallet-avg-uscite" style="font-size: 1.1em; font-weight: bold; color: #dc3545;">€0,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px;">
+                        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Media Risparmio') }}</span>
+                        <span id="wallet-avg-risparmio" style="font-size: 1.1em; font-weight: bold; color: #0d6efd;">€0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Andamento Risparmio Percentuale -->
+            <div class="widget-box">
+                <div class="widget-header">{{ _('Andamento Risparmio') }} % <div class="widget-header-actions"><span title="Seleziona layout">⊞</span> <span title="Rimuovi">🗑️</span></div></div>
+                <div style="margin-bottom: 5px;">
+                    <div style="font-size: 1.4em; font-weight: bold;" id="risparmio-pct-kpi">0%</div>
+                    <div style="color: #6c757d; font-size: 0.8em;">{{ _('Risparmio medio degli ultimi 12 mesi') }}</div>
+                </div>
+                <div style="height: 110px; position: relative; width: 100%;"><canvas id="graficoRisparmioPercentuale"></canvas></div>
+            </div>
         </div>
 
         <div class="analisi-avanzata-container">

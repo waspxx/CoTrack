@@ -17,6 +17,7 @@ let chartStipDonut = null;
 let chartStipLine  = null;
 let chartStipLavoroDonut = null;
 let chartStipLavoroLine  = null;
+let chartStipAnnuale = null;
 
 // ── THEME SYNC ────────────────────────────────────────────────────────────────
 function syncStipTheme() {
@@ -125,6 +126,19 @@ window.caricaDatiStipendi = async function() {
     stipState.persons = [...new Set([...names, ...storedPersons])];
 
     populatePersonSelector();
+
+    // Toggle group members filter & form person select
+    populateGroupMembersFilter();
+    const formPersonGroup = document.getElementById('stip-form-person-group');
+    if (formPersonGroup) {
+        if (stipState.activePersonName === '__GROUP__') {
+            formPersonGroup.style.display = 'flex';
+            populateFormPersonSelect();
+        } else {
+            formPersonGroup.style.display = 'none';
+        }
+    }
+
     renderStipDashboard();
     renderSalaryHistoryTable();
     renderPersonsGrid();
@@ -214,27 +228,110 @@ function populatePersonSelector() {
     const sel = document.getElementById('active-person-select');
     if (!sel) return;
     sel.innerHTML = '';
+    
+    // Add the Group option
+    const optGroup = document.createElement('option');
+    optGroup.value = '__GROUP__';
+    optGroup.textContent = '👥 ' + (window.Translations.allGroup || 'Tutto il gruppo');
+    sel.appendChild(optGroup);
+
     stipState.persons.forEach(name => {
         const opt = document.createElement('option');
         opt.value = name; opt.textContent = name;
         sel.appendChild(opt);
     });
-    if (stipState.persons.length > 0) {
-        const saved = localStorage.getItem(`activeStipPerson_${stipState.activeGroupId}`);
-        if (saved && stipState.persons.includes(saved)) {
-            stipState.activePersonName = saved;
-        } else {
-            stipState.activePersonName = stipState.persons[0];
-        }
-        sel.value = stipState.activePersonName;
+    
+    const saved = localStorage.getItem(`activeStipPerson_${stipState.activeGroupId}`);
+    if (saved && (saved === '__GROUP__' || stipState.persons.includes(saved))) {
+        stipState.activePersonName = saved;
     } else {
-        stipState.activePersonName = null;
+        stipState.activePersonName = '__GROUP__';
     }
+    sel.value = stipState.activePersonName;
 }
 
 window.handlePersonChange = function(e) {
     stipState.activePersonName = e.target.value;
     localStorage.setItem(`activeStipPerson_${stipState.activeGroupId}`, stipState.activePersonName);
+    
+    // Toggle group members filter
+    populateGroupMembersFilter();
+    
+    // Toggle person select in form
+    const formPersonGroup = document.getElementById('stip-form-person-group');
+    if (formPersonGroup) {
+        if (stipState.activePersonName === '__GROUP__') {
+            formPersonGroup.style.display = 'flex';
+            populateFormPersonSelect();
+        } else {
+            formPersonGroup.style.display = 'none';
+        }
+    }
+    
+    renderStipDashboard();
+    renderSalaryHistoryTable();
+};
+
+function populateFormPersonSelect() {
+    const sel = document.getElementById('stip-form-person');
+    if (!sel) return;
+    sel.innerHTML = '';
+    stipState.persons.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        sel.appendChild(opt);
+    });
+}
+
+function getSelectedGroupPersons() {
+    const storageKey = `stip_group_selected_persons_${stipState.activeGroupId}`;
+    try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length > 0) {
+                return arr.filter(p => stipState.persons.includes(p));
+            }
+        }
+    } catch(e) {}
+    return [...stipState.persons];
+}
+
+function populateGroupMembersFilter() {
+    const container = document.getElementById('stip-group-members-filter');
+    const listContainer = document.getElementById('stip-group-members-list');
+    if (!container || !listContainer) return;
+    
+    if (stipState.activePersonName === '__GROUP__') {
+        container.classList.remove('hidden');
+        
+        const selected = getSelectedGroupPersons();
+        
+        listContainer.innerHTML = stipState.persons.map(name => {
+            const isChecked = selected.includes(name) ? 'checked' : '';
+            return `
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; cursor: pointer; color: var(--text-secondary); font-weight: 500; user-select: none;">
+                    <input type="checkbox" class="stip-group-person-cb" value="${name}" ${isChecked} onchange="window.handleGroupPersonToggle()" style="accent-color: var(--primary-color); width: 15px; height: 15px; cursor: pointer;">
+                    <span>${name}</span>
+                </label>
+            `;
+        }).join('');
+    } else {
+        container.classList.add('hidden');
+        listContainer.innerHTML = '';
+    }
+}
+
+window.handleGroupPersonToggle = function() {
+    const checkboxes = document.querySelectorAll('.stip-group-person-cb');
+    const selected = [];
+    checkboxes.forEach(cb => {
+        if (cb.checked) selected.push(cb.value);
+    });
+    
+    const storageKey = `stip_group_selected_persons_${stipState.activeGroupId}`;
+    localStorage.setItem(storageKey, JSON.stringify(selected));
+    
     renderStipDashboard();
     renderSalaryHistoryTable();
 };
@@ -328,6 +425,10 @@ function formatDateLocal(date) {
 }
 
 function personSalaries() {
+    if (stipState.activePersonName === '__GROUP__') {
+        const selected = getSelectedGroupPersons();
+        return stipState.salaries.filter(s => selected.includes(s.person_name));
+    }
     if (!stipState.activePersonName) return [];
     return stipState.salaries.filter(s => s.person_name === stipState.activePersonName);
 }
@@ -395,12 +496,15 @@ function renderStipDashboard() {
 
     const grossTotal    = filtered.reduce((a, s) => a + s.gross, 0);
     const netTotal      = filtered.reduce((a, s) => a + s.net, 0);
-    const netAvg        = filtered.length > 0 ? netTotal / filtered.length : 0;
+    
+    // Average calculated over unique months in filtered set
+    const uniqueMonths  = [...new Set(filtered.map(s => s.month))].length;
+    const netAvg        = uniqueMonths > 0 ? netTotal / uniqueMonths : 0;
 
     // Derived: lordo/netto da lavoro (exclude extra components)
     const grossLavoroTotal = filtered.reduce((a, s) => a + calcolaLordoLavoro(s), 0);
     const netLavoroTotal   = filtered.reduce((a, s) => a + calcolaNettoLavoro(s), 0);
-    const netLavoroAvg     = filtered.length > 0 ? netLavoroTotal / filtered.length : 0;
+    const netLavoroAvg     = uniqueMonths > 0 ? netLavoroTotal / uniqueMonths : 0;
 
     document.getElementById('kpi-gross-total').textContent = fmtEur(grossTotal);
     document.getElementById('kpi-net-total').textContent   = fmtEur(netTotal);
@@ -416,7 +520,10 @@ function renderStipDashboard() {
     const kpiNetLavoroAvg = document.getElementById('kpi-net-lavoro-avg');
     if (kpiNetLavoroAvg) kpiNetLavoroAvg.textContent = fmtEur(netLavoroAvg);
 
-    document.getElementById('stip-dashboard-title').textContent = stipState.activePersonName || 'Dashboard Stipendi';
+    const activeGroupName = document.getElementById('select-stip-group')?.options[document.getElementById('select-stip-group').selectedIndex]?.text || '';
+    document.getElementById('stip-dashboard-title').textContent = stipState.activePersonName === '__GROUP__'
+        ? (activeGroupName ? `Dashboard ${activeGroupName}` : 'Dashboard Gruppo')
+        : (stipState.activePersonName || 'Dashboard Stipendi');
 
     // Recent table (last 5)
     const recent = [...filtered].sort((a,b) => b.month.localeCompare(a.month)).slice(0, 5);
@@ -428,8 +535,9 @@ function renderStipDashboard() {
             const lavoroLordo = calcolaLordoLavoro(s);
             const lavoroNetto = calcolaNettoLavoro(s);
             const badge13 = s.tredicesima ? ' <span style="font-size:0.7em;background:#f3e5f5;color:#7b1fa2;border-radius:3px;padding:1px 5px;font-weight:700;">13ª</span>' : '';
+            const labelPerson = stipState.activePersonName === '__GROUP__' ? ` <span style="font-size:0.8em;color:var(--text-muted);">(${s.person_name})</span>` : '';
             return `<tr>
-                <td>${s.month}${badge13}</td>
+                <td>${s.month}${labelPerson}${badge13}</td>
                 <td style="text-align:right;">${fmtEur(s.gross)}</td>
                 <td style="text-align:right;">${fmtEur(s.net)}</td>
                 <td style="text-align:right;color:var(--primary-color);font-weight:600;" title="Lordo lavoro: ${fmtEur(lavoroLordo)}">${fmtEur(lavoroNetto)}</td>
@@ -473,9 +581,11 @@ function renderStipCharts(data) {
         allowances: '#3b82f6'
     };
 
+    const uniqueMonths = [...new Set(data.map(s => s.month))].length;
+
     // Donut: avg gross breakdown (net vs deductions estimate)
-    const avgGross = data.length ? data.reduce((a,s)=>a+s.gross,0)/data.length : 0;
-    const avgNet   = data.length ? data.reduce((a,s)=>a+s.net,0)/data.length : 0;
+    const avgGross = uniqueMonths > 0 ? data.reduce((a,s)=>a+s.gross,0)/uniqueMonths : 0;
+    const avgNet   = uniqueMonths > 0 ? data.reduce((a,s)=>a+s.net,0)/uniqueMonths : 0;
     const avgDed   = Math.max(0, avgGross - avgNet);
 
     const donutCtx = document.getElementById('chart-stip-donut');
@@ -494,8 +604,31 @@ function renderStipCharts(data) {
         });
     }
 
-    // Line chart: net per month
-    const sorted = [...data].sort((a,b) => a.month.localeCompare(b.month));
+    // Merge monthly values for line charts (if group mode has multiple people in same month)
+    let monthlyMerged = [];
+    if (stipState.activePersonName === '__GROUP__') {
+        const monthlyMap = {};
+        data.forEach(s => {
+            if (!monthlyMap[s.month]) {
+                monthlyMap[s.month] = { month: s.month, net: 0, gross: 0, grossLavoro: 0, netLavoro: 0 };
+            }
+            monthlyMap[s.month].net += s.net || 0;
+            monthlyMap[s.month].gross += s.gross || 0;
+            monthlyMap[s.month].grossLavoro += calcolaLordoLavoro(s) || 0;
+            monthlyMap[s.month].netLavoro += calcolaNettoLavoro(s) || 0;
+        });
+        monthlyMerged = Object.values(monthlyMap);
+    } else {
+        monthlyMerged = data.map(s => ({
+            month: s.month,
+            net: s.net,
+            gross: s.gross,
+            grossLavoro: calcolaLordoLavoro(s),
+            netLavoro: calcolaNettoLavoro(s)
+        }));
+    }
+    const sorted = monthlyMerged.sort((a,b) => a.month.localeCompare(b.month));
+
     const lineCtx = document.getElementById('chart-stip-line');
     if (lineCtx) {
         if (chartStipLine) chartStipLine.destroy();
@@ -521,8 +654,8 @@ function renderStipCharts(data) {
     }
 
     // Donut Lavoro: avg gross work breakdown (net work vs work deductions estimate)
-    const avgGrossLavoro = data.length ? data.reduce((a,s)=>a+calcolaLordoLavoro(s),0)/data.length : 0;
-    const avgNetLavoro   = data.length ? data.reduce((a,s)=>a+calcolaNettoLavoro(s),0)/data.length : 0;
+    const avgGrossLavoro = uniqueMonths > 0 ? data.reduce((a,s)=>a+calcolaLordoLavoro(s),0)/uniqueMonths : 0;
+    const avgNetLavoro   = uniqueMonths > 0 ? data.reduce((a,s)=>a+calcolaNettoLavoro(s),0)/uniqueMonths : 0;
     const avgDedLavoro   = Math.max(0, avgGrossLavoro - avgNetLavoro);
 
     const lavoroDonutCtx = document.getElementById('chart-stip-lavoro-donut');
@@ -551,12 +684,12 @@ function renderStipCharts(data) {
                 labels: sorted.map(s => s.month),
                 datasets: [
                     {
-                        label: 'Lordo Lavoro', data: sorted.map(s => calcolaLordoLavoro(s)),
+                        label: 'Lordo Lavoro', data: sorted.map(s => s.grossLavoro),
                         borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.05)',
                         fill: true, tension: 0.4, pointBackgroundColor: '#f97316', pointRadius: 4
                     },
                     {
-                        label: 'Netto Lavoro', data: sorted.map(s => calcolaNettoLavoro(s)),
+                        label: 'Netto Lavoro', data: sorted.map(s => s.netLavoro),
                         borderColor: '#14b8a6', backgroundColor: 'rgba(20,184,166,0.05)',
                         fill: true, tension: 0.4, pointBackgroundColor: '#14b8a6', pointRadius: 4
                     }
@@ -572,6 +705,84 @@ function renderStipCharts(data) {
             }
         });
     }
+
+    // ── CHART: ANNUAL TREND (Gross, Net, Gross Work, Net Work) ───────────────────
+    const yearlyData = {};
+    data.forEach(s => {
+        const year = s.month.split('-')[0];
+        if (!yearlyData[year]) {
+            yearlyData[year] = { gross: 0, net: 0, grossLavoro: 0, netLavoro: 0 };
+        }
+        yearlyData[year].gross += s.gross || 0;
+        yearlyData[year].net += s.net || 0;
+        yearlyData[year].grossLavoro += calcolaLordoLavoro(s) || 0;
+        yearlyData[year].netLavoro += calcolaNettoLavoro(s) || 0;
+    });
+    const years = Object.keys(yearlyData).sort();
+
+    const annualCtx = document.getElementById('chart-stip-annuale');
+    if (annualCtx) {
+        if (chartStipAnnuale) chartStipAnnuale.destroy();
+        chartStipAnnuale = new Chart(annualCtx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Lordo',
+                        data: years.map(y => yearlyData[y].gross),
+                        borderColor: '#8b5cf6', // purple
+                        backgroundColor: 'rgba(139,92,246,0.05)',
+                        fill: false, tension: 0.3, pointBackgroundColor: '#8b5cf6', pointRadius: 5, borderWidth: 3
+                    },
+                    {
+                        label: 'Netto',
+                        data: years.map(y => yearlyData[y].net),
+                        borderColor: '#22c55e', // green
+                        backgroundColor: 'rgba(34,197,94,0.05)',
+                        fill: false, tension: 0.3, pointBackgroundColor: '#22c55e', pointRadius: 5, borderWidth: 3
+                    },
+                    {
+                        label: 'Lordo Lavoro',
+                        data: years.map(y => yearlyData[y].grossLavoro),
+                        borderColor: '#f97316', // orange
+                        backgroundColor: 'rgba(249,115,22,0.05)',
+                        fill: false, tension: 0.3, pointBackgroundColor: '#f97316', pointRadius: 5, borderWidth: 3
+                    },
+                    {
+                        label: 'Netto Lavoro',
+                        data: years.map(y => yearlyData[y].netLavoro),
+                        borderColor: '#14b8a6', // teal
+                        backgroundColor: 'rgba(20,184,166,0.05)',
+                        fill: false, tension: 0.3, pointBackgroundColor: '#14b8a6', pointRadius: 5, borderWidth: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#64748b', font: { size: 12, weight: 'bold' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) label += fmtEur(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#64748b', font: { size: 12, weight: '600' } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => '€' + v.toLocaleString('it-IT') }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    }
 }
 
 // ── SALARY HISTORY TABLE ──────────────────────────────────────────────────────
@@ -581,23 +792,26 @@ function renderSalaryHistoryTable() {
     if (!tbody) return;
     tbody.innerHTML = filtered.length === 0
         ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">${window.Translations.noPayslips || 'No payslips.'}</td></tr>`
-        : filtered.map(s => `<tr>
-            <td>${s.month}</td>
-            <td style="text-align:right;">${fmtEur(s.gross)}</td>
-            <td style="text-align:right;">${fmtEur(s.net)}</td>
-            <td>${s.notes || '–'}</td>
-            <td style="text-align:center;">
-                <button class="icon-btn" onclick="window.openStipItems('${s.id}')" title="Voci" style="margin-right:4px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                </button>
-                <button class="icon-btn" onclick="window.editSalary('${s.id}')" title="Modifica" style="margin-right:4px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button class="icon-btn btn-delete" onclick="window.deleteSalary('${s.id}')" title="Elimina">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-            </td>
-        </tr>`).join('');
+        : filtered.map(s => {
+            const labelPerson = stipState.activePersonName === '__GROUP__' ? ` <span style="font-size:0.8em;color:var(--text-muted);">(${s.person_name})</span>` : '';
+            return `<tr>
+                <td>${s.month}${labelPerson}</td>
+                <td style="text-align:right;">${fmtEur(s.gross)}</td>
+                <td style="text-align:right;">${fmtEur(s.net)}</td>
+                <td>${s.notes || '–'}</td>
+                <td style="text-align:center;">
+                    <button class="icon-btn" onclick="window.openStipItems('${s.id}')" title="Voci" style="margin-right:4px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                    <button class="icon-btn" onclick="window.editSalary('${s.id}')" title="Modifica" style="margin-right:4px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="icon-btn btn-delete" onclick="window.deleteSalary('${s.id}')" title="Elimina">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
 }
 
 // ── PERSONS GRID ──────────────────────────────────────────────────────────────
@@ -690,7 +904,14 @@ window.handlePersonSubmit = function(e) {
 window.handleSalarySubmit = async function(e) {
     e.preventDefault();
     const id   = document.getElementById('stip-edit-id').value;
-    const personName = stipState.activePersonName || document.getElementById('active-person-select').value || 'Senza nome';
+    let personName = stipState.activePersonName;
+    if (personName === '__GROUP__') {
+        personName = document.getElementById('stip-form-person').value;
+    }
+    if (!personName || personName === '__GROUP__') {
+        alert("Seleziona una persona a cui associare la busta paga.");
+        return;
+    }
     const month = document.getElementById('stip-month').value;
     const gross = parseFloat(document.getElementById('stip-gross').value) || 0;
     const net   = parseFloat(document.getElementById('stip-net').value) || 0;
@@ -867,14 +1088,22 @@ window.openStipPdfReviewModal = function(salaries) {
     
     tbody.innerHTML = salaries.map((c, index) => {
         const itemsCount = c.items ? c.items.length : 0;
-        const displayName = stipState.activePersonName || "Dipendente";
+        
+        let personSelectHtml = '';
+        if (stipState.activePersonName === '__GROUP__') {
+            personSelectHtml = `<select class="stip-pdf-row-person" style="border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}">
+                ${stipState.persons.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>`;
+        } else {
+            personSelectHtml = `<span class="stip-pdf-row-person-name" data-index="${index}">${stipState.activePersonName || 'Dipendente'}</span>`;
+        }
         
         return `
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="text-align: center; padding: 8px;"><input type="checkbox" class="stip-pdf-row-checkbox" data-index="${index}" checked></td>
                 <td style="padding: 8px;"><input type="month" class="stip-pdf-row-month" value="${c.month || ''}" style="border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
                 <td style="padding: 8px; font-weight: 500;">
-                    ${displayName}
+                    ${personSelectHtml}
                 </td>
                 <td style="padding: 8px;"><input type="number" step="0.01" class="stip-pdf-row-gross" value="${c.gross || 0.00}" style="width: 90px; text-align: right; border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
                 <td style="padding: 8px;"><input type="number" step="0.01" class="stip-pdf-row-net" value="${c.net || 0.00}" style="width: 90px; text-align: right; border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; font-size: 13px;" data-index="${index}"></td>
@@ -919,7 +1148,14 @@ window.submitStipPdfImportedSalaries = async function() {
         const notesInput = document.querySelector(`.stip-pdf-row-notes[data-index="${index}"]`);
         
         const month = monthInput ? monthInput.value : originalSalary.month;
-        const person_name = stipState.activePersonName || "Dipendente";
+        
+        let person_name;
+        if (stipState.activePersonName === '__GROUP__') {
+            const selectEl = document.querySelector(`.stip-pdf-row-person[data-index="${index}"]`);
+            person_name = selectEl ? selectEl.value : '';
+        } else {
+            person_name = stipState.activePersonName || "Dipendente";
+        }
         const gross = grossInput ? parseFloat(grossInput.value) : (originalSalary.gross || 0.0);
         const net = netInput ? parseFloat(netInput.value) : (originalSalary.net || 0.0);
         const notes = notesInput ? notesInput.value : (originalSalary.notes || "Importato da PDF");
@@ -1003,9 +1239,10 @@ function openStipMappingModal(file, headers, sample) {
     container.innerHTML = '';
 
     const isIt = document.documentElement.lang === 'it';
+    const isPersonRequired = !stipState.activePersonName || stipState.activePersonName === '__GROUP__';
     const dbFields = [
         { id: 'month', label: isIt ? 'Mese (YYYY-MM)' : 'Month (YYYY-MM)', required: true },
-        { id: 'person_name', label: isIt ? 'Nome Persona' : 'Person Name', required: !stipState.activePersonName },
+        { id: 'person_name', label: isIt ? 'Nome Persona' : 'Person Name', required: isPersonRequired },
         { id: 'gross', label: isIt ? 'Stipendio Lordo' : 'Gross Salary', required: true },
         { id: 'net', label: isIt ? 'Stipendio Netto' : 'Net Salary', required: true },
         { id: 'notes', label: isIt ? 'Note / Descrizione' : 'Notes / Description', required: false }
@@ -1057,7 +1294,7 @@ window.confermaMappingStipendiCSV = async function() {
         notes: document.getElementById('stipmap_notes').value
     };
 
-    const isPersonRequired = !stipState.activePersonName;
+    const isPersonRequired = !stipState.activePersonName || stipState.activePersonName === '__GROUP__';
     if (!mapping.month || (isPersonRequired && !mapping.person_name) || !mapping.gross || !mapping.net) {
         alert("Compila tutti i campi obbligatori (*).");
         return;
@@ -1071,7 +1308,7 @@ window.confermaMappingStipendiCSV = async function() {
 
     try {
         let url = `/api/salaries/import_custom_csv?salary_group_id=${stipState.activeGroupId}`;
-        if (stipState.activePersonName) {
+        if (stipState.activePersonName && stipState.activePersonName !== '__GROUP__') {
             url += `&person_name=${encodeURIComponent(stipState.activePersonName)}`;
         }
         let risposta = await fetch(url, { method: 'POST', body: formData });
@@ -1233,12 +1470,21 @@ window.testStipCustomPdfRegex = function() {
             notes: notesVal
         });
         
+        let personHtml = '';
+        if (stipState.activePersonName === '__GROUP__') {
+            personHtml = `<select class="stip-custom-pdf-row-person" style="padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}">
+                ${stipState.persons.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>`;
+        } else {
+            personHtml = `<span class="stip-custom-pdf-row-person-name" data-index="${index}">${stipState.activePersonName || "Dipendente"}</span>`;
+        }
+        
         tbody.innerHTML += `
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="text-align: center;"><input type="checkbox" class="stip-custom-pdf-row-cb" data-index="${index}" checked></td>
                 <td><input type="month" class="stip-custom-pdf-row-month" value="${formatDateForInput(monthVal)}" style="padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
                 <td style="font-weight: 500; font-size: 12px; padding: 4px;">
-                    ${stipState.activePersonName || "Dipendente"}
+                    ${personHtml}
                 </td>
                 <td><input type="number" step="0.01" class="stip-custom-pdf-row-gross" value="${cleanFloatStr(grossVal)}" style="width: 80px; text-align: right; padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
                 <td><input type="number" step="0.01" class="stip-custom-pdf-row-net" value="${cleanFloatStr(netVal)}" style="width: 80px; text-align: right; padding: 4px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px;" data-index="${index}"></td>
@@ -1276,7 +1522,14 @@ window.confirmStipCustomPdfImport = async function() {
         const notesInput = document.querySelector(`.stip-custom-pdf-row-notes[data-index="${index}"]`);
         
         const month = monthInput ? monthInput.value : '';
-        const person_name = stipState.activePersonName || 'Dipendente';
+        
+        let person_name;
+        if (stipState.activePersonName === '__GROUP__') {
+            const selectEl = document.querySelector(`.stip-custom-pdf-row-person[data-index="${index}"]`);
+            person_name = selectEl ? selectEl.value : '';
+        } else {
+            person_name = stipState.activePersonName || 'Dipendente';
+        }
         const gross = grossInput ? parseFloat(grossInput.value) : 0.0;
         const net = netInput ? parseFloat(netInput.value) : 0.0;
         const notes = notesInput ? notesInput.value : 'Importato da PDF personalizzato';
@@ -1311,6 +1564,10 @@ window.clearSalaryHistory = async function() {
     const gId = stipState.activeGroupId;
     const personName = stipState.activePersonName;
     if (!gId || !personName) return;
+    if (personName === '__GROUP__') {
+        alert("Seleziona una singola persona per svuotare la sua cronologia.");
+        return;
+    }
     const confirmation = confirm(`Sei sicuro di voler eliminare TUTTE le buste paga di "${personName}"? Questa azione non può essere annullata.`);
     if (!confirmation) return;
 
