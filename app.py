@@ -1222,8 +1222,8 @@ def get_vehicle_summary(conn, garage_id):
         v_sums[f"{v['brand']} {v['model']}"] = sum_data
     return v_sums
 
-def calculate_amortization_py(principal, annual_rate, term_months, start_date_str, custom_monthly_payment=None, payments=[]):
-    def add_months_py(date_str, months):
+def calculate_amortization_py(principal, annual_rate, term_months, start_date_str, custom_monthly_payment=None, payments=[], additional_charges=0.0, payment_day='last', strategy='term'):
+    def get_payment_date_py(date_str, t, p_day):
         try:
             dt = datetime.strptime(date_str, '%Y-%m-%d')
         except ValueError:
@@ -1231,10 +1231,21 @@ def calculate_amortization_py(principal, annual_rate, term_months, start_date_st
                 dt = datetime.strptime(date_str.split(' ')[0], '%Y-%m-%d')
             except Exception:
                 return date_str
-        month = dt.month - 1 + months
+        
+        # Calculate target month
+        month = dt.month - 1 + t
         year = dt.year + month // 12
         month = month % 12 + 1
-        day = min(dt.day, [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+        
+        max_day = [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+        
+        if p_day == 'last' or p_day == 'Ultimo del mese':
+            day = max_day
+        elif p_day and str(p_day).isdigit():
+            day = min(int(p_day), max_day)
+        else:
+            day = min(dt.day, max_day)
+            
         return f"{year:04d}-{month:02d}-{day:02d}"
         
     def get_month_diff_py(d1_str, d2_str):
@@ -1252,6 +1263,8 @@ def calculate_amortization_py(principal, annual_rate, term_months, start_date_st
     
     current_annual_rate = annual_rate
     current_monthly_rate = (current_annual_rate / 12) / 100
+    
+    additional_charges_val = float(additional_charges or 0.0)
     
     base_installment = 0.0
     if custom_monthly_payment and custom_monthly_payment > 0:
@@ -1273,7 +1286,7 @@ def calculate_amortization_py(principal, annual_rate, term_months, start_date_st
             extras_by_month[m_index] = extras_by_month.get(m_index, 0.0) + p['amount']
             
     while remaining_principal > 0.01 and t <= 1200:
-        date = add_months_py(start_date_str, t)
+        date = get_payment_date_py(start_date_str, t, payment_day)
         
         rate_changed = False
         for rc in rate_changes:
@@ -1315,9 +1328,16 @@ def calculate_amortization_py(principal, annual_rate, term_months, start_date_st
             'remaining': remaining_principal,
             'principal': principal_portion,
             'interest': interest_portion,
-            'installment': installment,
+            'installment': installment + additional_charges_val,
             'extra': extra_amount
         })
+        if strategy == 'payment' and extra_amount > 0 and remaining_principal > 0.01:
+            remaining_term = term_months - t
+            if remaining_term > 0:
+                if current_monthly_rate == 0:
+                    base_installment = remaining_principal / remaining_term
+                else:
+                    base_installment = remaining_principal * (current_monthly_rate * ((1 + current_monthly_rate) ** remaining_term)) / (((1 + current_monthly_rate) ** remaining_term) - 1)
         t += 1
         
     return schedule
@@ -1332,7 +1352,9 @@ def get_loan_summary(conn, loan_id):
     
     schedule = calculate_amortization_py(
         l['principal'], l['interest_rate'], l['term_months'], l['start_date'],
-        custom_monthly_payment=l['monthly_payment'], payments=payments_list
+        custom_monthly_payment=l['monthly_payment'], payments=payments_list,
+        additional_charges=l['additional_charges'] or 0.0,
+        payment_day=l['payment_day'] or 'last'
     )
     
     today_str = datetime.today().strftime('%Y-%m-%d')
@@ -5133,6 +5155,8 @@ def loans_route():
         start_date = data.get('start_date')
         monthly_payment = data.get('monthly_payment')
         rate_type = data.get('rate_type', 'fixed')
+        additional_charges = float(data.get('additional_charges') or 0.0)
+        payment_day = data.get('payment_day') or 'last'
         if monthly_payment is not None and monthly_payment != '':
             monthly_payment = float(monthly_payment)
         else:
@@ -5144,9 +5168,9 @@ def loans_route():
             
         try:
             conn.execute('''
-                INSERT INTO loans (id, name, principal, interest_rate, term_months, start_date, monthly_payment, user_id, loan_group_id, rate_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (loan_id, name, principal, interest_rate, term_months, start_date, monthly_payment, session['user_id'], loan_group_id, rate_type))
+                INSERT INTO loans (id, name, principal, interest_rate, term_months, start_date, monthly_payment, user_id, loan_group_id, rate_type, additional_charges, payment_day)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (loan_id, name, principal, interest_rate, term_months, start_date, monthly_payment, session['user_id'], loan_group_id, rate_type, additional_charges, payment_day))
             conn.commit()
         except sqlite3.IntegrityError as e:
             conn.close()
@@ -5191,12 +5215,14 @@ def loan_detail_route(loan_id):
         monthly_payment = None
     loan_group_id = data.get('loan_group_id', loan['loan_group_id'])
     rate_type = data.get('rate_type', loan['rate_type'])
+    additional_charges = float(data.get('additional_charges', loan['additional_charges'] if 'additional_charges' in loan.keys() else 0.0) or 0.0)
+    payment_day = data.get('payment_day', loan['payment_day'] if 'payment_day' in loan.keys() else 'last') or 'last'
         
     conn.execute('''
         UPDATE loans 
-        SET name = ?, principal = ?, interest_rate = ?, term_months = ?, start_date = ?, monthly_payment = ?, loan_group_id = ?, rate_type = ?
+        SET name = ?, principal = ?, interest_rate = ?, term_months = ?, start_date = ?, monthly_payment = ?, loan_group_id = ?, rate_type = ?, additional_charges = ?, payment_day = ?
         WHERE id = ?
-    ''', (name, principal, interest_rate, term_months, start_date, monthly_payment, loan_group_id, rate_type, loan_id))
+    ''', (name, principal, interest_rate, term_months, start_date, monthly_payment, loan_group_id, rate_type, additional_charges, payment_day, loan_id))
     conn.commit()
     
     row = conn.execute("SELECT * FROM loans WHERE id = ?", (loan_id,)).fetchone()

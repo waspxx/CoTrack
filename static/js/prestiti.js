@@ -269,12 +269,14 @@ function getMonthDiff(startDateStr, dateStr) {
     return Math.max(0, diff);
 }
 
-function calculateAmortization(principal, annualRate, termMonths, startDate, customMonthlyPayment = null, extraPayments = [], rateChanges = []) {
+function calculateAmortization(principal, annualRate, termMonths, startDate, customMonthlyPayment = null, extraPayments = [], rateChanges = [], additionalCharges = 0, paymentDay = 'last', strategy = 'term') {
     // Sort rate changes by date
     const sortedRateChanges = [...rateChanges].sort((a, b) => new Date(a.date) - new Date(b.date));
     
     let currentAnnualRate = annualRate;
     let currentMonthlyRate = (currentAnnualRate / 12) / 100;
+    
+    const parsedAdditionalCharges = parseFloat(additionalCharges) || 0;
     
     // Theoretical monthly payment (French amortization formula)
     let baseInstallment = 0;
@@ -302,7 +304,39 @@ function calculateAmortization(principal, annualRate, termMonths, startDate, cus
     });
     
     while (remainingPrincipal > 0.01 && t <= 1200) {
-        const date = addMonths(startDate, t);
+        let date;
+        if (paymentDay && paymentDay !== 'last') {
+            const pDay = parseInt(paymentDay);
+            const parts = startDate.split('-');
+            const sYear = parseInt(parts[0]);
+            const sMonth = parseInt(parts[1]) - 1; // 0-indexed
+            
+            const targetDate = new Date(sYear, sMonth + t, 1);
+            const targetYear = targetDate.getFullYear();
+            const targetMonth = targetDate.getMonth();
+            
+            const maxDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+            const day = Math.min(pDay, maxDay);
+            
+            const yyyy = targetYear;
+            const mm = String(targetMonth + 1).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            date = `${yyyy}-${mm}-${dd}`;
+        } else {
+            if (paymentDay === 'last') {
+                const parts = startDate.split('-');
+                const sYear = parseInt(parts[0]);
+                const sMonth = parseInt(parts[1]) - 1;
+                
+                const targetDate = new Date(sYear, sMonth + t + 1, 0);
+                const yyyy = targetDate.getFullYear();
+                const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(targetDate.getDate()).padStart(2, '0');
+                date = `${yyyy}-${mm}-${dd}`;
+            } else {
+                date = addMonths(startDate, t);
+            }
+        }
         
         // Find if there is a rate change active for this month
         let rateChanged = false;
@@ -352,14 +386,25 @@ function calculateAmortization(principal, annualRate, termMonths, startDate, cus
         schedule.push({
             month: t,
             date: date,
-            installment: installment,
+            installment: installment + parsedAdditionalCharges,
             interest: interestPortion,
             principal: principalPortion,
             extra: extraAmount,
-            total: installment + extraAmount,
+            total: (installment + parsedAdditionalCharges) + extraAmount,
             remaining: remainingPrincipal,
             rate: currentAnnualRate
         });
+        
+        if (strategy === 'payment' && extraAmount > 0 && remainingPrincipal > 0.01) {
+            const remainingTerm = termMonths - t;
+            if (remainingTerm > 0) {
+                if (currentMonthlyRate === 0) {
+                    baseInstallment = remainingPrincipal / remainingTerm;
+                } else {
+                    baseInstallment = remainingPrincipal * (currentMonthlyRate * Math.pow(1 + currentMonthlyRate, remainingTerm)) / (Math.pow(1 + currentMonthlyRate, remainingTerm) - 1);
+                }
+            }
+        }
         
         t++;
     }
@@ -533,8 +578,8 @@ function refreshLoanUI() {
     document.getElementById('active-loan-desc-dashboard').textContent = `Tasso: ${rateTypeStr} | TAN: ${displayRate}% | Durata: ${loan.term_months} mesi | Inizio: ${loan.start_date}`;
     
     // Calculations
-    const originalSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, [], rateChanges);
-    const actualSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, loanState.payments.filter(p => p.type === 'extra'), rateChanges);
+    const originalSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, [], rateChanges, loan.additional_charges, loan.payment_day);
+    const actualSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, loanState.payments.filter(p => p.type === 'extra'), rateChanges, loan.additional_charges, loan.payment_day);
     
     if (loanState.activeSubTab === 'dashboard') {
         renderLoanDashboard(loan, originalSchedule, actualSchedule);
@@ -653,7 +698,7 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
 
     // Remaining months KPI
     const todayStr = new Date().toISOString().slice(0, 10);
-    const futureInstallments = actualSchedule.filter(s => s.date >= todayStr && s.remaining > 0.01);
+    const futureInstallments = actualSchedule.filter(s => s.date >= todayStr);
     const monthsLeft = futureInstallments.length;
     const elMonthsRem = document.getElementById('kpi-loan-months-remaining');
     const elEndLabel = document.getElementById('kpi-loan-end-date-label');
@@ -798,7 +843,7 @@ window.runSimulation = function() {
     
     // Calculate Actual (which is our base comparator)
     const rateChanges = loanState.payments.filter(p => p.type === 'rate_change');
-    const baseSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, loanState.payments.filter(p => p.type === 'extra'), rateChanges);
+    const baseSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, loanState.payments.filter(p => p.type === 'extra'), rateChanges, loan.additional_charges, loan.payment_day);
     
     // Calculate simulated schedule
     // Create copy of actual extra payments and append simulated one
@@ -821,7 +866,7 @@ window.runSimulation = function() {
         simInstallment = simInstallment + paymentIncrease;
     }
     
-    const simSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, simInstallment, simExtras, rateChanges);
+    const simSchedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, simInstallment, simExtras, rateChanges, loan.additional_charges, loan.payment_day, strategy);
     
     // Calculate Interest Savings
     const baseInterest = baseSchedule.reduce((sum, s) => sum + s.interest, 0);
@@ -1069,11 +1114,15 @@ window.openLoanModal = function(id = null) {
         document.getElementById('l-start').value = l.start_date;
         document.getElementById('l-payment').value = l.monthly_payment || '';
         document.getElementById('l-rate-type').value = l.rate_type || 'fixed';
+        document.getElementById('l-additional-charges').value = l.additional_charges !== undefined ? l.additional_charges : 0;
+        document.getElementById('l-payment-day').value = l.payment_day || 'last';
         
         document.getElementById('loan-modal-title').textContent = "Modifica Prestito";
     } else {
         document.getElementById('loan-edit-id').value = '';
         document.getElementById('l-rate-type').value = 'fixed';
+        document.getElementById('l-additional-charges').value = '';
+        document.getElementById('l-payment-day').value = 'last';
         document.getElementById('loan-modal-title').textContent = "Nuovo Prestito";
     }
     
@@ -1100,8 +1149,23 @@ window.handleLoanSubmit = async function(e) {
     const pVal = document.getElementById('l-payment').value;
     const payment = pVal !== '' ? parseFloat(pVal) : null;
     const rateType = document.getElementById('l-rate-type').value;
+    const addVal = document.getElementById('l-additional-charges').value;
+    const additionalCharges = addVal !== '' ? parseFloat(addVal) : 0.0;
+    const paymentDay = document.getElementById('l-payment-day').value;
     
-    const payload = { id, name, principal, interest_rate: rate, term_months: term, start_date: start, monthly_payment: payment, loan_group_id: activeLoanGroupId, rate_type: rateType };
+    const payload = { 
+        id, 
+        name, 
+        principal, 
+        interest_rate: rate, 
+        term_months: term, 
+        start_date: start, 
+        monthly_payment: payment, 
+        loan_group_id: activeLoanGroupId, 
+        rate_type: rateType,
+        additional_charges: additionalCharges,
+        payment_day: paymentDay
+    };
     const method = id ? 'PUT' : 'POST';
     const url = id ? `/api/loans/${id}` : '/api/loans?loan_group_id=' + activeLoanGroupId;
     

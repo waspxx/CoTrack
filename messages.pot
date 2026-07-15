@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 17:51+0200\n"
+"POT-Creation-Date: 2026-07-15 15:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,439 +17,439 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: app.py:2334
+#: app.py:2349
 msgid "Login successful"
 msgstr ""
 
-#: app.py:2335
+#: app.py:2350
 msgid "Invalid credentials"
 msgstr ""
 
-#: app.py:2371
+#: app.py:2386
 msgid "Username must be a valid email address"
 msgstr ""
 
-#: app.py:2381
+#: app.py:2396
 msgid "Registration completed"
 msgstr ""
 
-#: app.py:2383
+#: app.py:2398
 msgid "Username already in use"
 msgstr ""
 
-#: app.py:2390
+#: app.py:2405
 msgid "Logout successful"
 msgstr ""
 
-#: app.py:2423
+#: app.py:2438
 msgid "Valid email required"
 msgstr ""
 
-#: app.py:2436
+#: app.py:2451
 msgid "If the email exists, a reset link has been sent."
 msgstr ""
 
-#: app.py:2442 app.py:2815
+#: app.py:2457 app.py:2830
 msgid "Missing data"
 msgstr ""
 
-#: app.py:2447
+#: app.py:2462
 msgid "Invalid or expired token"
 msgstr ""
 
-#: app.py:2452
+#: app.py:2467
 msgid "Password updated successfully"
 msgstr ""
 
-#: app.py:2458 app.py:2473 app.py:2484 app.py:2507 app.py:2539 app.py:2556
-#: app.py:2578 app.py:2596 app.py:2611 app.py:2629 app.py:2645 app.py:2660
-#: app.py:2678 app.py:2694 app.py:2709 app.py:2727 app.py:2744 app.py:2788
-#: app.py:2797 app.py:2807 app.py:2827 app.py:2860 app.py:2872 app.py:2930
-#: app.py:2972 app.py:3088 app.py:3165 app.py:3191 app.py:3321 app.py:3594
-#: app.py:3603 app.py:3624 app.py:3649 app.py:3659 app.py:3683 app.py:3712
-#: app.py:3906 app.py:4100 app.py:4175 app.py:4203 app.py:4267 app.py:4305
-#: app.py:4579 app.py:4633 app.py:4683 app.py:4760 app.py:4813 app.py:4883
-#: app.py:4912 app.py:4983 app.py:5012 app.py:5063 app.py:5078 app.py:5096
-#: app.py:5114 app.py:5166 app.py:5209 app.py:5261 app.py:5301 app.py:5430
-#: app.py:6642 app.py:6662 app.py:6756 app.py:6879 app.py:6893 app.py:6907
-#: app.py:6921
+#: app.py:2473 app.py:2488 app.py:2499 app.py:2522 app.py:2554 app.py:2571
+#: app.py:2593 app.py:2611 app.py:2626 app.py:2644 app.py:2660 app.py:2675
+#: app.py:2693 app.py:2709 app.py:2724 app.py:2742 app.py:2759 app.py:2803
+#: app.py:2812 app.py:2822 app.py:2842 app.py:2875 app.py:2887 app.py:2945
+#: app.py:2987 app.py:3103 app.py:3180 app.py:3206 app.py:3336 app.py:3609
+#: app.py:3618 app.py:3639 app.py:3664 app.py:3674 app.py:3698 app.py:3727
+#: app.py:3921 app.py:4115 app.py:4190 app.py:4218 app.py:4282 app.py:4320
+#: app.py:4594 app.py:4648 app.py:4698 app.py:4775 app.py:4828 app.py:4898
+#: app.py:4927 app.py:4998 app.py:5027 app.py:5078 app.py:5093 app.py:5111
+#: app.py:5129 app.py:5183 app.py:5228 app.py:5280 app.py:5320 app.py:5449
+#: app.py:6661 app.py:6681 app.py:6775 app.py:6898 app.py:6912 app.py:6926
+#: app.py:6940
 msgid "Not authenticated"
 msgstr ""
 
-#: app.py:2525
+#: app.py:2540
 msgid "Settings updated successfully"
 msgstr ""
 
-#: app.py:2543 templates/components/tab_investimenti.html:7
+#: app.py:2558 templates/components/tab_investimenti.html:7
 msgid "New Portfolio"
 msgstr ""
 
-#: app.py:2548
+#: app.py:2563
 msgid "Portfolio created"
 msgstr ""
 
-#: app.py:2560 app.py:2614 app.py:2663 app.py:2712
+#: app.py:2575 app.py:2629 app.py:2678 app.py:2727
 msgid "Name cannot be empty"
 msgstr ""
 
-#: app.py:2571 app.py:2584
+#: app.py:2586 app.py:2599
 msgid "Portfolio not found or unauthorized"
 msgstr ""
 
-#: app.py:2574
+#: app.py:2589
 msgid "Portfolio renamed successfully"
 msgstr ""
 
-#: app.py:2591
+#: app.py:2606
 msgid "Portfolio deleted successfully"
 msgstr ""
 
-#: app.py:2599 templates/components/tab_wallet.html:7
+#: app.py:2614 templates/components/tab_wallet.html:7
 msgid "New Wallet"
 msgstr ""
 
-#: app.py:2604
+#: app.py:2619
 msgid "Wallet created"
 msgstr ""
 
-#: app.py:2623 app.py:2634
+#: app.py:2638 app.py:2649
 msgid "Wallet not found or unauthorized"
 msgstr ""
 
-#: app.py:2625
+#: app.py:2640
 msgid "Wallet renamed successfully"
 msgstr ""
 
-#: app.py:2640
+#: app.py:2655
 msgid "Wallet deleted successfully"
 msgstr ""
 
-#: app.py:2648 templates/components/tab_bollette.html:6
+#: app.py:2663 templates/components/tab_bollette.html:6
 msgid "New Bills Group"
 msgstr ""
 
-#: app.py:2653
+#: app.py:2668
 msgid "Bills group created"
 msgstr ""
 
-#: app.py:2672 app.py:2683 app.py:4118 app.py:4165 app.py:4221 app.py:4249
-#: app.py:4274 app.py:4315
+#: app.py:2687 app.py:2698 app.py:4133 app.py:4180 app.py:4236 app.py:4264
+#: app.py:4289 app.py:4330
 msgid "Bills group not found or unauthorized"
 msgstr ""
 
-#: app.py:2674
+#: app.py:2689
 msgid "Bills group renamed successfully"
 msgstr ""
 
-#: app.py:2689
+#: app.py:2704
 msgid "Bills group deleted successfully"
 msgstr ""
 
-#: app.py:2697 templates/components/tab_veicoli.html:6
+#: app.py:2712 templates/components/tab_veicoli.html:6
 msgid "New Garage"
 msgstr ""
 
-#: app.py:2702
+#: app.py:2717
 msgid "Garage created"
 msgstr ""
 
-#: app.py:2721 app.py:2732 app.py:4589 app.py:4693 app.py:4823 app.py:4993
-#: app.py:5025
+#: app.py:2736 app.py:2747 app.py:4604 app.py:4708 app.py:4838 app.py:5008
+#: app.py:5040
 msgid "Garage not found or unauthorized"
 msgstr ""
 
-#: app.py:2723
+#: app.py:2738
 msgid "Garage renamed successfully"
 msgstr ""
 
-#: app.py:2740
+#: app.py:2755
 msgid "Garage deleted successfully"
 msgstr ""
 
-#: app.py:2778
+#: app.py:2793
 msgid "Transaction saved successfully!"
 msgstr ""
 
-#: app.py:2793
+#: app.py:2808
 msgid "Transaction deleted!"
 msgstr ""
 
-#: app.py:2803
+#: app.py:2818
 msgid "All transactions deleted!"
 msgstr ""
 
-#: app.py:2822
+#: app.py:2837
 msgid "Asset type updated successfully!"
 msgstr ""
 
-#: app.py:2863
+#: app.py:2878
 msgid "Database not found"
 msgstr ""
 
-#: app.py:2876 app.py:2933 app.py:2976 app.py:3092 app.py:3168 app.py:3714
-#: app.py:3910 app.py:4307 app.py:5311 app.py:6644 app.py:6669 app.py:6762
+#: app.py:2891 app.py:2948 app.py:2991 app.py:3107 app.py:3183 app.py:3729
+#: app.py:3925 app.py:4322 app.py:5330 app.py:6663 app.py:6688 app.py:6781
 msgid "No file uploaded"
 msgstr ""
 
-#: app.py:2882 app.py:2937 app.py:3098 app.py:3172 app.py:3717 app.py:4309
+#: app.py:2897 app.py:2952 app.py:3113 app.py:3187 app.py:3732 app.py:4324
 msgid "No file selected"
 msgstr ""
 
-#: app.py:2921
+#: app.py:2936
 #, python-format
 msgid "CSV format error: %(err)s"
 msgstr ""
 
-#: app.py:2924
+#: app.py:2939
 msgid "Import completed successfully!"
 msgstr ""
 
-#: app.py:2926 app.py:2967 app.py:3902
+#: app.py:2941 app.py:2982 app.py:3917
 msgid "Invalid file format. Expected CSV."
 msgstr ""
 
-#: app.py:2949 app.py:2993 app.py:3725 app.py:3927 app.py:4325 app.py:5334
-#: app.py:6686 app.py:6779
+#: app.py:2964 app.py:3008 app.py:3740 app.py:3942 app.py:4340 app.py:5353
+#: app.py:6705 app.py:6798
 msgid "The uploaded file is empty."
 msgstr ""
 
-#: app.py:2961 app.py:6792
+#: app.py:2976 app.py:6811
 msgid "CSV format error."
 msgstr ""
 
-#: app.py:2981 app.py:3915 app.py:5317 app.py:6674 app.py:6767
+#: app.py:2996 app.py:3930 app.py:5336 app.py:6693 app.py:6786
 msgid "Missing column mapping"
 msgstr ""
 
-#: app.py:2986 app.py:3920 app.py:5323 app.py:6679 app.py:6772
+#: app.py:3001 app.py:3935 app.py:5342 app.py:6698 app.py:6791
 msgid "Invalid mapping format"
 msgstr ""
 
-#: app.py:3081
+#: app.py:3096
 #, python-format
 msgid "Import error: %(err)s"
 msgstr ""
 
-#: app.py:3083
+#: app.py:3098
 msgid "Custom import completed successfully!"
 msgstr ""
 
-#: app.py:3102
+#: app.py:3117
 msgid ""
 "PyPDF2 library not installed. Add it to the server with 'pip install "
 "PyPDF2'."
 msgstr ""
 
-#: app.py:3121
+#: app.py:3136
 msgid "ISIN code not found in PDF"
 msgstr ""
 
-#: app.py:3140
+#: app.py:3155
 msgid "Execution data (quantity, price, total) not found in PDF"
 msgstr ""
 
-#: app.py:3154
+#: app.py:3169
 #, python-format
 msgid "Transaction for %(name)s imported successfully!"
 msgstr ""
 
-#: app.py:3156
+#: app.py:3171
 msgid "This transaction has already been imported into the portfolio."
 msgstr ""
 
-#: app.py:3159 app.py:3185
+#: app.py:3174 app.py:3200
 #, python-format
 msgid "Error reading PDF: %(err)s"
 msgstr ""
 
-#: app.py:3161 app.py:3187
+#: app.py:3176 app.py:3202
 msgid "Invalid file format. Expected PDF."
 msgstr ""
 
-#: app.py:3176
+#: app.py:3191
 msgid "PyPDF2 library not installed."
 msgstr ""
 
-#: app.py:3194
+#: app.py:3209
 msgid "Google Generative AI SDK not installed. Run 'pip install google-genai'."
 msgstr ""
 
-#: app.py:3198
+#: app.py:3213
 msgid ""
 "Gemini API key not configured. Please set GEMINI_API_KEY environment "
 "variable."
 msgstr ""
 
-#: app.py:3609
+#: app.py:3624
 msgid "Missing category"
 msgstr ""
 
-#: app.py:3615
+#: app.py:3630
 msgid "Category updated successfully"
 msgstr ""
 
-#: app.py:3640
+#: app.py:3655
 msgid "Configuration saved!"
 msgstr ""
 
-#: app.py:3655
+#: app.py:3670
 msgid "All Wallet transactions deleted!"
 msgstr ""
 
-#: app.py:3666
+#: app.py:3681
 msgid "No transactions selected"
 msgstr ""
 
-#: app.py:3674
+#: app.py:3689
 msgid "Selected transactions deleted!"
 msgstr ""
 
-#: app.py:3893 app.py:4024
+#: app.py:3908 app.py:4039
 #, python-format
 msgid ""
 "Imported %(count)s new transactions. (Ignored %(ignored)s already "
 "present). WARNING: %(errors)s rows were not read correctly."
 msgstr ""
 
-#: app.py:3895 app.py:4026
+#: app.py:3910 app.py:4041
 #, python-format
 msgid ""
 "Imported %(count)s new transactions successfully! (Ignored %(ignored)s "
 "already present)."
 msgstr ""
 
-#: app.py:4112
+#: app.py:4127
 msgid "Missing required fields"
 msgstr ""
 
-#: app.py:4149
+#: app.py:4164
 msgid "Bill saved successfully"
 msgstr ""
 
-#: app.py:4160 app.py:4216 app.py:4244
+#: app.py:4175 app.py:4231 app.py:4259
 msgid "Missing bills_id"
 msgstr ""
 
-#: app.py:4187
+#: app.py:4202
 msgid "Bill not found or unauthorized"
 msgstr ""
 
-#: app.py:4192
+#: app.py:4207
 msgid "Bill deleted successfully"
 msgstr ""
 
-#: app.py:4233
+#: app.py:4248
 msgid "Config saved successfully"
 msgstr ""
 
-#: app.py:4374
+#: app.py:4389
 #, python-format
 msgid "Imported %(count)s bills successfully!"
 msgstr ""
 
-#: app.py:4382
+#: app.py:4397
 msgid "Invalid file type"
 msgstr ""
 
-#: app.py:4583 app.py:4687 app.py:4817 app.py:4987 app.py:5019
+#: app.py:4598 app.py:4702 app.py:4832 app.py:5002 app.py:5034
 msgid "Missing garage_id"
 msgstr ""
 
-#: app.py:4643 app.py:6884
+#: app.py:4658 app.py:6903
 msgid "Vehicle not found or unauthorized"
 msgstr ""
 
-#: app.py:4771
+#: app.py:4786
 msgid "Activity not found or unauthorized"
 msgstr ""
 
-#: app.py:5172 app.py:5216 app.py:5307 app.py:6898
+#: app.py:5189 app.py:5235 app.py:5326 app.py:6917
 msgid "Loan not found or unauthorized"
 msgstr ""
 
-#: app.py:5273
+#: app.py:5292
 msgid "Payment not found or unauthorized"
 msgstr ""
 
-#: app.py:5420
+#: app.py:5439
 #, python-format
 msgid ""
 "Import completed: %(imported)d payments imported, %(skipped)d skipped as "
 "duplicates."
 msgstr ""
 
-#: app.py:6647
+#: app.py:6666
 msgid "The file must be a PDF"
 msgstr ""
 
-#: templates/index.html:5
+#: templates/index.html:6
 msgid "Portfolio Management - Dashboard"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:368
-#: templates/components/tab_investimenti.html:508 templates/index.html:42
+#: templates/components/tab_investimenti.html:508 templates/index.html:43
 msgid "Purchase"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:369
-#: templates/components/tab_investimenti.html:509 templates/index.html:43
+#: templates/components/tab_investimenti.html:509 templates/index.html:44
 msgid "Sale"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:370
-#: templates/components/tab_investimenti.html:510 templates/index.html:44
+#: templates/components/tab_investimenti.html:510 templates/index.html:45
 msgid "Div."
 msgstr ""
 
-#: templates/components/tab_investimenti.html:336 templates/index.html:45
+#: templates/components/tab_investimenti.html:336 templates/index.html:46
 msgid "Single Stocks"
 msgstr ""
 
-#: templates/components/tab_investimenti.html:337 templates/index.html:46
+#: templates/components/tab_investimenti.html:337 templates/index.html:47
 msgid "Single Bonds"
 msgstr ""
 
-#: templates/components/tab_investimenti.html:338 templates/index.html:47
+#: templates/components/tab_investimenti.html:338 templates/index.html:48
 msgid "Gold"
 msgstr ""
 
-#: templates/components/tab_investimenti.html:340 templates/index.html:48
+#: templates/components/tab_investimenti.html:340 templates/index.html:49
 msgid "Cash"
 msgstr ""
 
-#: templates/index.html:49
+#: templates/index.html:50
 msgid "Undefined"
 msgstr ""
 
-#: templates/index.html:50
+#: templates/index.html:51
 msgid "Delete transaction"
 msgstr ""
 
-#: templates/index.html:51
+#: templates/index.html:52
 msgid "Live update..."
 msgstr ""
 
-#: templates/index.html:52
+#: templates/index.html:53
 msgid "TOTAL"
 msgstr ""
 
-#: templates/index.html:53
+#: templates/index.html:54
 msgid "Asset Type Allocation"
 msgstr ""
 
-#: templates/index.html:54
+#: templates/index.html:55
 msgid "Analyzing portfolio..."
 msgstr ""
 
-#: templates/index.html:55
+#: templates/index.html:56
 msgid "Error during import."
 msgstr ""
 
-#: templates/index.html:56
+#: templates/index.html:57
 msgid "Network error during Wallet import."
 msgstr ""
 
-#: templates/index.html:57
+#: templates/index.html:58
 msgid ""
 "WARNING! Are you sure you want to delete ALL imported Wallet "
 "transactions?\n"
@@ -457,188 +457,188 @@ msgid ""
 "Do you really want to continue and delete everything?"
 msgstr ""
 
-#: templates/index.html:58
+#: templates/index.html:59
 msgid "All Wallet transactions have been deleted."
 msgstr ""
 
-#: templates/index.html:59
+#: templates/index.html:60
 msgid "Error during deletion."
 msgstr ""
 
-#: templates/index.html:60
+#: templates/index.html:61
 msgid "Network error."
 msgstr ""
 
 #: templates/components/tab_bollette.html:26
 #: templates/components/tab_bollette.html:71
-#: templates/components/tab_bollette.html:130 templates/index.html:61
+#: templates/components/tab_bollette.html:130 templates/index.html:62
 msgid "Water"
 msgstr ""
 
 #: templates/components/tab_bollette.html:31
 #: templates/components/tab_bollette.html:72
-#: templates/components/tab_bollette.html:144 templates/index.html:62
+#: templates/components/tab_bollette.html:144 templates/index.html:63
 msgid "Electricity"
 msgstr ""
 
 #: templates/components/tab_bollette.html:36
 #: templates/components/tab_bollette.html:73
-#: templates/components/tab_bollette.html:158 templates/index.html:63
+#: templates/components/tab_bollette.html:158 templates/index.html:64
 msgid "Gas"
 msgstr ""
 
-#: templates/index.html:64
+#: templates/index.html:65
 msgid "No portfolio data available."
 msgstr ""
 
-#: templates/index.html:65
+#: templates/index.html:66
 msgid "No bills inserted."
 msgstr ""
 
-#: templates/components/tab_fondopensione.html:305 templates/index.html:66
+#: templates/components/tab_fondopensione.html:305 templates/index.html:67
 msgid "No contributions."
 msgstr ""
 
-#: templates/index.html:67
+#: templates/index.html:68
 msgid "No pension funds. Add one with the button above."
 msgstr ""
 
-#: templates/index.html:68
+#: templates/index.html:69
 msgid "-- No Loans --"
 msgstr ""
 
-#: templates/index.html:69
+#: templates/index.html:70
 msgid "No Loans"
 msgstr ""
 
-#: templates/index.html:70
+#: templates/index.html:71
 msgid "No payments registered."
 msgstr ""
 
-#: templates/index.html:71
+#: templates/index.html:72
 msgid "No loans registered. Click on \"New Loan\" to start!"
 msgstr ""
 
-#: templates/index.html:72
+#: templates/index.html:73
 msgid "No active loan selected."
 msgstr ""
 
-#: templates/index.html:73
+#: templates/index.html:74
 msgid "No loans to export."
 msgstr ""
 
-#: templates/index.html:74
+#: templates/index.html:75
 msgid "No payment or repayment detected in the PDF file."
 msgstr ""
 
-#: templates/index.html:75
+#: templates/index.html:76
 msgid "No payslips."
 msgstr ""
 
-#: templates/index.html:76
+#: templates/index.html:77
 msgid "Tutto il gruppo"
 msgstr ""
 
-#: templates/index.html:77
+#: templates/index.html:78
 msgid "No people. Add a payslip to create a person."
 msgstr ""
 
-#: templates/index.html:78
+#: templates/index.html:79
 msgid "No items."
 msgstr ""
 
-#: templates/components/tab_veicoli.html:229 templates/index.html:79
+#: templates/components/tab_veicoli.html:229 templates/index.html:80
 msgid "No activities registered. Click on \"Add\" to start."
 msgstr ""
 
-#: templates/components/tab_veicoli.html:240 templates/index.html:80
+#: templates/components/tab_veicoli.html:240 templates/index.html:81
 msgid "No active reminders."
 msgstr ""
 
-#: templates/index.html:81
+#: templates/index.html:82
 msgid "No activities found for selected filters."
 msgstr ""
 
-#: templates/index.html:82
+#: templates/index.html:83
 msgid "No refuelings registered."
 msgstr ""
 
-#: templates/index.html:83
+#: templates/index.html:84
 msgid "No expenses registered."
 msgstr ""
 
-#: templates/index.html:84
+#: templates/index.html:85
 msgid "No incomes registered."
 msgstr ""
 
-#: templates/index.html:85
+#: templates/index.html:86
 msgid "No maintenances registered."
 msgstr ""
 
-#: templates/index.html:86
+#: templates/index.html:87
 msgid "No reminders registered."
 msgstr ""
 
-#: templates/index.html:87
+#: templates/index.html:88
 msgid "No odometer data available."
 msgstr ""
 
-#: templates/index.html:88
+#: templates/index.html:89
 msgid "No expenses registered to generate chart."
 msgstr ""
 
-#: templates/index.html:89
+#: templates/index.html:90
 msgid "No consecutive fills registered."
 msgstr ""
 
-#: templates/index.html:90
+#: templates/index.html:91
 msgid "No data available."
 msgstr ""
 
-#: templates/index.html:91
+#: templates/index.html:92
 msgid "Loading..."
 msgstr ""
 
-#: templates/index.html:92
+#: templates/index.html:93
 msgid "No amortization plan available."
 msgstr ""
 
-#: templates/index.html:93
+#: templates/index.html:94
 msgid "No transactions found."
 msgstr ""
 
-#: templates/index.html:94
+#: templates/index.html:95
 msgid "No assets in portfolio."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:268 templates/index.html:95
+#: templates/components/tab_prestiti.html:268 templates/index.html:96
 msgid "Interest Rate Change (TAN)"
 msgstr ""
 
-#: templates/index.html:96
+#: templates/index.html:97
 msgid "Interest Rate Change"
 msgstr ""
 
-#: templates/index.html:97
+#: templates/index.html:98
 msgid "Fixed"
 msgstr ""
 
-#: templates/index.html:98
+#: templates/index.html:99
 msgid "Variable"
 msgstr ""
 
-#: templates/components/tab_fondopensione.html:300 templates/index.html:99
+#: templates/components/tab_fondopensione.html:300 templates/index.html:100
 msgid "Spese"
 msgstr ""
 
-#: templates/index.html:105
+#: templates/index.html:106
 msgid "Map Pension Fund CSV Columns"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:462
-#: templates/components/tab_prestiti.html:555
+#: templates/components/tab_prestiti.html:598
 #: templates/components/tab_stipendi.html:481
-#: templates/components/tab_wallet.html:307 templates/index.html:106
+#: templates/components/tab_wallet.html:307 templates/index.html:107
 msgid ""
 "Select the corresponding column from your CSV file for each required "
 "field."
@@ -653,10 +653,10 @@ msgstr ""
 #: templates/components/tab_investimenti.html:467
 #: templates/components/tab_investimenti.html:549
 #: templates/components/tab_prestiti.html:276
-#: templates/components/tab_prestiti.html:437
-#: templates/components/tab_prestiti.html:471
-#: templates/components/tab_prestiti.html:545
-#: templates/components/tab_prestiti.html:560
+#: templates/components/tab_prestiti.html:480
+#: templates/components/tab_prestiti.html:514
+#: templates/components/tab_prestiti.html:588
+#: templates/components/tab_prestiti.html:603
 #: templates/components/tab_stipendi.html:343
 #: templates/components/tab_stipendi.html:426
 #: templates/components/tab_stipendi.html:486
@@ -664,30 +664,30 @@ msgstr ""
 #: templates/components/tab_stipendi.html:600
 #: templates/components/tab_veicoli.html:862
 #: templates/components/tab_veicoli.html:962
-#: templates/components/tab_wallet.html:312 templates/index.html:111
+#: templates/components/tab_wallet.html:312 templates/index.html:112
 msgid "Cancel"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:491
 #: templates/components/tab_investimenti.html:468
 #: templates/components/tab_investimenti.html:550
-#: templates/components/tab_prestiti.html:546
-#: templates/components/tab_prestiti.html:561
+#: templates/components/tab_prestiti.html:589
+#: templates/components/tab_prestiti.html:604
 #: templates/components/tab_stipendi.html:487
 #: templates/components/tab_stipendi.html:601
-#: templates/components/tab_wallet.html:313 templates/index.html:112
+#: templates/components/tab_wallet.html:313 templates/index.html:113
 msgid "Confirm and Import"
 msgstr ""
 
-#: templates/components/header.html:4
+#: templates/components/header.html:19
 msgid "Make a donation to support the project"
 msgstr ""
 
-#: templates/components/header.html:4
+#: templates/components/header.html:19
 msgid "Support"
 msgstr ""
 
-#: templates/components/header.html:14
+#: templates/components/header.html:29
 msgid "Logout"
 msgstr ""
 
@@ -1103,9 +1103,9 @@ msgstr ""
 #: templates/components/tab_fondopensione.html:400
 #: templates/components/tab_fondopensione.html:456
 #: templates/components/tab_fondopensione.html:479
-#: templates/components/tab_prestiti.html:461
-#: templates/components/tab_prestiti.html:513
-#: templates/components/tab_prestiti.html:534
+#: templates/components/tab_prestiti.html:504
+#: templates/components/tab_prestiti.html:556
+#: templates/components/tab_prestiti.html:577
 #: templates/components/tab_stipendi.html:249
 #: templates/components/tab_stipendi.html:339
 #: templates/components/tab_stipendi.html:383
@@ -1265,8 +1265,8 @@ msgid "e.g., Amundi, Allianz..."
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:349
-#: templates/components/tab_prestiti.html:459
-#: templates/components/tab_prestiti.html:532
+#: templates/components/tab_prestiti.html:502
+#: templates/components/tab_prestiti.html:575
 #: templates/components/tab_stipendi.html:447
 #: templates/components/tab_stipendi.html:460
 msgid "Type"
@@ -1320,37 +1320,37 @@ msgid ""
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:411
-#: templates/components/tab_prestiti.html:472
+#: templates/components/tab_prestiti.html:515
 #: templates/components/tab_stipendi.html:522
 msgid "Import Selected"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:419
-#: templates/components/tab_prestiti.html:480
+#: templates/components/tab_prestiti.html:523
 #: templates/components/tab_stipendi.html:530
 msgid "Custom PDF Import Workbench"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:424
-#: templates/components/tab_prestiti.html:485
+#: templates/components/tab_prestiti.html:528
 #: templates/components/tab_stipendi.html:535
 msgid "Extracted PDF Text"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:430
-#: templates/components/tab_prestiti.html:491
+#: templates/components/tab_prestiti.html:534
 #: templates/components/tab_stipendi.html:541
 msgid "Extraction Pattern (Regex)"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:433
-#: templates/components/tab_prestiti.html:494
+#: templates/components/tab_prestiti.html:537
 #: templates/components/tab_stipendi.html:544
 msgid "Use capture groups () to capture fields from matching lines."
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:437
-#: templates/components/tab_prestiti.html:498
+#: templates/components/tab_prestiti.html:541
 #: templates/components/tab_stipendi.html:548
 msgid "Map Capture Groups to Fields"
 msgstr ""
@@ -1373,19 +1373,19 @@ msgid "Employer Contrib (€) *"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:462
-#: templates/components/tab_prestiti.html:519
+#: templates/components/tab_prestiti.html:562
 #: templates/components/tab_stipendi.html:573
 msgid "Test & Parse"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:468
-#: templates/components/tab_prestiti.html:525
+#: templates/components/tab_prestiti.html:568
 #: templates/components/tab_stipendi.html:579
 msgid "Parsed Results Preview"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:483
-#: templates/components/tab_prestiti.html:538
+#: templates/components/tab_prestiti.html:581
 #: templates/components/tab_stipendi.html:593
 msgid "Enter a pattern and click Test to view results."
 msgstr ""
@@ -1956,8 +1956,8 @@ msgstr ""
 
 #: templates/components/tab_investimenti.html:431
 #: templates/components/tab_investimenti.html:490
-#: templates/components/tab_prestiti.html:458
-#: templates/components/tab_prestiti.html:531
+#: templates/components/tab_prestiti.html:501
+#: templates/components/tab_prestiti.html:574
 #: templates/components/tab_veicoli.html:305
 #: templates/components/tab_veicoli.html:335
 #: templates/components/tab_veicoli.html:361
@@ -2229,7 +2229,7 @@ msgid "Payment Date *"
 msgstr ""
 
 #: templates/components/tab_prestiti.html:260
-#: templates/components/tab_prestiti.html:505
+#: templates/components/tab_prestiti.html:548
 #: templates/components/tab_veicoli.html:781
 msgid "Amount (€) *"
 msgstr ""
@@ -2410,43 +2410,59 @@ msgstr ""
 msgid "Leave blank for automatic calculation"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:434
+#: templates/components/tab_prestiti.html:435
+msgid "Additional Monthly Charges (€)"
+msgstr ""
+
+#: templates/components/tab_prestiti.html:436
+msgid "e.g., 2.03 for insurance/fees"
+msgstr ""
+
+#: templates/components/tab_prestiti.html:439
+msgid "Payment Day of the Month"
+msgstr ""
+
+#: templates/components/tab_prestiti.html:441
+msgid "Last day of the month"
+msgstr ""
+
+#: templates/components/tab_prestiti.html:477
 msgid ""
 "For variable rate loans, you can record interest rate updates in the "
 "'Record & History' tab using 'Interest Rate Change (TAN)'."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:438
+#: templates/components/tab_prestiti.html:481
 msgid "Save Loan"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:448
+#: templates/components/tab_prestiti.html:491
 msgid "Review Detected Transactions"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:452
+#: templates/components/tab_prestiti.html:495
 msgid ""
 "The following transactions were detected in the PDF file. Select those "
 "you want to import into the active loan."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:460
-#: templates/components/tab_prestiti.html:533
+#: templates/components/tab_prestiti.html:503
+#: templates/components/tab_prestiti.html:576
 #: templates/components/tab_stipendi.html:448
 #: templates/components/tab_veicoli.html:363
 #: templates/components/tab_wallet.html:295
 msgid "Amount"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:501
+#: templates/components/tab_prestiti.html:544
 msgid "Date (YYYY-MM-DD or DD/MM/YYYY) *"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:509
+#: templates/components/tab_prestiti.html:552
 msgid "Type *"
 msgstr ""
 
-#: templates/components/tab_prestiti.html:554
+#: templates/components/tab_prestiti.html:597
 msgid "Map Loan CSV Columns"
 msgstr ""
 
