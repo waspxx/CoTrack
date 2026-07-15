@@ -1,5 +1,20 @@
 <div class="header-container">
-        <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32" style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <rect width="512" height="512" rx="128" fill="#0D1117"/>
+              <defs>
+                <linearGradient id="header-logo-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#00F2FE"/>
+                  <stop offset="100%" stop-color="#4FACFE"/>
+                </linearGradient>
+              </defs>
+              <path d="M 130 370 L 210 250 L 280 300 L 382 152" fill="none" stroke="url(#header-logo-grad)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="130" cy="370" r="16" fill="#0D1117" stroke="url(#header-logo-grad)" stroke-width="14"/>
+              <circle cx="210" cy="250" r="16" fill="#0D1117" stroke="url(#header-logo-grad)" stroke-width="14"/>
+              <circle cx="280" cy="300" r="16" fill="#0D1117" stroke="url(#header-logo-grad)" stroke-width="14"/>
+              <circle cx="382" cy="152" r="16" fill="#0D1117" stroke="url(#header-logo-grad)" stroke-width="14"/>
+              <path d="M 320 152 L 382 152 L 382 214" fill="none" stroke="url(#header-logo-grad)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
             <h2 style="margin: 0;">CoTrack</h2>
             <a href="https://paypal.me/mattiacorrente" target="_blank" style="font-size: 0.85em; color: #6c757d; text-decoration: none; border: 1px solid #dee2e6; padding: 4px 10px; border-radius: 15px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'" title="{{ _('Make a donation to support the project') }}">💖 {{ _('Support') }}</a>
         </div>

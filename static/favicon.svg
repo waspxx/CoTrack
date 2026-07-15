@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#0D1117"/>
+  <!-- Gradients & Glow -->
+  <defs>
+    <linearGradient id="cotrack-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00F2FE"/>
+      <stop offset="100%" stop-color="#4FACFE"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Chart Line / Nodes -->
+  <g filter="url(#glow)">
+    <path d="M 130 370 L 210 250 L 280 300 L 382 152" fill="none" stroke="url(#cotrack-grad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="130" cy="370" r="16" fill="#0D1117" stroke="url(#cotrack-grad)" stroke-width="12"/>
+    <circle cx="210" cy="250" r="16" fill="#0D1117" stroke="url(#cotrack-grad)" stroke-width="12"/>
+    <circle cx="280" cy="300" r="16" fill="#0D1117" stroke="url(#cotrack-grad)" stroke-width="12"/>
+    <circle cx="382" cy="152" r="16" fill="#0D1117" stroke="url(#cotrack-grad)" stroke-width="12"/>
+    <!-- Arrow tip -->
+    <path d="M 330 152 L 382 152 L 382 204" fill="none" stroke="url(#cotrack-grad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
