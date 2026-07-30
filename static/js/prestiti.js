@@ -825,6 +825,50 @@ function renderLoanDashboard(loan, originalSchedule, actualSchedule) {
     }
 }
 
+window.onSimInvAssetTypeChange = function() {
+    const assetTypeSelect = document.getElementById('sim-inv-asset-type');
+    const assetType = assetTypeSelect ? assetTypeSelect.value : 'obbligazioni_stato';
+    const taxContainer = document.getElementById('sim-inv-custom-tax-container');
+    const taxInput = document.getElementById('sim-inv-tax-rate');
+    
+    if (taxInput) {
+        if (assetType === 'obbligazioni_stato') {
+            taxInput.value = '12.5';
+            if (taxContainer) taxContainer.style.display = 'none';
+        } else if (assetType === 'obbligazioni_corp' || assetType === 'etf') {
+            taxInput.value = '26.0';
+            if (taxContainer) taxContainer.style.display = 'none';
+        } else if (assetType === 'custom') {
+            if (taxContainer) taxContainer.style.display = 'block';
+        }
+    }
+    if (typeof window.runSimulation === 'function') {
+        window.runSimulation();
+    }
+};
+
+window.syncInvDurationWithLoan = function() {
+    if (!loanState.activeLoanId) return;
+    const loan = loanState.loans.find(l => l.id === loanState.activeLoanId);
+    if (!loan) return;
+    
+    const rateChanges = loanState.payments.filter(p => p.type === 'rate_change');
+    const schedule = calculateAmortization(loan.principal, loan.interest_rate, loan.term_months, loan.start_date, loan.monthly_payment, loanState.payments.filter(p => p.type === 'extra'), rateChanges, loan.additional_charges, loan.payment_day);
+    
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const remainingInstallments = schedule.filter(s => s.date >= todayStr);
+    const monthsLeft = remainingInstallments.length > 0 ? remainingInstallments.length : schedule.length;
+    const yearsLeft = Math.max(1, Math.round(monthsLeft / 12));
+    
+    const durationInput = document.getElementById('sim-inv-duration-years');
+    if (durationInput) {
+        durationInput.value = yearsLeft;
+    }
+    if (typeof window.runSimulation === 'function') {
+        window.runSimulation();
+    }
+};
+
 // --- SIMULATOR ENGINE ---
 window.runSimulation = function() {
     if (!loanState.activeLoanId) return;
@@ -853,8 +897,7 @@ window.runSimulation = function() {
     }
     
     // If strategy is "term", the monthly installment remains the same but term is reduced.
-    // If strategy is "payment", we have to adjust calculations. For this simplified simulator, we can recalculate baseInstallment if needed,
-    // but the standard French repayment term reduction is most intuitive. Let's compute simulated schedule:
+    // If strategy is "payment", we have to adjust calculations.
     let simInstallment = loan.monthly_payment;
     if (paymentIncrease > 0) {
         if (!simInstallment) {
@@ -948,7 +991,166 @@ window.runSimulation = function() {
             }
         });
     }
-}
+
+    // --- CONFRONTO ESTINZIONE VS INVESTIMENTO ---
+    const isTaxDeductionActive = document.getElementById('sim-tax-deduction-19')?.checked ?? true;
+    
+    // Compute lost IRPEF 19% tax deduction on saved interest (capped at 4000€ interest / year)
+    let lostDeduction = 0;
+    if (isTaxDeductionActive && baseSchedule.length > 0) {
+        const baseByYear = {};
+        const simByYear = {};
+        
+        baseSchedule.forEach(s => {
+            const yr = s.date ? s.date.substring(0, 4) : '0000';
+            baseByYear[yr] = (baseByYear[yr] || 0) + (s.interest || 0);
+        });
+        
+        simSchedule.forEach(s => {
+            const yr = s.date ? s.date.substring(0, 4) : '0000';
+            simByYear[yr] = (simByYear[yr] || 0) + (s.interest || 0);
+        });
+        
+        Object.keys(baseByYear).forEach(yr => {
+            const baseYrInt = baseByYear[yr] || 0;
+            const simYrInt = simByYear[yr] || 0;
+            const baseDeductible = Math.min(4000, baseYrInt);
+            const simDeductible = Math.min(4000, simYrInt);
+            const diffDeductible = Math.max(0, baseDeductible - simDeductible);
+            lostDeduction += diffDeductible * 0.19;
+        });
+    }
+
+    const netRepaymentBenefit = Math.max(0, savings - lostDeduction);
+
+    // Get investment inputs
+    const rawTaxRate = parseFloat(document.getElementById('sim-inv-tax-rate')?.value) ?? 26.0;
+    const taxRate = rawTaxRate / 100;
+    const annualReturnPct = parseFloat(document.getElementById('sim-inv-return-rate')?.value) ?? 4.0;
+    const annualReturnRate = annualReturnPct / 100;
+
+    let invDurationYears = parseFloat(document.getElementById('sim-inv-duration-years')?.value);
+    if (isNaN(invDurationYears) || invDurationYears <= 0) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const remMonths = simSchedule.length > 0 ? simSchedule.length : baseSchedule.length;
+        invDurationYears = Math.max(1, Math.round(remMonths / 12));
+        const durationInput = document.getElementById('sim-inv-duration-years');
+        if (durationInput && !durationInput.value) {
+            durationInput.value = invDurationYears;
+        }
+    }
+
+    const totalInvMonths = Math.round(invDurationYears * 12);
+    const monthlyInvReturnRate = Math.pow(1 + annualReturnRate, 1 / 12) - 1;
+
+    // Capital invested
+    const totalLumpSumInvested = extraAmount;
+    const totalMonthlyInvested = paymentIncrease * totalInvMonths;
+    const totalCapitalInvested = totalLumpSumInvested + totalMonthlyInvested;
+
+    // Investment Future Values
+    let fvLump = 0;
+    if (extraAmount > 0 && totalInvMonths > 0) {
+        fvLump = extraAmount * Math.pow(1 + monthlyInvReturnRate, totalInvMonths);
+    }
+    const grossGainLump = Math.max(0, fvLump - extraAmount);
+
+    let fvMonthly = 0;
+    if (paymentIncrease > 0 && totalInvMonths > 0) {
+        if (monthlyInvReturnRate > 0) {
+            fvMonthly = paymentIncrease * ((Math.pow(1 + monthlyInvReturnRate, totalInvMonths) - 1) / monthlyInvReturnRate);
+        } else {
+            fvMonthly = paymentIncrease * totalInvMonths;
+        }
+    }
+    const grossGainMonthly = Math.max(0, fvMonthly - (paymentIncrease * totalInvMonths));
+
+    const totalGrossGain = grossGainLump + grossGainMonthly;
+    const investmentTaxAmount = totalGrossGain * taxRate;
+    const netInvestmentGain = Math.max(0, totalGrossGain - investmentTaxAmount);
+
+    // Delta comparison
+    const delta = netInvestmentGain - netRepaymentBenefit;
+
+    // Update DOM details
+    const elRepayGrossInt = document.getElementById('sim-res-repay-gross-interest');
+    if (elRepayGrossInt) elRepayGrossInt.textContent = formatEuro(savings);
+
+    const elRepayLostDed = document.getElementById('sim-res-repay-lost-deduction');
+    if (elRepayLostDed) elRepayLostDed.textContent = `-${formatEuro(lostDeduction)}`;
+
+    const elRepayNetBen = document.getElementById('sim-res-repay-net-benefit');
+    if (elRepayNetBen) elRepayNetBen.textContent = formatEuro(netRepaymentBenefit);
+
+    const elInvCap = document.getElementById('sim-res-inv-capital');
+    if (elInvCap) elInvCap.textContent = formatEuro(totalCapitalInvested);
+
+    const elInvGrossRet = document.getElementById('sim-res-inv-gross-return');
+    if (elInvGrossRet) elInvGrossRet.textContent = formatEuro(totalGrossGain);
+
+    const elInvTaxLabel = document.getElementById('sim-res-inv-tax-label');
+    if (elInvTaxLabel) elInvTaxLabel.textContent = `Tasse Plusvalenza (${(taxRate * 100).toFixed(1)}%):`;
+
+    const elInvTaxAmt = document.getElementById('sim-res-inv-tax-amount');
+    if (elInvTaxAmt) elInvTaxAmt.textContent = `-${formatEuro(investmentTaxAmount)}`;
+
+    const elInvNetGain = document.getElementById('sim-res-inv-net-gain');
+    if (elInvNetGain) elInvNetGain.textContent = formatEuro(netInvestmentGain);
+
+    // Update Verdict Banner & Badge
+    const elVerdictBadge = document.getElementById('sim-verdict-badge');
+    const elVerdictBanner = document.getElementById('sim-verdict-banner');
+    const elVerdictTitle = document.getElementById('sim-verdict-title');
+    const elVerdictDesc = document.getElementById('sim-verdict-desc');
+
+    if (elVerdictBanner && elVerdictTitle && elVerdictDesc && elVerdictBadge) {
+        if (extraAmount <= 0 && paymentIncrease <= 0) {
+            elVerdictBadge.textContent = 'ℹ️ Nessun Importo Simulato';
+            elVerdictBadge.style.background = 'rgba(158, 158, 158, 0.15)';
+            elVerdictBadge.style.color = 'var(--text-muted)';
+            
+            elVerdictBanner.style.background = 'var(--bg-app)';
+            elVerdictBanner.style.border = '1px solid var(--border-color)';
+            elVerdictTitle.textContent = 'Inserisci un importo di estinzione o aumento rata';
+            elVerdictTitle.style.color = 'var(--text-primary)';
+            elVerdictDesc.textContent = 'Compila i campi "Importo Estinzione Straordinaria" o "Aumento Rata Mensile" per attivare il confronto tra l\'estinzione del mutuo e un investimento alternativo.';
+        } else if (delta > 5) {
+            // Investment is better
+            elVerdictBadge.textContent = '📈 Conveniente Investire';
+            elVerdictBadge.style.background = 'rgba(21, 101, 192, 0.15)';
+            elVerdictBadge.style.color = '#1565c0';
+
+            elVerdictBanner.style.background = 'linear-gradient(135deg, rgba(21, 101, 192, 0.12), rgba(30, 136, 229, 0.06))';
+            elVerdictBanner.style.border = '1px solid rgba(21, 101, 192, 0.3)';
+            elVerdictTitle.textContent = `🚀 È più conveniente INVESTIRE (+${formatEuro(delta)} di guadagno netto)`;
+            elVerdictTitle.style.color = '#1565c0';
+            elVerdictDesc.textContent = `Mantenendo il mutuo attivo e investendo gli stessi importi (${formatEuro(totalCapitalInvested)}) al ${annualReturnPct.toFixed(1)}% lordo (${(taxRate * 100).toFixed(1)}% tasse) per ${invDurationYears} anni, otterrai un guadagno netto di ${formatEuro(netInvestmentGain)}, ovvero ${formatEuro(delta)} in più rispetto al risparmio netto dell'estinzione anticipata (${formatEuro(netRepaymentBenefit)}).`;
+        } else if (delta < -5) {
+            // Repayment is better
+            const absDelta = Math.abs(delta);
+            elVerdictBadge.textContent = '🛡️ Conveniente Estinguere';
+            elVerdictBadge.style.background = 'rgba(46, 125, 50, 0.15)';
+            elVerdictBadge.style.color = '#2e7d32';
+
+            elVerdictBanner.style.background = 'linear-gradient(135deg, rgba(46, 125, 50, 0.12), rgba(76, 175, 80, 0.06))';
+            elVerdictBanner.style.border = '1px solid rgba(46, 125, 50, 0.3)';
+            elVerdictTitle.textContent = `🛡️ È più conveniente ESTINGUERE IL MUTUO (+${formatEuro(absDelta)} di risparmio netto)`;
+            elVerdictTitle.style.color = '#2e7d32';
+            elVerdictDesc.textContent = `Destinando ${formatEuro(totalCapitalInvested)} all'estinzione anticipata del mutuo otterrai un risparmio netto sugli interessi di ${formatEuro(netRepaymentBenefit)}${isTaxDeductionActive ? ' (al netto della detrazione IRPEF del 19% persa)' : ''}, che supera di ${formatEuro(absDelta)} il rendimento netto dell'investimento alternativo (${formatEuro(netInvestmentGain)}).`;
+        } else {
+            // Equivalent
+            elVerdictBadge.textContent = '⚖️ Risultati Equivalenti';
+            elVerdictBadge.style.background = 'rgba(255, 152, 0, 0.15)';
+            elVerdictBadge.style.color = '#e65100';
+
+            elVerdictBanner.style.background = 'linear-gradient(135deg, rgba(255, 152, 0, 0.12), rgba(255, 183, 77, 0.06))';
+            elVerdictBanner.style.border = '1px solid rgba(255, 152, 0, 0.3)';
+            elVerdictTitle.textContent = '⚖️ Le due opzioni sono finanziariamente equivalenti';
+            elVerdictTitle.style.color = '#e65100';
+            elVerdictDesc.textContent = `Il beneficio netto dell'estinzione anticipata (${formatEuro(netRepaymentBenefit)}) e il rendimento netto dell'investimento (${formatEuro(netInvestmentGain)}) differiscono di meno di € 5.`;
+        }
+    }
+};
 
 // --- HISTORY RENDERER ---
 function renderPaymentsTable() {

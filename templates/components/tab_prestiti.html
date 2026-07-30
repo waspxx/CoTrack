@@ -208,31 +208,146 @@
                                     <option value="payment">{{ _('Reduce Payment (Keep term unchanged)') }}</option>
                                 </select>
                             </div>
+
+                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0 5px 0;" />
+                            
+                            <h4 style="margin: 0; color: var(--primary-color); display: flex; align-items: center; gap: 6px; font-size: 0.95em;">
+                                📈 {{ _('Investimento Alternativo (Confronto)') }}
+                            </h4>
+
+                            <div class="form-group">
+                                <label for="sim-inv-asset-type">{{ _('Strumento di Investimento / Tassazione') }}</label>
+                                <select id="sim-inv-asset-type" onchange="window.onSimInvAssetTypeChange()" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                                    <option value="obbligazioni_stato" selected>{{ _('Obbligazioni Statali (Tassazione 12.5%%)') }}</option>
+                                    <option value="obbligazioni_corp">{{ _('Obbligazioni Corporate (Tassazione 26%%)') }}</option>
+                                    <option value="etf">{{ _('ETF / Azioni (Tassazione 26%%)') }}</option>
+                                    <option value="custom">{{ _('Personalizzato') }}</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="sim-inv-custom-tax-container" style="display: none;">
+                                <label for="sim-inv-tax-rate">{{ _('Aliquota Tassazione Personalizzata (%%)') }}</label>
+                                <input type="number" id="sim-inv-tax-rate" min="0" max="100" step="0.1" value="26.0" oninput="runSimulation()" style="width:100%;" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="sim-inv-return-rate">{{ _('Rendimento Annuo Lordo Atteso (%%)') }}</label>
+                                <input type="number" id="sim-inv-return-rate" min="-100" max="100" step="0.1" value="4.0" placeholder="{{ _('e.g. 4.0') }}" oninput="runSimulation()" style="width:100%;" />
+                            </div>
+
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label for="sim-inv-duration-years" style="margin-bottom: 0;">{{ _('Durata Investimento (Anni)') }}</label>
+                                    <button type="button" onclick="window.syncInvDurationWithLoan()" class="btn-link" style="background: none; border: none; color: var(--primary-color); font-size: 0.78em; cursor: pointer; text-decoration: underline; padding: 0;">
+                                        {{ _('Usa durata residua mutuo') }}
+                                    </button>
+                                </div>
+                                <input type="number" id="sim-inv-duration-years" min="1" max="50" step="1" placeholder="{{ _('e.g. 10') }}" oninput="runSimulation()" style="width:100%;" />
+                            </div>
+
+                            <div class="form-group" style="margin-top: 2px;">
+                                <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.85em; cursor: pointer; color: var(--text-primary); line-height: 1.3;">
+                                    <input type="checkbox" id="sim-tax-deduction-19" checked onchange="runSimulation()" style="margin-top: 2px;" />
+                                    <span>{{ _('Detrazione IRPEF 19%% su interessi mutuo (es. Prima Casa)') }}</span>
+                                </label>
+                                <p style="font-size: 0.75em; color: var(--text-muted); margin: 4px 0 0 24px;">
+                                    {{ _('Riducendo gli interessi del mutuo con l\'estinzione anticipata, si riduce la detrazione IRPEF del 19%% (max 4.000€/anno d\'interessi).') }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Simulation Results -->
-                    <div class="card" style="padding: 20px;">
-                        <h3>{{ _('Comparative Simulation Results') }}</h3>
-                        
-                        <!-- Mini KPIs -->
-                        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); display: grid; gap: 12px; margin-top: 15px; margin-bottom: 20px;">
-                            <div style="background: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                                <span class="stat-label" style="font-size: 11px;">{{ _('Interest Saved') }}</span>
-                                <span class="stat-value" id="sim-savings-interest" style="font-size: 1.5em; color: #2e7d32; display: block; font-weight: bold; margin-top: 4px;">€ 0,00</span>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="card" style="padding: 20px;">
+                            <h3>{{ _('Comparative Simulation Results') }}</h3>
+                            
+                            <!-- Mini KPIs -->
+                            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); display: grid; gap: 12px; margin-top: 15px; margin-bottom: 20px;">
+                                <div style="background: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <span class="stat-label" style="font-size: 11px;">{{ _('Interest Saved') }}</span>
+                                    <span class="stat-value" id="sim-savings-interest" style="font-size: 1.5em; color: #2e7d32; display: block; font-weight: bold; margin-top: 4px;">€ 0,00</span>
+                                </div>
+                                <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <span class="stat-label" style="font-size: 11px;">{{ _('Months Saved') }}</span>
+                                    <span class="stat-value" id="sim-savings-term" style="font-size: 1.5em; color: #2196f3; display: block; font-weight: bold; margin-top: 4px;">0 mesi</span>
+                                </div>
+                                <div style="background: rgba(255, 152, 0, 0.08); border: 1px solid rgba(255, 152, 0, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <span class="stat-label" style="font-size: 11px;">{{ _('New Maturity Date') }}</span>
+                                    <span class="stat-value" id="sim-new-end-date" style="font-size: 1.2em; color: #ff9800; display: block; font-weight: bold; margin-top: 8px;">N/A</span>
+                                </div>
                             </div>
-                            <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                                <span class="stat-label" style="font-size: 11px;">{{ _('Months Saved') }}</span>
-                                <span class="stat-value" id="sim-savings-term" style="font-size: 1.5em; color: #2196f3; display: block; font-weight: bold; margin-top: 4px;">0 mesi</span>
-                            </div>
-                            <div style="background: rgba(255, 152, 0, 0.08); border: 1px solid rgba(255, 152, 0, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                                <span class="stat-label" style="font-size: 11px;">{{ _('New Maturity Date') }}</span>
-                                <span class="stat-value" id="sim-new-end-date" style="font-size: 1.2em; color: #ff9800; display: block; font-weight: bold; margin-top: 8px;">N/A</span>
+                            
+                            <div class="chart-container" style="position: relative; height: 240px; margin-bottom: 15px;">
+                                <canvas id="chart-sim-comparison"></canvas>
                             </div>
                         </div>
-                        
-                        <div class="chart-container" style="position: relative; height: 250px; margin-bottom: 15px;">
-                            <canvas id="chart-sim-comparison"></canvas>
+
+                        <!-- Estinzione vs Investimento Comparison Card -->
+                        <div class="card" style="padding: 20px;" id="sim-comparison-verdict-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                                <h3 style="margin: 0;">⚖️ {{ _('Convenienza: Estinzione VS Investimento') }}</h3>
+                                <span id="sim-verdict-badge" style="padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px;"></span>
+                            </div>
+
+                            <!-- Verdict Banner Box -->
+                            <div id="sim-verdict-banner" style="padding: 16px; border-radius: 10px; margin-bottom: 18px; transition: all 0.3s ease;">
+                                <h4 id="sim-verdict-title" style="margin: 0 0 6px 0; font-size: 1.1em; font-weight: bold;"></h4>
+                                <p id="sim-verdict-desc" style="margin: 0; font-size: 0.88em; opacity: 0.95; line-height: 1.4;"></p>
+                            </div>
+
+                            <!-- 2 Column Comparison Cards -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                                <!-- Option A: Estinzione Anticipata -->
+                                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                        <span style="font-size: 1.2em;">🛡️</span>
+                                        <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95em;">{{ _('Estinzione Anticipata Mutuo') }}</h4>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: var(--text-muted);">{{ _('Risparmio Interessi Lordo:') }}</span>
+                                            <strong id="sim-res-repay-gross-interest" style="color: #2e7d32;">€ 0,00</strong>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: var(--text-muted);">{{ _('Persa Detrazione IRPEF (19%%):') }}</span>
+                                            <span id="sim-res-repay-lost-deduction" style="color: #c62828;">-€ 0,00</span>
+                                        </div>
+                                        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 4px 0;" />
+                                        <div style="display: flex; justify-content: space-between; font-size: 1.05em;">
+                                            <span style="font-weight: bold;">{{ _('Beneficio Netto Estinzione:') }}</span>
+                                            <strong id="sim-res-repay-net-benefit" style="color: #2e7d32; font-size: 1.1em;">€ 0,00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Option B: Investimento Alternativo -->
+                                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                        <span style="font-size: 1.2em;">📈</span>
+                                        <h4 style="margin: 0; color: var(--text-primary); font-size: 0.95em;">{{ _('Investimento Alternativo') }}</h4>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85em;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: var(--text-muted);">{{ _('Capitale Investito Totale:') }}</span>
+                                            <strong id="sim-res-inv-capital">€ 0,00</strong>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: var(--text-muted);">{{ _('Rendimento Lordo Accumulato:') }}</span>
+                                            <strong id="sim-res-inv-gross-return" style="color: #1565c0;">€ 0,00</strong>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="color: var(--text-muted);" id="sim-res-inv-tax-label">{{ _('Tasse Plusvalenza:') }}</span>
+                                            <span id="sim-res-inv-tax-amount" style="color: #c62828;">-€ 0,00</span>
+                                        </div>
+                                        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 4px 0;" />
+                                        <div style="display: flex; justify-content: space-between; font-size: 1.05em;">
+                                            <span style="font-weight: bold;">{{ _('Guadagno Netto Investimento:') }}</span>
+                                            <strong id="sim-res-inv-net-gain" style="color: #1565c0; font-size: 1.1em;">€ 0,00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

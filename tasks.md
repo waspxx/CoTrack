@@ -10,6 +10,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tab Prestiti: Simulatore Risparmio con confronto convenienza estinzione anticipata VS investimento dello stesso importo (durata, tasso, obbligazioni/ETF, tasse plusvalenza e detrazione IRPEF 19% mutuo)
 - [x] **Feature** Aggiunto nel tab wallet la media delle entrate, uscite e risparmio degli ultimi 12 mesi e l'andamento del risparmio percentuale con grafico
 - [x] **Feature** Aggiunto andamento annuale netto/lordo/lavoro nel tab stipendi e statistiche di gruppo con selettore di contributo delle singole persone
 - [x] **Feature** In base ai tab in uso, aggiornare il report di Gemini per inviare via mail i dati più significativi per compararli con la settimana o il mese precedente. Cercare di ridurre il più possibile il consumo di token.
