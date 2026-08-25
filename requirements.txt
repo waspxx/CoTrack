@@ -1,4 +1,5 @@
 Flask==3.0.0
+Flask-Limiter==3.8.0
 requests
 beautifulsoup4
 pandas
@@ -10,3 +11,4 @@ Flask-Babel
 APScheduler==3.10.4
 git+https://github.com/rongardF/tvdatafeed.git
 git+https://github.com/druzsan/justetf-scraping.git
+gunicorn==21.2.0

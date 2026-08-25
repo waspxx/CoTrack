@@ -1,23 +1,44 @@
-# Usa un'immagine base di Python leggera
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+# 1. Builder stage: scarica e compila le dipendenze
+FROM python:3.11-slim AS builder
 
-# Imposta la cartella di lavoro nel container
 WORKDIR /app
 
-# Copia il file delle dipendenze e installale
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
-RUN pip install --upgrade --no-cache-dir git+https://github.com/rongardF/tvdatafeed.git
-RUN pip install --upgrade --no-cache-dir git+https://github.com/druzsan/justetf-scraping.git
-RUN pip install --no-cache-dir -r requirements.txt
-# Installa Gunicorn per l'ambiente di produzione
-RUN pip install --no-cache-dir gunicorn
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Copia tutto il resto del codice nell'immagine
-COPY . .
+# 2. Final stage: immagine leggera e sicura di runtime
+FROM python:3.11-slim
 
-# Espone la porta che userà Flask
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/install/lib/python3.11/site-packages:$PYTHONPATH \
+    PATH=/install/bin:$PATH
+
+# Crea utente non privilegiato e directory dati per persistenza
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/data && \
+    chown -R appuser:appuser /app
+
+# Copia i pacchetti installati dal builder e il codice dell'app
+COPY --from=builder /install /install
+COPY --chown=appuser:appuser . .
+
+USER appuser
+
 EXPOSE 5001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5001/').read()" || exit 1
 
 # Use Gunicorn with 1 worker and 4 threads to handle concurrency
 # and prevent APScheduler from running multiple times (sending duplicate emails)

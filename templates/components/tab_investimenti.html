@@ -427,7 +427,7 @@
             <table class="tabella-transazioni">
                 <thead>
                     <tr>
-                        <th></th> 
+                        <th style="width: 60px; text-align: center;">{{ _('Actions') }}</th> 
                         <th>{{ _('Date') }}</th>
                         <th>{{ _('Instrument (Ticker/ISIN)') }}</th>
                         <th>{{ _('Asset Type:') }}</th>
@@ -548,6 +548,78 @@
             <div style="text-align:right; margin-top:20px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
                 <button onclick="document.getElementById('pdf-mapping-modal').style.display='none'; document.getElementById('file-pdf').value='';" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
                 <button onclick="confermaPdfMapping()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #28a745;">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MODIFICA TRANSAZIONE INVESTIMENTI -->
+    <div id="modal-modifica-transazione-investimenti" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:25px 30px; border-radius:12px; max-width:550px; width:90%; max-height:90vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#0d6efd; border-bottom:2px solid #f1f3f5; padding-bottom:12px;">✏️ {{ _('Edit Transaction') }}</h3>
+            
+            <input type="hidden" id="edit-inv-id">
+            
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('ISIN (e.g., IE00B3RBWM25, IT0005436693):') }}</label>
+                <input type="text" id="edit-inv-asset-name" placeholder="Codice ISIN" oninput="onEditIsinInput(this.value)">
+            </div>
+
+            <div class="form-group" id="edit-inv-ticker-group" style="margin-bottom: 12px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.88em; color:#495057;">
+                    {{ _('Yahoo Ticker') }}
+                    <span id="edit-inv-ticker-status" style="font-size:0.85em; color:#6c757d;"></span>
+                </label>
+                <input type="text" id="edit-inv-ticker" placeholder="es. VWCE.MI, AAPL, IWDA.L" style="font-family: monospace;">
+                <div style="font-size:0.78em; color:#6c757d; margin-top:4px;">
+                    {{ _('Auto-resolved from ISIN. Edit only to use a different exchange (e.g. .AS, .L, .DE).') }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Asset Type:') }}</label>
+                <select id="edit-inv-asset-type" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; outline: none; background-color: white; cursor: pointer;">
+                    <option value="ETF">ETF</option>
+                    <option value="Single Stocks">{{ _('Single Stocks') }}</option>
+                    <option value="Single Bonds">{{ _('Single Bonds') }}</option>
+                    <option value="Gold">{{ _('Gold') }}</option>
+                    <option value="Bitcoin">Bitcoin</option>
+                    <option value="Cash">{{ _('Cash') }}</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Date:') }}</label>
+                <input type="date" id="edit-inv-date">
+            </div>
+            
+            <div class="form-row" style="display:flex; gap:12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex:1;">
+                    <label>{{ _('Price per Share (€):') }}</label>
+                    <input type="number" id="edit-inv-price" step="0.0001" placeholder="Prezzo per quota">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>{{ _('Fees (€):') }}</label>
+                    <input type="number" id="edit-inv-fees" step="0.01" value="0" placeholder="Totali">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Number of Shares:') }}</label>
+                <input type="number" id="edit-inv-quantity" step="0.0001" value="1" placeholder="es. 10.5">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>{{ _('Type:') }}</label>
+                <div class="radio-group" style="display:flex; gap:15px; margin-top:5px;">
+                    <label><input type="radio" name="edit_inv_type" value="Buy"> {{ _('Purchase') }}</label>
+                    <label><input type="radio" name="edit_inv_type" value="Sell"> {{ _('Sale') }}</label>
+                    <label><input type="radio" name="edit_inv_type" value="Dividend"> {{ _('Div.') }}</label>
+                </div>
+            </div>
+
+            <div style="text-align:right; margin-top:20px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="chiudiModalModificaInvestimenti()" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="salvaModificaTransazioneInvestimenti()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #0d6efd;">{{ _('Save Changes') }}</button>
             </div>
         </div>
     </div>

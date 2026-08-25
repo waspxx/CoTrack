@@ -10,6 +10,9 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Integrazione REST API BudgetBakers: sincronizzazione automatica delle transazioni del mese precedente ogni 20 del mese alle 06:00, sincronizzazione manuale rapida/personalizzata, mappatura intelligente delle categorie con Gemini AI e cache persistente in DB
+- [x] **Feature** Aggiunta la possibilità di modificare le transazioni sia nel tab investimenti che nel tab wallet (con modali dedicate, autocompletamento e sincronizzazione)
+- [x] **Feature** Tab Veicoli: Integrazione e sincronizzazione automatica delle attività (rifornimenti, spese, manutenzioni, entrate, promemoria) con Drivvo via credenziali .env e riconoscimento veicoli per targa
 - [x] **Feature** Tab Prestiti: Simulatore Risparmio con confronto convenienza estinzione anticipata VS investimento dello stesso importo (durata, tasso, obbligazioni/ETF, tasse plusvalenza e detrazione IRPEF 19% mutuo)
 - [x] **Feature** Aggiunto nel tab wallet la media delle entrate, uscite e risparmio degli ultimi 12 mesi e l'andamento del risparmio percentuale con grafico
 - [x] **Feature** Aggiunto andamento annuale netto/lordo/lavoro nel tab stipendi e statistiche di gruppo con selettore di contributo delle singole persone

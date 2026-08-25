@@ -485,12 +485,22 @@
             {
                 "nome": "tfr silente",
                 "codice": "GAR",
-                "link_dati_storici": "https://www.cometafondo.it/andamenti/reddito/"
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/tfr-silente/"
             },
             {
                 "nome": "reddito",
                 "codice": "BIL",
                 "link_dati_storici": "https://www.cometafondo.it/andamenti/reddito/"
+            },
+            {
+                "nome": "crescita",
+                "codice": "AZI",
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/crescita/"
+            },
+            {
+                "nome": "sicurezza",
+                "codice": "GAR",
+                "link_dati_storici": "https://www.cometafondo.it/andamenti/sicurezza/"
             }
         ]
     },

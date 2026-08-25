@@ -218,6 +218,31 @@
                         <option value="BudgetBakers">BudgetBakers</option>
                     </select>
                 </div>
+                
+                <!-- BudgetBakers Integration Box -->
+                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-top: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.85em; font-weight: bold; color: #212529;">BudgetBakers Sync</span>
+                        <span id="badge-budgetbakers-status" style="font-size: 0.75em; padding: 2px 6px; border-radius: 4px; background: #e9ecef; color: #6c757d;">{{ _('Checking...') }}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <button type="button" class="btn-secondary" id="btn-sync-budgetbakers" onclick="sincronizzaBudgetBakersMeseScorso()" style="width: 100%; background-color: #0d6efd; color: white; border: none; font-size: 0.85em; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span>🔄</span> {{ _('Sync Previous Month') }}
+                        </button>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" onclick="apriModalBudgetBakers()" style="flex: 1; background: white; border: 1px solid #ced4da; color: #495057; font-size: 0.8em; padding: 5px; border-radius: 4px; cursor: pointer;">
+                                ⚙️ {{ _('Configure') }}
+                            </button>
+                            <button type="button" onclick="apriModalSyncBudgetBakersCustom()" style="flex: 1; background: white; border: 1px solid #ced4da; color: #495057; font-size: 0.8em; padding: 5px; border-radius: 4px; cursor: pointer;">
+                                📅 {{ _('Custom Range') }}
+                            </button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.72em; color: #6c757d; margin-top: 6px; text-align: center;">
+                        {{ _('Auto-syncs previous month on the 20th') }}
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-secondary" onclick="document.getElementById('file-wallet-csv').click()" style="flex: 1; background-color: #17a2b8;">{{ _('Import CSV') }}</button>
                     <button class="btn-secondary" onclick="esportaWalletCSV()" style="flex: 1;">{{ _('Export CSV') }}</button>
@@ -292,10 +317,61 @@
                 </div>
             </div>
                 <table class="tabella-transazioni">
-                    <thead><tr><th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllWallet" onchange="toggleSelectAllWallet(this)"></th><th>{{ _('Date') }}</th><th>{{ _('Account') }}</th><th>{{ _('Category') }}</th><th>{{ _('Note') }}</th><th style="text-align: left;">{{ _('Amount') }} <div id="wallet-saldo-filtri" style="font-size: 0.85em; font-weight: normal; margin-top: 4px;"></div></th></tr></thead>
+                    <thead><tr><th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllWallet" onchange="toggleSelectAllWallet(this)"></th><th style="width: 45px; text-align: center;">{{ _('Actions') }}</th><th>{{ _('Date') }}</th><th>{{ _('Account') }}</th><th>{{ _('Category') }}</th><th>{{ _('Note') }}</th><th style="text-align: left;">{{ _('Amount') }} <div id="wallet-saldo-filtri" style="font-size: 0.85em; font-weight: normal; margin-top: 4px;"></div></th></tr></thead>
                     <tbody id="corpo-tabella-wallet"></tbody>
                 </table>
                 <div id="paginazione-wallet-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE MODIFICA TRANSAZIONE WALLET -->
+    <div id="modal-modifica-transazione-wallet" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:25px 30px; border-radius:12px; max-width:550px; width:90%; max-height:90vh; overflow-y:auto; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#198754; border-bottom:2px solid #f1f3f5; padding-bottom:12px;">✏️ {{ _('Edit Transaction') }}</h3>
+            
+            <input type="hidden" id="edit-wallet-id">
+            
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Date:') }}</label>
+                <input type="date" id="edit-wallet-date" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Account:') }}</label>
+                <input type="text" id="edit-wallet-account" list="list-wallet-accounts" placeholder="es. Conto Corrente, Revolut..." style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+                <datalist id="list-wallet-accounts"></datalist>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>{{ _('Category:') }}</label>
+                <input type="text" id="edit-wallet-category" list="list-wallet-categories" placeholder="es. Spesa, Ristorante, Stipendio..." style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+                <datalist id="list-wallet-categories"></datalist>
+            </div>
+
+            <div class="form-row" style="display:flex; gap:12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex:1;">
+                    <label>{{ _('Type:') }}</label>
+                    <select id="edit-wallet-type" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; cursor: pointer; outline: none; box-sizing: border-box;">
+                        <option value="Expense">{{ _('Expense') }}</option>
+                        <option value="Income">{{ _('Income') }}</option>
+                        <option value="Transfer">{{ _('Transfer') }}</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>{{ _('Amount (€):') }}</label>
+                    <input type="number" id="edit-wallet-amount" step="0.01" placeholder="0.00" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>{{ _('Note:') }}</label>
+                <input type="text" id="edit-wallet-note" placeholder="Note aggiuntive (opzionale)" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+            </div>
+
+            <div style="text-align:right; margin-top:20px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="chiudiModalModificaWallet()" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button onclick="salvaModificaTransazioneWallet()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #198754;">{{ _('Save Changes') }}</button>
             </div>
         </div>
     </div>
@@ -311,6 +387,57 @@
             <div style="text-align:right; margin-top:30px; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
                 <button onclick="document.getElementById('wallet-csv-mapping-modal').style.display='none'; document.getElementById('file-wallet-csv').value='';" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
                 <button onclick="confermaMappingWalletCSV()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #28a745;">{{ _('Confirm and Import') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CONFIGURAZIONE BUDGETBAKERS -->
+    <div id="modal-config-budgetbakers" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:550px; width:90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#0d6efd; border-bottom:2px solid #f1f3f5; padding-bottom:15px; display:flex; align-items:center; gap:8px;">
+                ⚙️ {{ _('BudgetBakers API Configuration') }}
+            </h3>
+            <p style="color: #6c757d; font-size: 0.88em; line-height: 1.5; margin-bottom: 20px;">
+                {{ _('Enter your personal BudgetBakers Bearer Token / API Key. You can get your token from the BudgetBakers Web App or developer portal.') }}
+            </p>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight: 600; font-size: 0.85em; color: #495057; display: block; margin-bottom: 6px;">{{ _('API Token / Bearer Token:') }}</label>
+                <input type="password" id="input-budgetbakers-token" placeholder="{{ _('Paste your token here...') }}" style="width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box; font-family: monospace;">
+                <small id="text-budgetbakers-status-detail" style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.8em;"></small>
+            </div>
+
+            <div style="text-align:right; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="chiudiModalBudgetBakers()" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button type="button" onclick="salvaConfigBudgetBakers()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #0d6efd;">{{ _('Save Token') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE SYNC BUDGETBAKERS PERSONALIZZATO -->
+    <div id="modal-sync-budgetbakers-custom" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:white; padding:30px; border-radius:12px; max-width:480px; width:90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#198754; border-bottom:2px solid #f1f3f5; padding-bottom:15px; display:flex; align-items:center; gap:8px;">
+                📅 {{ _('Custom BudgetBakers Sync') }}
+            </h3>
+            <p style="color: #6c757d; font-size: 0.88em; margin-bottom: 20px;">
+                {{ _('Select a date range to download and synchronize transactions directly from BudgetBakers.') }}
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.85em; color: #495057; display: block; margin-bottom: 4px;">{{ _('Start Date (From):') }}</label>
+                    <input type="date" id="sync-bb-start-date" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.85em; color: #495057; display: block; margin-bottom: 4px;">{{ _('End Date (To):') }}</label>
+                    <input type="date" id="sync-bb-end-date" style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="text-align:right; padding-top: 15px; border-top: 1px solid #f1f3f5; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="chiudiModalSyncBudgetBakersCustom()" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
+                <button type="button" onclick="eseguiSyncBudgetBakersCustom()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #198754;">{{ _('Start Sync') }}</button>
             </div>
         </div>
     </div>

@@ -1,3 +1,8 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, render_template, request, jsonify, make_response, send_file, session
 from flask_babel import Babel, _
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -36,12 +41,15 @@ try:
 except ImportError:
     justetf_scraping = None
 
+from drivvo_sync import drivvo_service
+from budgetbakers_sync import budgetbakers_service
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') # Obbligatoria per i form con Flask-WTF
 # Configurazione del database SQLite
 app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY')
-app.config['GEMINI_MODEL_PRIMARY'] = os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash')
-app.config['GEMINI_MODEL_FALLBACK'] = os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.1-flash-lite')
+app.config['GEMINI_MODEL_PRIMARY'] = os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
+app.config['GEMINI_MODEL_FALLBACK'] = os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'it']
 app.config['SMTP_SERVER'] = os.environ.get('SMTP_SERVER')
@@ -63,6 +71,35 @@ def inject_locale():
 DB_FOLDER = 'data'
 DB_NAME = 'cotrack.db'
 DATABASE_PATH = os.path.join(DB_FOLDER, DB_NAME)
+
+try:
+    from flask_limiter import Limiter
+except ImportError:
+    Limiter = None
+
+def get_client_ip():
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
+if Limiter:
+    limiter = Limiter(
+        key_func=get_client_ip,
+        app=app,
+        default_limits=[],
+        storage_uri="memory://"
+    )
+else:
+    class DummyLimiter:
+        def limit(self, *args, **kwargs):
+            def decorator(f):
+                return f
+            return decorator
+    limiter = DummyLimiter()
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"errore": _("Too many requests. Please try again later.")}), 429
 
 import time
 
@@ -1044,13 +1081,13 @@ Portfolio Data:
         client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
         try:
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash'),
+                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash'),
                 contents=prompt
             )
         except Exception as primary_e:
             print(f"Errore modello primario in get_gemini_analysis_html: {primary_e}. Tentativo con il fallback.")
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.1-flash-lite'),
+                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
                 contents=prompt
             )
         
@@ -1471,13 +1508,13 @@ Financial Overview:
         client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
         try:
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash'),
+                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash'),
                 contents=prompt
             )
         except Exception as primary_e:
             print(f"Errore modello primario in get_gemini_holistic_analysis: {primary_e}. Tentativo con il fallback.")
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.1-flash-lite'),
+                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
                 contents=prompt
             )
         
@@ -1493,10 +1530,8 @@ def send_weekly_report():
         
         for user in users:
             email_destinatario = user['username']
-            if email_destinatario.lower() in ['admin', 'admin@admin.com']:
-                email_destinatario = app.config.get('MAIL_DEFAULT_SENDER') or app.config.get('SMTP_USERNAME')
-                
-            if not email_destinatario or '@' not in email_destinatario: continue
+            if not email_destinatario or '@' not in email_destinatario:
+                continue
             
             # Detect active tabs
             active_tabs = get_user_active_tabs(conn, user['id'])
@@ -2051,9 +2086,6 @@ def send_daily_reminders():
             
             if status:
                 email = r['username']
-                if email.lower() in ['admin', 'admin@admin.com']:
-                    email = mittente
-                
                 if not email or '@' not in email:
                     continue
                     
@@ -2330,10 +2362,31 @@ def update_pension_fund_prices_job():
         print(f"Updating prices for compartment {comp['id']} from {comp['investing_link']}...")
         scrape_and_save_prices(comp['id'], comp['investing_link'])
 
+def sync_budgetbakers_monthly_job():
+    print("[SCHEDULER] Running scheduled BudgetBakers monthly sync job (20th of the month)...")
+    conn = get_db_connection()
+    try:
+        users = conn.execute("SELECT id, username FROM users").fetchall()
+        for user in users:
+            uid = user['id']
+            if budgetbakers_service.is_configured(user_id=uid, conn=conn):
+                wallets = conn.execute("SELECT id, name FROM wallets WHERE user_id = ? ORDER BY id ASC", (uid,)).fetchall()
+                for wallet in wallets:
+                    try:
+                        res = budgetbakers_service.sync_wallet(conn, wallet_id=wallet['id'], user_id=uid)
+                        print(f"[SCHEDULER] BudgetBakers sync for user {user['username']} (wallet {wallet['id']} - {wallet['name']}): {res}")
+                    except Exception as e:
+                        print(f"[SCHEDULER] Error syncing BudgetBakers for user {user['username']} wallet {wallet['id']}: {e}")
+    except Exception as e:
+        print(f"[SCHEDULER] Exception in sync_budgetbakers_monthly_job: {e}")
+    finally:
+        conn.close()
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
 scheduler.add_job(func=send_daily_reminders, trigger="cron", hour=8, minute=0)
 scheduler.add_job(func=update_pension_fund_prices_job, trigger="cron", day=10, hour=2, minute=0)
+scheduler.add_job(func=sync_budgetbakers_monthly_job, trigger="cron", day=20, hour=6, minute=0)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
@@ -2344,13 +2397,16 @@ def index():
 
 # --- 1.5 AUTENTICAZIONE E PORTAFOGLI ---
 @app.route('/api/auth/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
-    data = request.json
+    data = request.json or {}
+    username = (data.get('username') or '').strip().lower()
+    password = data.get('password')
     conn = get_db_connection()
-    user = conn.execute("SELECT * FROM users WHERE username = ?", (data.get('username'),)).fetchone()
+    user = conn.execute("SELECT * FROM users WHERE LOWER(username) = ?", (username,)).fetchone()
     conn.close()
     
-    if user and check_password_hash(user['password_hash'], data.get('password')):
+    if user and password and check_password_hash(user['password_hash'], password):
         session['user_id'] = user['id']
         session['username'] = user['username']
         return jsonify({"messaggio": _("Login successful")}), 200
@@ -2384,16 +2440,20 @@ def invia_email_benvenuto(destinatario):
         print(f"Errore durante l'invio dell'email a {destinatario}: {e}")
 
 @app.route('/api/auth/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
-    data = request.json
+    data = request.json or {}
     conn = get_db_connection()
     try:
-        username = data.get('username')
+        username = (data.get('username') or '').strip().lower()
+        password = data.get('password')
         if not username or '@' not in username:
             return jsonify({"errore": _("Username must be a valid email address")}), 400
+        if not password:
+            return jsonify({"errore": _("Missing data")}), 400
             
         conn.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", 
-                     (username, generate_password_hash(data.get('password'))))
+                     (username, generate_password_hash(password)))
         conn.commit()
         
         # Invia l'email in background se SMTP è configurato
@@ -2402,7 +2462,8 @@ def register():
             
         return jsonify({"messaggio": _("Registration completed")}), 201
     except sqlite3.IntegrityError:
-        return jsonify({"errore": _("Username already in use")}), 400
+        # Mitigazione User Enumeration: non rivelare se l'utente esiste già
+        return jsonify({"messaggio": _("Registration completed")}), 201
     finally:
         conn.close()
 
@@ -2439,13 +2500,14 @@ def invia_email_reset(destinatario, reset_link):
         print(f"Errore durante l'invio dell'email di reset a {destinatario}: {e}")
 
 @app.route('/api/auth/forgot_password', methods=['POST'])
+@limiter.limit("3 per minute")
 def forgot_password():
-    email = request.json.get('username')
+    email = (request.json.get('username') or '').strip().lower()
     if not email or '@' not in email:
         return jsonify({"errore": _("Valid email required")}), 400
         
     conn = get_db_connection()
-    user = conn.execute("SELECT id FROM users WHERE username = ?", (email,)).fetchone()
+    user = conn.execute("SELECT id FROM users WHERE LOWER(username) = ?", (email,)).fetchone()
     if user:
         token = secrets.token_urlsafe(32)
         scadenza = (datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
@@ -2458,8 +2520,9 @@ def forgot_password():
     return jsonify({"messaggio": _("If the email exists, a reset link has been sent.")}), 200
 
 @app.route('/api/auth/reset_password', methods=['POST'])
+@limiter.limit("5 per minute")
 def reset_password():
-    data = request.json
+    data = request.json or {}
     token, new_password = data.get('token'), data.get('password')
     if not token or not new_password: return jsonify({"errore": _("Missing data")}), 400
     conn = get_db_connection()
@@ -2555,6 +2618,16 @@ def settings_tabs():
             res[key] = (row['value'] == 'true') if row else True
         conn.close()
         return jsonify(res)
+
+@app.route('/api/drivvo/status', methods=['GET'])
+def drivvo_status():
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    return jsonify({
+        "configured": drivvo_service.is_configured(),
+        "email": drivvo_service.email if drivvo_service.is_configured() else None
+    })
+
 
 @app.route('/api/portfolios', methods=['GET', 'POST'])
 def manage_portfolios():
@@ -2805,14 +2878,67 @@ def manage_transactions():
         lista_transactions = [dict(row) for row in transactions]
         return jsonify(lista_transactions)
 
-@app.route('/api/transactions/<int:id>', methods=['DELETE'])
-def delete_transaction(id):
+@app.route('/api/transactions/<int:id>', methods=['PUT', 'DELETE'])
+def manage_single_transaction(id):
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
     conn = get_db_connection()
-    conn.execute('DELETE FROM transactions WHERE id = ? AND portfolio_id IN (SELECT id FROM portfolios WHERE user_id = ?)', (id, session['user_id']))
-    conn.commit()
-    conn.close()
-    return jsonify({"messaggio": _("Transaction deleted!")}), 200
+    if request.method == 'DELETE':
+        conn.execute('DELETE FROM transactions WHERE id = ? AND portfolio_id IN (SELECT id FROM portfolios WHERE user_id = ?)', (id, session['user_id']))
+        conn.commit()
+        conn.close()
+        return jsonify({"messaggio": _("Transaction deleted!")}), 200
+        
+    elif request.method == 'PUT':
+        data = request.json
+        if not data:
+            conn.close()
+            return jsonify({"errore": _("Missing data")}), 400
+            
+        isin = (data.get('asset_name') or '').strip().upper()
+        if not isin:
+            conn.close()
+            return jsonify({"errore": _("Instrument (ISIN) is required")}), 400
+            
+        ticker_override = (data.get('ticker') or '').strip()
+        if ticker_override:
+            ticker = ticker_override
+        else:
+            ticker = resolve_ticker_from_isin(isin)
+            
+        date = data.get('date')
+        operation_type = data.get('operation_type') or 'Buy'
+        try:
+            price_per_share = float(data.get('price_per_share', 0))
+            fees = float(data.get('fees', 0))
+            quantity = float(data.get('quantity', 0))
+        except (ValueError, TypeError):
+            conn.close()
+            return jsonify({"errore": _("Invalid numeric values")}), 400
+            
+        total_value = data.get('total_value')
+        if total_value is None:
+            total_value = price_per_share * quantity
+        else:
+            try:
+                total_value = float(total_value)
+            except (ValueError, TypeError):
+                total_value = price_per_share * quantity
+                
+        asset_type = data.get('asset_type') or 'ETF'
+        
+        tx = conn.execute('SELECT id FROM transactions WHERE id = ? AND portfolio_id IN (SELECT id FROM portfolios WHERE user_id = ?)', (id, session['user_id'])).fetchone()
+        if not tx:
+            conn.close()
+            return jsonify({"errore": _("Transaction not found or unauthorized")}), 404
+            
+        conn.execute('''
+            UPDATE transactions 
+            SET date = ?, asset_name = ?, ticker = ?, operation_type = ?, price_per_share = ?, fees = ?, quantity = ?, total_value = ?, asset_type = ?
+            WHERE id = ? AND portfolio_id IN (SELECT id FROM portfolios WHERE user_id = ?)
+        ''', (date, isin, ticker, operation_type, price_per_share, fees, quantity, total_value, asset_type, id, session['user_id']))
+        conn.commit()
+        conn.close()
+        return jsonify({"messaggio": _("Transaction updated successfully!")}), 200
 
 @app.route('/api/transactions/all', methods=['DELETE'])
 def delete_all_transactions():
@@ -3277,14 +3403,14 @@ Portfolio Data:
     try:
         client = genai.Client(api_key=api_key)
         try:
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash')
+            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt
             )
         except Exception as primary_e:
             print(f"Errore modello primario in analyze_portfolio: {primary_e}. Tentativo con il fallback.")
-            fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.1-flash-lite')
+            fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
             response = client.models.generate_content(
                 model=fallback_model,
                 contents=prompt
@@ -3635,6 +3761,65 @@ def update_wallet_transaction_category(transaction_id):
         conn.execute('UPDATE wallet_transactions SET category = ? WHERE id = ?', (new_category, transaction_id))
         conn.commit()
         return jsonify({"messaggio": _("Category updated successfully")}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"errore": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/wallet/transactions/<int:transaction_id>', methods=['PUT', 'DELETE'])
+def manage_single_wallet_transaction(transaction_id):
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    
+    conn = get_db_connection()
+    try:
+        tx = conn.execute('''
+            SELECT wt.id, wt.wallet_id 
+            FROM wallet_transactions wt
+            JOIN wallets w ON wt.wallet_id = w.id
+            WHERE wt.id = ? AND w.user_id = ?
+        ''', (transaction_id, session['user_id'])).fetchone()
+        
+        if not tx:
+            return jsonify({"errore": _("Transaction not found or unauthorized")}), 404
+            
+        if request.method == 'DELETE':
+            conn.execute('DELETE FROM wallet_transactions WHERE id = ?', (transaction_id,))
+            conn.commit()
+            return jsonify({"messaggio": _("Transaction deleted successfully")}), 200
+            
+        elif request.method == 'PUT':
+            data = request.json
+            if not data:
+                return jsonify({"errore": _("Missing data")}), 400
+                
+            date = data.get('date')
+            account = (data.get('account') or '').strip()
+            category = (data.get('category') or '').strip()
+            currency = data.get('currency', 'EUR')
+            note = data.get('note', '')
+            tx_type = data.get('type', 'Expense')
+            
+            try:
+                amount = float(data.get('amount', 0))
+            except (ValueError, TypeError):
+                return jsonify({"errore": _("Invalid amount")}), 400
+                
+            if not date or not account or not category:
+                return jsonify({"errore": _("Date, account and category are required")}), 400
+                
+            if tx_type == 'Expense' and amount > 0:
+                amount = -amount
+            elif tx_type == 'Income' and amount < 0:
+                amount = abs(amount)
+                
+            conn.execute('''
+                UPDATE wallet_transactions 
+                SET date = ?, account = ?, category = ?, currency = ?, amount = ?, note = ?, type = ?
+                WHERE id = ?
+            ''', (date, account, category, currency, amount, note, tx_type, transaction_id))
+            conn.commit()
+            return jsonify({"messaggio": _("Transaction updated successfully")}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({"errore": str(e)}), 500
@@ -4053,67 +4238,94 @@ def import_custom_wallet_csv():
         return jsonify({"errore": f"Errore durante l'importazione: {str(e)}"}), 500
     finally: conn.close()
 
-# @app.route('/api/config/wallet_token', methods=['GET', 'POST'])
-# def gestisci_token():
-#     conn = get_db_connection()
-#     if request.method == 'POST':
-#         token = request.json.get('token', '').strip()
-#         conn.execute('INSERT OR REPLACE INTO configurazioni (chiave, valore) VALUES (?, ?)', ('wallet_token', token))
-#         conn.commit()
-#         conn.close()
-#         return jsonify({"messaggio": "Token salvato!"})
-#     else:
-#         row = conn.execute('SELECT valore FROM configurazioni WHERE chiave = ?', ('wallet_token',)).fetchone()
-#         conn.close()
-#         return jsonify({"token": row['valore'] if row else ""})
+@app.route('/api/wallet/budgetbakers/status', methods=['GET'])
+def budgetbakers_status():
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+    configured = budgetbakers_service.is_configured(user_id=user_id, conn=conn)
+    token = budgetbakers_service.get_token(user_id=user_id, conn=conn)
+    conn.close()
 
-# @app.route('/api/wallet/sync', methods=['POST'])
-# def sync_wallet():
-#     conn = get_db_connection()
-#     try:
-#         row = conn.execute('SELECT valore FROM configurazioni WHERE chiave = ?', ('wallet_token',)).fetchone()
-#         if not row or not row['valore']:
-#             return jsonify({"errore": "Token non configurato"}), 400
-        
-#         token = row['valore']
-#         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-        
-#         response = requests.get("https://rest.budgetbakers.com/v1/api/accounts", headers=headers)
-#         if response.status_code != 200:
-#             return jsonify({"errore": f"Errore API Wallet: {response.text}"}), 400
-            
-#         accounts_data = response.json()
-#         accounts_list = accounts_data if isinstance(accounts_data, list) else accounts_data.get('accounts', [])
-        
-#         oggi = datetime.today().strftime('%Y-%m-%d')
-        
-#         for acc in accounts_list:
-#             acc_id = str(acc.get('id', ''))
-#             acc_name = acc.get('name', 'Sconosciuto')
-#             balance = acc.get('initialBalance', 0)
-            
-#             conn.execute('''
-#                 INSERT INTO saldi_conto (data, account_id, account_name, saldo, valuta)
-#                 VALUES (?, ?, ?, ?, ?)
-#                 ON CONFLICT(data, account_id) DO UPDATE SET 
-#                     saldo=excluded.saldo,
-#                     account_name=excluded.account_name
-#             ''', (oggi, acc_id, acc_name, float(balance), 'EUR'))
-            
-#         conn.commit()
-#         return jsonify({"messaggio": "Sincronizzazione completata!"})
-#     except Exception as e:
-#         conn.rollback()
-#         return jsonify({"errore": str(e)}), 500
-#     finally:
-#         conn.close()
+    masked_token = ""
+    if token:
+        masked_token = token[:6] + "..." + token[-4:] if len(token) > 10 else "***"
 
-# @app.route('/api/wallet/saldi', methods=['GET'])
-# def get_saldi_storico():
-#     conn = get_db_connection()
-#     rows = conn.execute('SELECT * FROM saldi_conto ORDER BY data ASC').fetchall()
-#     conn.close()
-#     return jsonify([dict(row) for row in rows])
+    return jsonify({
+        "configured": configured,
+        "masked_token": masked_token
+    })
+
+
+@app.route('/api/wallet/budgetbakers/config', methods=['GET', 'POST'])
+def budgetbakers_config():
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    if request.method == 'POST':
+        data = request.json or {}
+        token = str(data.get('token', '')).strip()
+        conn.execute(
+            "INSERT OR REPLACE INTO configurations (key, value) VALUES (?, ?)",
+            (f"user_config:{user_id}:budgetbakers_token", token)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"messaggio": _("BudgetBakers token saved successfully!")})
+    else:
+        row = conn.execute(
+            "SELECT value FROM configurations WHERE key = ?",
+            (f"user_config:{user_id}:budgetbakers_token",)
+        ).fetchone()
+        conn.close()
+        return jsonify({"token": row['value'] if row else ""})
+
+
+@app.route('/api/wallet/budgetbakers/sync', methods=['POST'])
+def sync_budgetbakers_wallet():
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    data = request.json or {}
+    wallet_id = data.get('wallet_id')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+
+    conn = get_db_connection()
+    if wallet_id:
+        w = conn.execute("SELECT id FROM wallets WHERE id = ? AND user_id = ?", (wallet_id, user_id)).fetchone()
+        if not w:
+            conn.close()
+            return jsonify({"errore": _("Wallet not found or unauthorized")}), 404
+    else:
+        w = conn.execute("SELECT id FROM wallets WHERE user_id = ? ORDER BY id ASC LIMIT 1", (user_id,)).fetchone()
+        if not w:
+            conn.close()
+            return jsonify({"errore": _("No wallet found for this user")}), 404
+        wallet_id = w['id']
+
+    try:
+        res = budgetbakers_service.sync_wallet(conn, wallet_id=wallet_id, user_id=user_id, start_date=start_date, end_date=end_date)
+        if not res.get("success"):
+            conn.close()
+            return jsonify({"errore": res.get("error", _("Sync failed"))}), 400
+
+        imported = res.get("imported", 0)
+        ignored = res.get("ignored", 0)
+        total_fetched = res.get("total_fetched", 0)
+        s_date = res.get("start_date")
+        e_date = res.get("end_date")
+
+        msg = _("Sync completed! %(imported)s new transactions imported, %(ignored)s already present (total fetched: %(total)s from %(start)s to %(end)s).",
+                imported=imported, ignored=ignored, total=total_fetched, start=s_date, end=e_date)
+        conn.close()
+        return jsonify({"messaggio": msg, "imported": imported, "ignored": ignored, "total_fetched": total_fetched}), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({"errore": f"Errore durante la sincronizzazione: {str(e)}"}), 500
 
 # --- 6. GESTIONE BOLLETTE ---
 @app.route('/api/bills', methods=['GET', 'POST'])
@@ -4726,7 +4938,7 @@ def vehicle_entries_route():
             conn.close()
             return jsonify({"errore": "Missing required fields"}), 400
             
-        v = conn.execute("SELECT id, odometer FROM vehicles WHERE id = ? AND garage_id = ?", (vehicle_id, garage_id)).fetchone()
+        v = conn.execute("SELECT id, brand, model, plate, odometer FROM vehicles WHERE id = ? AND garage_id = ?", (vehicle_id, garage_id)).fetchone()
         if not v:
             conn.close()
             return jsonify({"errore": "Vehicle not found in active garage"}), 404
@@ -4749,13 +4961,25 @@ def vehicle_entries_route():
         conn.execute(f"INSERT INTO vehicle_activities ({fields_str}) VALUES ({placeholders})", db_vals)
         
         if odometer_val is not None and v_type != 'reminder':
-            if odometer_val > v['odometer']:
+            if odometer_val > (v['odometer'] or 0):
                 conn.execute("UPDATE vehicles SET odometer = ? WHERE id = ?", (odometer_val, vehicle_id))
                 
         conn.commit()
         row = conn.execute("SELECT * FROM vehicle_activities WHERE id = ?", (act_id,)).fetchone()
+        row_dict = dict(row) if row else {}
         conn.close()
-        return jsonify(dict(row)), 201
+        
+        # Sincronizzazione automatica verso Drivvo
+        if row_dict:
+            try:
+                v_plate = v['plate'] if 'plate' in v.keys() else None
+                v_brand = v['brand'] if 'brand' in v.keys() else None
+                v_model = v['model'] if 'model' in v.keys() else None
+                drivvo_service.sync_activity_async(row_dict, vehicle_plate=v_plate, vehicle_brand=v_brand, vehicle_model=v_model)
+            except Exception as sync_err:
+                app.logger.error(f"Errore avvio sync Drivvo: {sync_err}")
+
+        return jsonify(row_dict), 201
         
     vehicle_id = request.args.get('vehicle_id')
     if vehicle_id:
@@ -5504,7 +5728,7 @@ def parse_statement_pdf():
             return jsonify({"transactions": transactions, "method": "regex_fallback"})
 
         client = genai.Client(api_key=api_key)
-        model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash')
+        model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
         
         prompt = (
             "Sei un assistente contabile esperto. Analizza il seguente testo estratto da un "
@@ -5527,10 +5751,18 @@ def parse_statement_pdf():
             f"Testo estratto:\n{text}"
         )
 
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
-        )
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+        except Exception as primary_e:
+            print(f"Errore modello primario in parse_statement_pdf: {primary_e}. Tentativo con il fallback.")
+            fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
+            response = client.models.generate_content(
+                model=fallback_model,
+                contents=prompt
+            )
 
         resp_text = response.text
         if resp_text.startswith("```"):
@@ -6611,7 +6843,7 @@ def parse_pension_pdf():
 
         try:
             client = genai.Client(api_key=api_key)
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.5-flash')
+            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
             prompt = (
                 "Sei un esperto contabile italiano. Analizza il testo estratto da un documento che può essere una busta paga italiana o un estratto conto di un fondo pensione (es. Cometa, Fonchim, Fonte, Secondapensione, ecc.).\n"
                 "Estrai tutti i contributi versati al fondo pensione (TFR, quota lavoratore/aderente, quota azienda/datore).\n"
@@ -6636,7 +6868,12 @@ def parse_pension_pdf():
                 "- Se è un estratto conto (statement), estrai la lista storica dei contributi mese per mese presenti nel documento.\n\n"
                 f"Testo:\n{text}"
             )
-            response = client.models.generate_content(model=model_name, contents=prompt)
+            try:
+                response = client.models.generate_content(model=model_name, contents=prompt)
+            except Exception as primary_e:
+                print(f"Errore modello primario in parse_pension_pdf: {primary_e}. Tentativo con il fallback.")
+                fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
+                response = client.models.generate_content(model=fallback_model, contents=prompt)
             resp_text = response.text.strip()
             
             if "```" in resp_text:

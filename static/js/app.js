@@ -343,7 +343,11 @@ async function eseguiRegistrazione() {
     if (p !== pConfirm) { alert("Passwords do not match!"); return; }
     if (!u.includes('@')) { alert("Please enter a valid email address as username."); return; }
     let res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
-    if (res.ok) { alert("Registration completed! Now log in."); toggleAuthMode(); }
+    if (res.ok) { 
+        let data = await res.json();
+        alert(data.messaggio || "Registration completed! Now log in."); 
+        toggleAuthMode(); 
+    }
     else { let err = await res.json(); alert(err.errore); }
 }
 
@@ -2111,6 +2115,132 @@ async function eliminaTransazione(id) {
     }
 }
 
+// 7.0 MODIFICA TRANSAZIONE INVESTIMENTI
+let _editIsinDebounceTimer = null;
+function onEditIsinInput(val) {
+    clearTimeout(_editIsinDebounceTimer);
+    let isin = val.trim().toUpperCase();
+    let status = document.getElementById('edit-inv-ticker-status');
+    let overrideInput = document.getElementById('edit-inv-ticker');
+    if (!status || !overrideInput) return;
+
+    let isValidIsin = /^[A-Z]{2}[A-Z0-9]{10}$/.test(isin) && !isin.startsWith('IT');
+    if (!isValidIsin) {
+        status.textContent = '';
+        return;
+    }
+    status.textContent = '⏳ Risoluzione...';
+    status.style.color = '#6c757d';
+
+    _editIsinDebounceTimer = setTimeout(async () => {
+        try {
+            let res = await fetch('/api/resolve_ticker?isin=' + encodeURIComponent(isin));
+            if (res.ok) {
+                let data = await res.json();
+                overrideInput.value = data.ticker;
+                if (data.ticker !== isin) {
+                    status.textContent = '✅ Trovato';
+                    status.style.color = '#28a745';
+                } else {
+                    status.textContent = '⚠️ Non trovato';
+                    status.style.color = '#ffc107';
+                }
+            }
+        } catch (e) {
+            status.textContent = '❌ Errore';
+            status.style.color = '#dc3545';
+        }
+    }, 600);
+}
+
+function modificaTransazioneInvestimenti(id) {
+    let t = transazioniValideInvestimenti.find(item => item.id === id);
+    if (!t) return;
+    
+    document.getElementById('edit-inv-id').value = t.id;
+    document.getElementById('edit-inv-asset-name').value = t.asset_name || '';
+    document.getElementById('edit-inv-ticker').value = t.ticker || '';
+    document.getElementById('edit-inv-asset-type').value = t.asset_type || 'ETF';
+    document.getElementById('edit-inv-date').value = t.date || '';
+    document.getElementById('edit-inv-price').value = t.price_per_share !== undefined ? t.price_per_share : '';
+    document.getElementById('edit-inv-fees').value = t.fees !== undefined ? t.fees : 0;
+    document.getElementById('edit-inv-quantity').value = t.quantity !== undefined ? t.quantity : 1;
+    
+    let tipoOp = t.operation_type;
+    let rad = document.querySelector(`input[name="edit_inv_type"][value="${tipoOp}"]`);
+    if (rad) rad.checked = true;
+    else {
+        let defaultRad = document.querySelector('input[name="edit_inv_type"][value="Buy"]');
+        if (defaultRad) defaultRad.checked = true;
+    }
+    
+    let status = document.getElementById('edit-inv-ticker-status');
+    if (status) status.textContent = '';
+    
+    let modal = document.getElementById('modal-modifica-transazione-investimenti');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalModificaInvestimenti() {
+    let modal = document.getElementById('modal-modifica-transazione-investimenti');
+    if (modal) modal.style.display = 'none';
+}
+
+async function salvaModificaTransazioneInvestimenti() {
+    let id = document.getElementById('edit-inv-id').value;
+    let asset_name = document.getElementById('edit-inv-asset-name').value.trim();
+    let ticker = document.getElementById('edit-inv-ticker').value.trim();
+    let asset_type = document.getElementById('edit-inv-asset-type').value;
+    let date = document.getElementById('edit-inv-date').value;
+    let price_per_share = parseFloat(document.getElementById('edit-inv-price').value) || 0;
+    let fees = parseFloat(document.getElementById('edit-inv-fees').value) || 0;
+    let quantity = parseFloat(document.getElementById('edit-inv-quantity').value) || 0;
+    let typeEl = document.querySelector('input[name="edit_inv_type"]:checked');
+    let operation_type = typeEl ? typeEl.value : 'Buy';
+    
+    if (!asset_name || !date || !price_per_share || !quantity) {
+        alert(window.Translations && window.Translations.fillRequiredFields ? window.Translations.fillRequiredFields : "Compila tutti i campi obbligatori prima di salvare.");
+        return;
+    }
+    
+    let total_value = price_per_share * quantity;
+    let payload = {
+        date: date,
+        asset_name: asset_name,
+        ticker: ticker,
+        operation_type: operation_type,
+        price_per_share: price_per_share,
+        fees: fees,
+        quantity: quantity,
+        total_value: total_value,
+        asset_type: asset_type
+    };
+    
+    try {
+        let res = await fetch(`/api/transactions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+            let err = await res.json();
+            alert(err.errore || "Errore durante il salvataggio");
+            return;
+        }
+        
+        chiudiModalModificaInvestimenti();
+        
+        document.getElementById('graficoAndamento').style.display = 'none';
+        document.getElementById('loading-grafico').style.display = 'block';
+        document.getElementById('loading-grafico').innerText = "Scarico dati aggiornati dal mercato...";
+        
+        caricaDati();
+    } catch (error) {
+        alert("Errore durante il salvataggio.");
+    }
+}
+
 // 7.2 AGGIORNA TIPO ASSET MASSIVO
 async function aggiornaTipoAsset(ticker, nuovoTipo) {
     try {
@@ -2721,6 +2851,7 @@ async function caricaDatiWallet() {
             initTableDateFilter();
             disegnaFiltriContiWallet();
             aggiornaDashboardWallet();
+            caricaStatoBudgetBakers();
         }
     } catch (error) { console.error("Errore caricamento dati Wallet:", error); }
 }
@@ -2783,6 +2914,104 @@ async function aggiornaCategoriaWallet(transactionId, nuovaCategoria) {
         }
     } catch (e) {
         alert("Errore di rete durante l'aggiornamento.");
+    }
+}
+
+// --- MODIFICA TRANSAZIONE WALLET ---
+function modificaTransazioneWallet(id) {
+    let t = transazioniWalletGlobal.find(item => item.id === id);
+    if (!t) return;
+    
+    document.getElementById('edit-wallet-id').value = t.id;
+    
+    let dataVal = t.date || t.data_operazione || '';
+    document.getElementById('edit-wallet-date').value = dataVal;
+    
+    let contoVal = t.account || t.conto || '';
+    document.getElementById('edit-wallet-account').value = contoVal;
+    
+    let catVal = (t.category || t.cat || '').replace(' (Trasf.)', '');
+    document.getElementById('edit-wallet-category').value = catVal;
+    
+    let importoVal = t.amount !== undefined ? t.amount : t.importo;
+    let tipoVal = t.type || (importoVal < 0 ? 'Expense' : 'Income');
+    if (tipoVal !== 'Expense' && tipoVal !== 'Income' && tipoVal !== 'Transfer') {
+        let low = tipoVal.toLowerCase();
+        if (low.includes('exp') || low.includes('spes')) tipoVal = 'Expense';
+        else if (low.includes('inc') || low.includes('entr')) tipoVal = 'Income';
+        else if (low.includes('trans') || low.includes('trasf')) tipoVal = 'Transfer';
+        else tipoVal = importoVal < 0 ? 'Expense' : 'Income';
+    }
+    
+    let typeSelect = document.getElementById('edit-wallet-type');
+    if (typeSelect) typeSelect.value = tipoVal;
+    
+    document.getElementById('edit-wallet-amount').value = Math.abs(parseFloat(importoVal) || 0);
+    document.getElementById('edit-wallet-note').value = t.note || '';
+    
+    // Popola datalist per suggerimenti
+    let dlAccounts = document.getElementById('list-wallet-accounts');
+    if (dlAccounts) {
+        let uniqueAccounts = [...new Set(transazioniWalletGlobal.map(item => item.account || item.conto).filter(Boolean))].sort();
+        dlAccounts.innerHTML = uniqueAccounts.map(acc => `<option value="${acc.replace(/"/g, '&quot;')}">`).join('');
+    }
+    
+    let dlCategories = document.getElementById('list-wallet-categories');
+    if (dlCategories) {
+        let uniqueCats = [...new Set(transazioniWalletGlobal.map(item => (item.category || item.cat || '').replace(' (Trasf.)', '')).filter(Boolean))].sort();
+        dlCategories.innerHTML = uniqueCats.map(cat => `<option value="${cat.replace(/"/g, '&quot;')}">`).join('');
+    }
+    
+    let modal = document.getElementById('modal-modifica-transazione-wallet');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalModificaWallet() {
+    let modal = document.getElementById('modal-modifica-transazione-wallet');
+    if (modal) modal.style.display = 'none';
+}
+
+async function salvaModificaTransazioneWallet() {
+    let id = document.getElementById('edit-wallet-id').value;
+    let date = document.getElementById('edit-wallet-date').value;
+    let account = document.getElementById('edit-wallet-account').value.trim();
+    let category = document.getElementById('edit-wallet-category').value.trim();
+    let type = document.getElementById('edit-wallet-type').value;
+    let amount = parseFloat(document.getElementById('edit-wallet-amount').value) || 0;
+    let note = document.getElementById('edit-wallet-note').value.trim();
+    
+    if (!date || !account || !category) {
+        alert(window.Translations && window.Translations.fillRequiredFields ? window.Translations.fillRequiredFields : "Compila tutti i campi obbligatori (Data, Conto, Categoria).");
+        return;
+    }
+    
+    let payload = {
+        date: date,
+        account: account,
+        category: category,
+        currency: 'EUR',
+        type: type,
+        amount: amount,
+        note: note
+    };
+    
+    try {
+        let res = await fetch(`/api/wallet/transactions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+            let err = await res.json();
+            alert(err.errore || "Errore durante il salvataggio");
+            return;
+        }
+        
+        chiudiModalModificaWallet();
+        caricaDatiWallet();
+    } catch (error) {
+        alert("Errore durante il salvataggio della transazione wallet.");
     }
 }
 
@@ -3867,6 +4096,7 @@ function renderTabellaWallet() {
 
     let tutteCategorie = [...new Set(transazioniWalletGlobal.map(tg => tg.category || "Altro"))].sort();
 
+    let isIt = document.documentElement.lang === 'it';
     let htmlRighe = "";
     paginated.forEach(t => {
         let dParts = t.dataStr.split('-');
@@ -3894,11 +4124,21 @@ function renderTabellaWallet() {
             selectCat += ' <span style="font-size:0.8em; color:#6c757d;">(Trasf.)</span>';
         }
 
-        htmlRighe += `<tr><td style="text-align: center;"><input type="checkbox" class="wallet-row-checkbox" value="${t.id}" onchange="aggiornaStatoEliminaWallet()"></td><td>${dataVis}</td><td>${t.conto}</td><td>${selectCat}</td><td>${t.note || ''}</td><td style="color: ${coloreImporto}; font-weight: bold;">${formatEuro(t.importo)}</td></tr>`;
+        htmlRighe += `<tr>
+            <td style="text-align: center;"><input type="checkbox" class="wallet-row-checkbox" value="${t.id}" onchange="aggiornaStatoEliminaWallet()"></td>
+            <td style="text-align: center;">
+                <button class="btn-elimina" style="color: #198754; padding: 2px 4px; font-size: 1.1em;" onclick="modificaTransazioneWallet(${t.id})" title="${isIt ? 'Modifica transazione' : 'Edit transaction'}">✏️</button>
+            </td>
+            <td>${dataVis}</td>
+            <td>${t.conto}</td>
+            <td>${selectCat}</td>
+            <td>${t.note || ''}</td>
+            <td style="color: ${coloreImporto}; font-weight: bold;">${formatEuro(t.importo)}</td>
+        </tr>`;
     });
 
     if (filtrate.length === 0) {
-        htmlRighe = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">${window.Translations.noTransactionsFound || 'No transactions found.'}</td></tr>`;
+        htmlRighe = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">${window.Translations.noTransactionsFound || 'No transactions found.'}</td></tr>`;
     }
     document.getElementById("corpo-tabella-wallet").innerHTML = htmlRighe;
     
@@ -4064,7 +4304,10 @@ function renderTabellaInvestimenti() {
                 `;
         htmlRighe += `
                     <tr>
-                        <td><button class="btn-elimina" onclick="eliminaTransazione(${transazione.id})" title="${isIt ? 'Elimina transazione' : 'Delete transaction'}">×</button></td>
+                        <td style="white-space: nowrap; text-align: center;">
+                            <button class="btn-elimina" style="color: #0d6efd; padding: 2px 4px; font-size: 1.1em;" onclick="modificaTransazioneInvestimenti(${transazione.id})" title="${isIt ? 'Modifica transazione' : 'Edit transaction'}">✏️</button>
+                            <button class="btn-elimina" style="padding: 2px 4px;" onclick="eliminaTransazione(${transazione.id})" title="${isIt ? 'Elimina transazione' : 'Delete transaction'}">×</button>
+                        </td>
                         <td>${transazione.date}</td>
                         <td>
                             <strong>${transazione.ticker ? transazione.ticker.toUpperCase() : ''}</strong>
@@ -4608,4 +4851,232 @@ window.caricaDatiSettings = function() {
     if (defaultTabSelect) {
         defaultTabSelect.value = localStorage.getItem('default_tab') || 'tab-investimenti';
     }
+
+    caricaStatoBudgetBakers();
 };
+
+// ==========================================
+// INTEGRAZIONE BUDGETBAKERS (WALLET)
+// ==========================================
+
+async function caricaStatoBudgetBakers() {
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const isIt = document.documentElement.lang === 'it';
+        const badgeWallet = document.getElementById('badge-budgetbakers-status');
+        const badgeSettings = document.getElementById('settings-bb-status-badge');
+        const infoSettings = document.getElementById('settings-bb-token-info');
+
+        if (data.configured) {
+            const labelOk = isIt ? '🟢 Configurato' : '🟢 Configured';
+            if (badgeWallet) {
+                badgeWallet.innerText = labelOk;
+                badgeWallet.style.backgroundColor = '#d1e7dd';
+                badgeWallet.style.color = '#0f5132';
+            }
+            if (badgeSettings) {
+                badgeSettings.innerText = labelOk;
+                badgeSettings.style.backgroundColor = '#d1e7dd';
+                badgeSettings.style.color = '#0f5132';
+            }
+            if (infoSettings && data.masked_token) {
+                infoSettings.innerText = (isIt ? 'Token attivo: ' : 'Active token: ') + data.masked_token;
+            }
+        } else {
+            const labelNo = isIt ? '⚪ Non configurato' : '⚪ Not configured';
+            if (badgeWallet) {
+                badgeWallet.innerText = labelNo;
+                badgeWallet.style.backgroundColor = '#f8d7da';
+                badgeWallet.style.color = '#842029';
+            }
+            if (badgeSettings) {
+                badgeSettings.innerText = labelNo;
+                badgeSettings.style.backgroundColor = '#f8d7da';
+                badgeSettings.style.color = '#842029';
+            }
+            if (infoSettings) {
+                infoSettings.innerText = isIt ? 'Nessun token impostato.' : 'No token set.';
+            }
+        }
+    } catch (e) {
+        console.error("Errore verifica stato BudgetBakers:", e);
+    }
+}
+
+async function apriModalBudgetBakers() {
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/config');
+        if (res.ok) {
+            const data = await res.json();
+            const input = document.getElementById('input-budgetbakers-token');
+            if (input) input.value = data.token || '';
+        }
+    } catch (e) {
+        console.error("Errore caricamento token BudgetBakers:", e);
+    }
+    const modal = document.getElementById('modal-config-budgetbakers');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalBudgetBakers() {
+    const modal = document.getElementById('modal-config-budgetbakers');
+    if (modal) modal.style.display = 'none';
+}
+
+async function salvaConfigBudgetBakers() {
+    const input = document.getElementById('input-budgetbakers-token');
+    const token = input ? input.value.trim() : '';
+
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.messaggio || "Token salvato con successo!");
+            chiudiModalBudgetBakers();
+            caricaStatoBudgetBakers();
+        } else {
+            alert(data.errore || "Errore durante il salvataggio del token.");
+        }
+    } catch (e) {
+        console.error("Errore salvataggio token BudgetBakers:", e);
+        alert("Errore di connessione durante il salvataggio del token.");
+    }
+}
+
+async function salvaBudgetBakersSettingsToken() {
+    const input = document.getElementById('settings-bb-token');
+    const token = input ? input.value.trim() : '';
+
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.messaggio || "Token salvato con successo!");
+            if (input) input.value = '';
+            caricaStatoBudgetBakers();
+        } else {
+            alert(data.errore || "Errore durante il salvataggio del token.");
+        }
+    } catch (e) {
+        console.error("Errore salvataggio token BudgetBakers da impostazioni:", e);
+        alert("Errore di connessione.");
+    }
+}
+
+async function sincronizzaBudgetBakersMeseScorso() {
+    const isIt = document.documentElement.lang === 'it';
+    const btn = document.getElementById('btn-sync-budgetbakers');
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ ${isIt ? 'Sincronizzazione in corso...' : 'Syncing...'}`;
+    }
+
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet_id: activeWalletId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.messaggio || (isIt ? "Sincronizzazione completata!" : "Sync completed!"));
+            await caricaDatiWallet();
+        } else {
+            alert(data.errore || (isIt ? "Errore durante la sincronizzazione." : "Sync error."));
+        }
+    } catch (e) {
+        console.error("Errore sincronizzazione BudgetBakers:", e);
+        alert(isIt ? "Errore di connessione durante la sincronizzazione." : "Connection error during sync.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
+        }
+    }
+}
+
+function apriModalSyncBudgetBakersCustom() {
+    // Calcola mese scorso di default
+    const now = new Date();
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDayPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const pad = n => String(n).padStart(2, '0');
+    const sDateStr = `${prevMonthDate.getFullYear()}-${pad(prevMonthDate.getMonth() + 1)}-01`;
+    const eDateStr = `${lastDayPrevMonth.getFullYear()}-${pad(lastDayPrevMonth.getMonth() + 1)}-${pad(lastDayPrevMonth.getDate())}`;
+
+    const inputStart = document.getElementById('sync-bb-start-date');
+    const inputEnd = document.getElementById('sync-bb-end-date');
+    if (inputStart && !inputStart.value) inputStart.value = sDateStr;
+    if (inputEnd && !inputEnd.value) inputEnd.value = eDateStr;
+
+    const modal = document.getElementById('modal-sync-budgetbakers-custom');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalSyncBudgetBakersCustom() {
+    const modal = document.getElementById('modal-sync-budgetbakers-custom');
+    if (modal) modal.style.display = 'none';
+}
+
+async function eseguiSyncBudgetBakersCustom() {
+    const isIt = document.documentElement.lang === 'it';
+    const inputStart = document.getElementById('sync-bb-start-date');
+    const inputEnd = document.getElementById('sync-bb-end-date');
+
+    const sDate = inputStart ? inputStart.value : '';
+    const eDate = inputEnd ? inputEnd.value : '';
+
+    if (!sDate || !eDate) {
+        alert(isIt ? "Seleziona entrambe le date di inizio e fine." : "Please select both start and end dates.");
+        return;
+    }
+
+    chiudiModalSyncBudgetBakersCustom();
+
+    const btn = document.getElementById('btn-sync-budgetbakers');
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ ${isIt ? 'Sincronizzazione in corso...' : 'Syncing...'}`;
+    }
+
+    try {
+        const res = await fetch('/api/wallet/budgetbakers/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                wallet_id: activeWalletId,
+                start_date: sDate,
+                end_date: eDate
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.messaggio || (isIt ? "Sincronizzazione completata!" : "Sync completed!"));
+            await caricaDatiWallet();
+        } else {
+            alert(data.errore || (isIt ? "Errore durante la sincronizzazione." : "Sync error."));
+        }
+    } catch (e) {
+        console.error("Errore sync custom BudgetBakers:", e);
+        alert(isIt ? "Errore di connessione durante la sincronizzazione." : "Connection error during sync.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
+        }
+    }
+}

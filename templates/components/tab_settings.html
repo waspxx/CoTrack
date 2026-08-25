@@ -74,5 +74,32 @@
                 <p style="font-size: 0.8em; color: var(--text-muted); margin: 4px 0 0;">{{ _('Choose which tab is displayed by default when you open CoTrack.') }}</p>
             </div>
         </div>
+
+        <!-- Card 3: Integrations (BudgetBakers) -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('BudgetBakers Integration') }}</h3>
+                </div>
+                <span id="settings-bb-status-badge" style="font-size: 0.75em; padding: 3px 8px; border-radius: 4px; background: #e9ecef; color: #6c757d; font-weight: 600;">{{ _('Checking...') }}</span>
+            </div>
+
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">
+                {{ _('Configure BudgetBakers API Token to automatically sync previous month transactions on the 20th of every month.') }}
+            </p>
+
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="settings-bb-token" style="font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.05em;">{{ _('API Token / Bearer Token') }}</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="password" id="settings-bb-token" placeholder="{{ _('Paste BudgetBakers token here...') }}" style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-app); color: var(--text-primary); outline: none; font-size: 0.95em; font-family: monospace;">
+                    <button onclick="salvaBudgetBakersSettingsToken()" style="padding: 10px 18px; background: var(--primary-color, #0d6efd); color: white; border: none; border-radius: var(--border-radius-sm); font-weight: 600; cursor: pointer;">{{ _('Save') }}</button>
+                </div>
+                <small id="settings-bb-token-info" style="font-size: 0.8em; color: var(--text-muted); margin-top: 4px;"></small>
+            </div>
+        </div>
     </div>
 </div>
