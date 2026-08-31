@@ -3090,7 +3090,7 @@ async function checkAndHandleTriggeredReminders(newEntry) {
     const date = newEntry.date;
     const odometer = parseInt(newEntry.odometer) || getCurrentOdometer(vehicleId, true);
     
-    const reminders = state.entries.filter(e => e.type === 'reminder' && e.vehicleId === vehicleId);
+    const reminders = state.entries.filter(e => e.type === 'reminder' && String(e.vehicleId) === String(vehicleId));
     
     for (const rem of reminders) {
         let isMatch = false;
@@ -3117,36 +3117,13 @@ async function checkAndHandleTriggeredReminders(newEntry) {
                 
                 let nextTargetDate = null;
                 if ((rem.triggerType === 'date' || rem.triggerType === 'both') && rem.recurrenceVal && rem.recurrenceUnit) {
-                    if (rem.nextTargetDate) {
-                        newTargetDate = rem.nextTargetDate;
-                    } else {
-                        const parts = date.split('-');
+                    const baseDateStr = date || new Date().toISOString().split('T')[0];
+                    const parts = baseDateStr.split('-');
+                    if (parts.length === 3) {
                         const y = parseInt(parts[0]);
                         const m = parseInt(parts[1]) - 1;
                         const d = parseInt(parts[2]);
-                        const baseDate = new Date(y, m, d);
-                        
-                        if (rem.recurrenceUnit === 'days') {
-                            baseDate.setDate(baseDate.getDate() + parseInt(rem.recurrenceVal));
-                        } else if (rem.recurrenceUnit === 'months') {
-                            baseDate.setMonth(baseDate.getMonth() + parseInt(rem.recurrenceVal));
-                        } else if (rem.recurrenceUnit === 'years') {
-                            baseDate.setFullYear(baseDate.getFullYear() + parseInt(rem.recurrenceVal));
-                        }
-                        
-                        const newY = baseDate.getFullYear();
-                        const newM = String(baseDate.getMonth() + 1).padStart(2, '0');
-                        const newD = String(baseDate.getDate()).padStart(2, '0');
-                        newTargetDate = `${newY}-${newM}-${newD}`;
-                    }
-                    
-                    // Calculate subsequent next target date relative to the new target date
-                    const partsNext = newTargetDate.split('-');
-                    if (partsNext.length === 3) {
-                        const yN = parseInt(partsNext[0]);
-                        const mN = parseInt(partsNext[1]) - 1;
-                        const dN = parseInt(partsNext[2]);
-                        const nextBaseDate = new Date(yN, mN, dN);
+                        const nextBaseDate = new Date(y, m, d);
                         
                         if (rem.recurrenceUnit === 'days') {
                             nextBaseDate.setDate(nextBaseDate.getDate() + parseInt(rem.recurrenceVal));
@@ -3159,6 +3136,7 @@ async function checkAndHandleTriggeredReminders(newEntry) {
                         const nY = nextBaseDate.getFullYear();
                         const nM = String(nextBaseDate.getMonth() + 1).padStart(2, '0');
                         const nD = String(nextBaseDate.getDate()).padStart(2, '0');
+                        newTargetDate = baseDateStr;
                         nextTargetDate = `${nY}-${nM}-${nD}`;
                     }
                 }
@@ -3173,18 +3151,33 @@ async function checkAndHandleTriggeredReminders(newEntry) {
                     targetOdometer: newTargetOdometer,
                     nextTargetDate: nextTargetDate
                 };
+                delete updatedRem._isExpired;
+                delete updatedRem._isExpiring;
+                delete updatedRem.garage_id;
+                delete updatedRem.portfolio_id;
                 
-                await fetch(`/api/vehicle-entries/${rem.id}`, {
+                const resp = await fetch(`/api/vehicle-entries/${rem.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedRem)
                 });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const idx = state.entries.findIndex(e => e.id === rem.id);
+                    if (idx !== -1) {
+                        state.entries[idx] = { ...state.entries[idx], ...data, targetDate: newTargetDate, targetOdometer: newTargetOdometer, nextTargetDate: nextTargetDate };
+                        delete state.entries[idx]._isExpired;
+                    }
+                }
             } else {
                 const confirmMessage = `È presente un promemoria attivo per "${rem.description}". Vuoi segnarlo come completato ed eliminarlo?`;
                 if (confirm(confirmMessage)) {
-                    await fetch(`/api/vehicle-entries/${rem.id}`, {
+                    const resp = await fetch(`/api/vehicle-entries/${rem.id}`, {
                         method: 'DELETE'
                     });
+                    if (resp.ok) {
+                        state.entries = state.entries.filter(e => e.id !== rem.id);
+                    }
                 }
             }
         }

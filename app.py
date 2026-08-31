@@ -5298,11 +5298,14 @@ def vehicle_entries_route():
             conn.close()
             return jsonify({"errore": "Vehicle not found in active garage"}), 404
             
+        cursor = conn.execute("PRAGMA table_info(vehicle_activities)")
+        valid_cols = set(row['name'] for row in cursor.fetchall())
+
         keys = list(data.keys())
         db_keys = []
         db_vals = []
         for k in keys:
-            if k == 'garage_id' or k == 'portfolio_id':
+            if k not in valid_cols or k in ('garage_id', 'portfolio_id'):
                 continue
             val = data[k]
             if isinstance(val, bool):
@@ -5377,26 +5380,26 @@ def vehicle_entry_detail_route(entry_id):
         conn.close()
         return jsonify({"success": True})
         
-    data = request.json
-    if 'id' in data:
-        del data['id']
-    if 'type' in data:
-        del data['type']
-        
+    data = request.json or {}
+    cursor = conn.execute("PRAGMA table_info(vehicle_activities)")
+    valid_cols = set(row['name'] for row in cursor.fetchall()) - {'id', 'type'}
+    
     keys = list(data.keys())
     update_pairs = []
     vals = []
     for k in keys:
+        if k not in valid_cols or k in ('garage_id', 'portfolio_id'):
+            continue
         val = data[k]
         if isinstance(val, bool):
             val = 1 if val else 0
         update_pairs.append(f"{k} = ?")
         vals.append(val)
         
-    vals.append(entry_id)
-    update_str = ', '.join(update_pairs)
-    
-    conn.execute(f"UPDATE vehicle_activities SET {update_str} WHERE id = ?", vals)
+    if update_pairs:
+        vals.append(entry_id)
+        update_str = ', '.join(update_pairs)
+        conn.execute(f"UPDATE vehicle_activities SET {update_str} WHERE id = ?", vals)
     
     updated = conn.execute("SELECT * FROM vehicle_activities WHERE id = ?", (entry_id,)).fetchone()
     if updated and updated['odometer'] is not None and e['type'] != 'reminder':
@@ -5406,7 +5409,7 @@ def vehicle_entry_detail_route(entry_id):
             
     conn.commit()
     conn.close()
-    return jsonify(dict(updated))
+    return jsonify(dict(updated)) if updated else jsonify({})
 
 @app.route('/api/vehicles/import-historical', methods=['POST'])
 def vehicles_import_historical():
