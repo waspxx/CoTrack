@@ -571,3 +571,94 @@ def scrape_pension_fund_prices(compartment_id, link, conn_provider):
         print(f"Exception scraping {link} for compartment {compartment_id}: {e}")
         
     return 0
+
+
+# ── VEHICLE RECALL CHECKERS ───────────────────────────────────────────────────
+
+def check_vin_recall(brand, vin):
+    """
+    Checks for open vehicle safety recalls based on brand and VIN (chassis number).
+    Currently supports:
+      - Škoda / VAG vehicles with TMB/WV/etc. chassis or brand 'skoda' / 'škoda'
+    """
+    b = (brand or "").strip().lower()
+    v = (vin or "").strip().upper()
+    
+    if not v:
+        return {
+            "status": "no_vin",
+            "has_recall": False,
+            "details": "Nessun numero di telaio (VIN) specificato per il veicolo."
+        }
+        
+    # Škoda check
+    if "skoda" in b or "škoda" in b or v.startswith("TMB"):
+        url = "https://recall.skoda-auto.com/it-it/Client/CheckVIN"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "text/html, */*; q=0.01"
+        }
+        try:
+            resp = requests.post(url, data={"VINToCheck": v}, headers=headers, timeout=12)
+            if not resp.ok:
+                return {
+                    "status": "error",
+                    "has_recall": False,
+                    "details": f"Risposta del server non valida (HTTP {resp.status_code})"
+                }
+                
+            text = resp.text
+            soup = BeautifulSoup(text, "html.parser")
+            msg = clean_html(soup.get_text(separator=" ", strip=True))
+            
+            if "vcr_VinFound" in text:
+                return {
+                    "status": "found",
+                    "has_recall": True,
+                    "details": msg or "Campagna di richiamo attiva rilevata per questo telaio."
+                }
+            elif "vcr_VinNotFound" in text:
+                return {
+                    "status": "not_found",
+                    "has_recall": False,
+                    "details": msg or "Il veicolo non risulta interessato da campagne di richiamo aperte."
+                }
+            elif "vcr_VinNotValid" in text:
+                return {
+                    "status": "invalid_vin",
+                    "has_recall": False,
+                    "details": msg or "Numero di telaio non valido o non riconosciuto dal portale."
+                }
+            elif "vcr_ServiceUnavailable" in text:
+                return {
+                    "status": "error",
+                    "has_recall": False,
+                    "details": "Il servizio verifica richiami del costruttore è momentaneamente non disponibile."
+                }
+            else:
+                return {
+                    "status": "unknown",
+                    "has_recall": False,
+                    "details": msg or text[:250]
+                }
+        except requests.exceptions.Timeout:
+            return {
+                "status": "error",
+                "has_recall": False,
+                "details": "Timeout durante la connessione al portale di verifica richiami."
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "has_recall": False,
+                "details": f"Errore durante la verifica: {str(e)}"
+            }
+            
+    return {
+        "status": "unsupported",
+        "has_recall": False,
+        "details": f"Verifica automatica richiami online non ancora disponibile per la marca {brand or 'specificata'}."
+    }
+

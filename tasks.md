@@ -10,6 +10,9 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tab Veicoli: Controllo periodico mensile automatico e manuale delle campagne di richiamo (Škoda/VAG) tramite VIN con notifica email in caso di richiamo attivo (VinFound), badge di stato nelle schede garage e nel certificato meccanico
+- [x] **Feature** Tab Veicoli: Aggiunti all'anagrafica veicolo i campi Numero di Telaio (VIN), Cilindrata, Potenza (kW), Cavalli (CV), HP Fiscali e Classe Euro, con autocalcolo kW/CV e integrazione sia nelle schede garage che nel Certificato Meccanico
+- [x] **Feature** Tab Veicoli: Aggiunto tasto per generare un certificato meccanico navigabile e stampabile/esportabile in PDF contenente dati tecnici del veicolo, storico delle manutenzioni registrate (data, argomento e chilometri) e riepilogo dei prossimi interventi da fare (tagliando, revisione ministeriale e revisione bombole metano)
 - [x] **Feature** Integrazione REST API BudgetBakers: sincronizzazione automatica delle transazioni del mese precedente ogni 20 del mese alle 06:00, sincronizzazione manuale rapida/personalizzata, mappatura intelligente delle categorie con Gemini AI e cache persistente in DB
 - [x] **Feature** Aggiunta la possibilità di modificare le transazioni sia nel tab investimenti che nel tab wallet (con modali dedicate, autocompletamento e sincronizzazione)
 - [x] **Feature** Tab Veicoli: Integrazione e sincronizzazione automatica delle attività (rifornimenti, spese, manutenzioni, entrate, promemoria) con Drivvo via credenziali .env e riconoscimento veicoli per targa

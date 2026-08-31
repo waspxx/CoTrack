@@ -1460,6 +1460,89 @@
     font-weight: 600;
 }
 
+/* Vehicle Recall Styling */
+.vehicle-recall-row {
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    align-items: center;
+}
+
+.vehicle-recall-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge-recall {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.badge-recall-found {
+    background-color: rgba(220, 38, 38, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    animation: pulse-recall 2s infinite ease-in-out;
+}
+
+.badge-recall-ok {
+    background-color: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.badge-recall-neutral {
+    background-color: rgba(148, 163, 184, 0.1);
+    color: var(--text-muted, #94a3b8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.btn-check-recall {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+    color: var(--text-color, #e2e8f0);
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-check-recall:hover:not(:disabled) {
+    background: var(--primary-color, #6366f1);
+    color: #ffffff;
+    border-color: var(--primary-color, #6366f1);
+}
+
+.btn-check-recall:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.recall-icon.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes pulse-recall {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
 .vehicle-card-actions {
     display: flex;
     justify-content: flex-end;
@@ -1794,4 +1877,747 @@
 .vehicle-card.archived-card:hover {
     opacity: 0.9;
 }
+
+/* -------------------------------------------------------------
+   MECHANICAL CERTIFICATE (CERTIFICATO MECCANICO)
+------------------------------------------------------------- */
+.btn-cert-quick {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 4px 10px;
+    border-radius: var(--border-radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all var(--transition-fast);
+}
+
+.btn-cert-quick:hover {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-cert {
+    background: #e8eaf6 !important;
+    color: #3f51b5 !important;
+    border: 1px solid #c5cae9 !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+}
+
+.btn-cert:hover {
+    background: #c5cae9 !important;
+    color: #1a237e !important;
+}
+
+/* Certificate Modal & Card */
+.certificate-modal-card {
+    max-width: 1040px;
+    width: 95%;
+    max-height: 92vh;
+    border-radius: var(--border-radius-lg);
+    background-color: var(--bg-card);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.certificate-modal-header {
+    padding: 16px 24px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cert-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cert-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cert-title-wrapper h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.cert-title-icon {
+    color: var(--primary-color);
+}
+
+.cert-vehicle-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-app);
+    padding: 4px 10px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.cert-vehicle-picker label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.cert-vehicle-picker select {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+}
+
+.cert-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-print-cert {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #0d6efd;
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-print-cert:hover {
+    background: #0b5ed7;
+}
+
+.certificate-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex-grow: 1;
+    background: #eef2f6;
+}
+
+/* Printable Document Sheet */
+.certificate-printable-sheet {
+    background: #ffffff;
+    color: #212529;
+    border-radius: 12px;
+    padding: 36px 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    max-width: 960px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sheet Header */
+.cert-doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    gap: 20px;
+}
+
+.cert-brand-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cert-brand-logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.cert-brand-text h1 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.5px;
+    color: #0f172a;
+    text-transform: uppercase;
+}
+
+.cert-brand-text p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+.cert-meta-block {
+    text-align: right;
+}
+
+.cert-doc-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.cert-doc-badge.status-ok {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.cert-doc-badge.status-warn {
+    background: #fff8e1;
+    color: #f57f17;
+    border: 1px solid #ffecb3;
+}
+
+.cert-doc-badge.status-danger {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.cert-meta-date {
+    font-size: 11px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Vehicle Hero Banner inside Certificate */
+.cert-vehicle-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.cert-veh-main h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #ffffff;
+}
+
+.cert-veh-plate {
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    letter-spacing: 1px;
+}
+
+.cert-veh-odometer {
+    text-align: right;
+}
+
+.cert-veh-odometer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    margin-bottom: 2px;
+}
+
+.cert-veh-odometer-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+/* Sections */
+.cert-section {
+    margin-bottom: 26px;
+}
+
+.cert-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+}
+
+.cert-section-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Technical Data Grid */
+.cert-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.cert-tech-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.cert-tech-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.cert-tech-value {
+    font-size: 13px;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* Upcoming Interventions (Tagliando & Revisione & Bombole Metano) */
+.cert-upcoming-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.cert-upcoming-card {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    background: #ffffff;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.cert-upcoming-card.border-ok {
+    border-left: 4px solid #2e7d32;
+}
+
+.cert-upcoming-card.border-warn {
+    border-left: 4px solid #f57f17;
+}
+
+.cert-upcoming-card.border-danger {
+    border-left: 4px solid #d32f2f;
+}
+
+.cert-upcoming-card.border-neutral {
+    border-left: 4px solid #94a3b8;
+}
+
+.cert-upcoming-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.cert-upcoming-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cert-status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.cert-status-badge.badge-ok {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.cert-status-badge.badge-warn {
+    background: #fff8e1;
+    color: #e65100;
+}
+
+.cert-status-badge.badge-danger {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.cert-status-badge.badge-neutral {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.cert-upcoming-details {
+    font-size: 12px;
+    color: #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cert-detail-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #edf2f7;
+    padding-bottom: 4px;
+}
+
+.cert-detail-label {
+    color: #64748b;
+}
+
+.cert-detail-val {
+    font-weight: 600;
+}
+
+/* Other reminders list */
+.cert-other-reminders-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cert-reminder-compact-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* KPI Summary for Maintenances */
+.cert-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.cert-kpi-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.cert-kpi-num {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+
+.cert-kpi-label {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Maintenance Table */
+.cert-table-container {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.cert-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+}
+
+.cert-table th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    padding: 10px 12px;
+    border-bottom: 2px solid #cbd5e1;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+}
+
+.cert-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #1e293b;
+    vertical-align: top;
+}
+
+.cert-table tr:nth-child(even) td {
+    background: #fafbfc;
+}
+
+.cert-table tr:hover td {
+    background: #f1f5f9;
+}
+
+.cert-service-tag {
+    display: inline-block;
+    background: rgba(121, 85, 72, 0.12);
+    color: #5d4037;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 11px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+.cert-service-part-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 2px 4px 2px 0;
+    color: #1e293b;
+}
+
+.cert-service-cost {
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+/* Certificate Footer */
+.cert-doc-footer {
+    border-top: 1.5px solid #e2e8f0;
+    margin-top: 30px;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.cert-stamp-box {
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 16px;
+    text-align: center;
+    color: #64748b;
+    font-size: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cert-tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .cert-upcoming-grid {
+        grid-template-columns: 1fr;
+    }
+    .cert-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .certificate-printable-sheet {
+        padding: 20px 16px;
+    }
+}
+
+/* -------------------------------------------------------------
+   PRINT MEDIA QUERY FOR MECHANICAL CERTIFICATE
+------------------------------------------------------------- */
+@media print {
+    /* Hide everything on page except modal sheet */
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    body > *:not(#tab-veicoli) {
+        display: none !important;
+    }
+
+    #tab-veicoli > *:not(#mechanical-certificate-modal) {
+        display: none !important;
+    }
+
+    .sidebar,
+    .bottom-nav,
+    .content-header,
+    .garage-selector-container,
+    #activity-modal,
+    #vehicle-modal {
+        display: none !important;
+    }
+
+    #mechanical-certificate-modal {
+        position: static !important;
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        z-index: 99999 !important;
+        backdrop-filter: none !important;
+    }
+
+    .certificate-modal-card {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+
+    .certificate-modal-header,
+    .no-print {
+        display: none !important;
+    }
+
+    .certificate-modal-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .certificate-printable-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+    }
+
+    .cert-doc-header {
+        border-bottom: 2px solid #000000 !important;
+    }
+
+    .cert-brand-text h1 {
+        color: #000000 !important;
+    }
+
+    .cert-vehicle-hero {
+        background: #f1f5f9 !important;
+        color: #000000 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .cert-vehicle-hero h2,
+    .cert-veh-odometer-val {
+        color: #000000 !important;
+    }
+
+    .cert-veh-plate {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #94a3b8 !important;
+    }
+
+    .cert-tech-item,
+    .cert-kpi-card,
+    .cert-upcoming-card {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .cert-table th {
+        background: #e2e8f0 !important;
+        color: #000000 !important;
+        border-bottom: 1.5px solid #000000 !important;
+    }
+
+    .cert-table td {
+        color: #000000 !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+    }
+
+    .cert-table tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .cert-section {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 12mm 10mm;
+    }
+}
+
 

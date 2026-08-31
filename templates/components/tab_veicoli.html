@@ -162,7 +162,13 @@
 <!-- Vehicle Card Summary -->
 <div class="vehicle-summary-card">
 <div class="vehicle-card-info">
-<div class="vehicle-card-badge" id="dash-veh-type-badge">AUTO</div>
+<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+<div class="vehicle-card-badge" id="dash-veh-type-badge" style="margin-bottom: 0;">AUTO</div>
+<button class="btn-cert-quick" onclick="openMechanicalCertificate()" title="{{ _('Visualizza ed esporta Certificato Meccanico') }}">
+<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align: -2px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+<span>{{ _('Certificato Meccanico') }}</span>
+</button>
+</div>
 <h2 class="vehicle-card-title" id="dash-veh-name">Fiat Panda</h2>
 <p class="vehicle-card-plate" id="dash-veh-plate">AB 123 CD</p>
 <div class="vehicle-card-odometer">
@@ -935,12 +941,56 @@
 <div class="form-row">
   <div class="form-group">
     <label for="v-plate">{{ _('Plate (optional)') }}</label>
-<input id="v-plate" placeholder="{{ _('e.g., AB 123 CD') }}" type="text"/>
+    <input id="v-plate" placeholder="{{ _('e.g., AB 123 CD') }}" type="text"/>
+  </div>
+  <div class="form-group">
+    <label for="v-vin">{{ _('Chassis Number / VIN (optional)') }}</label>
+    <input id="v-vin" placeholder="{{ _('e.g., ZFA31200000123456') }}" type="text" style="text-transform: uppercase;"/>
+  </div>
 </div>
-<div class="form-group">
-<label for="v-year">{{ _('Year of Manufacture (optional)') }}</label>
-<input id="v-year" max="2100" min="1900" placeholder="{{ _('e.g., 2020') }}" type="number"/>
+<div class="form-row">
+  <div class="form-group">
+    <label for="v-year">{{ _('Year of Manufacture (optional)') }}</label>
+    <input id="v-year" max="2100" min="1900" placeholder="{{ _('e.g., 2020') }}" type="number"/>
+  </div>
+  <div class="form-group">
+    <label for="v-euro-class">{{ _('Euro Class (optional)') }}</label>
+    <select id="v-euro-class">
+      <option value="">{{ _('-- Select Euro Class --') }}</option>
+      <option value="Euro 6d">Euro 6d</option>
+      <option value="Euro 6d-TEMP">Euro 6d-TEMP</option>
+      <option value="Euro 6c">Euro 6c</option>
+      <option value="Euro 6b">Euro 6b</option>
+      <option value="Euro 6">Euro 6</option>
+      <option value="Euro 5">Euro 5</option>
+      <option value="Euro 4">Euro 4</option>
+      <option value="Euro 3">Euro 3</option>
+      <option value="Euro 2">Euro 2</option>
+      <option value="Euro 1">Euro 1</option>
+      <option value="Euro 0">Euro 0</option>
+      <option value="Non applicabile">{{ _('Not applicable (Electric / Bicycle)') }}</option>
+    </select>
+  </div>
 </div>
+<div class="form-row">
+  <div class="form-group">
+    <label for="v-engine-capacity">{{ _('Displacement (cc / cm³ - optional)') }}</label>
+    <input id="v-engine-capacity" min="0" placeholder="{{ _('e.g., 999') }}" type="number"/>
+  </div>
+  <div class="form-group">
+    <label for="v-fiscal-hp">{{ _('Fiscal HP (optional)') }}</label>
+    <input id="v-fiscal-hp" min="0" placeholder="{{ _('e.g., 13') }}" type="number"/>
+  </div>
+</div>
+<div class="form-row">
+  <div class="form-group">
+    <label for="v-power-kw">{{ _('Power (kW - optional)') }}</label>
+    <input id="v-power-kw" min="0" placeholder="{{ _('e.g., 51.5') }}" step="0.1" type="number" oninput="if(this.value && !document.getElementById('v-horse-power').value){ document.getElementById('v-horse-power').value = Math.round(parseFloat(this.value)*1.35962); }"/>
+  </div>
+  <div class="form-group">
+    <label for="v-horse-power">{{ _('Horsepower (CV - optional)') }}</label>
+    <input id="v-horse-power" min="0" placeholder="{{ _('e.g., 70') }}" type="number"/>
+  </div>
 </div>
 <div class="form-row">
 <div class="form-group">
@@ -963,6 +1013,51 @@
 <button class="btn btn-primary" id="vehicle-modal-submit-btn" type="submit">{{ _('Save Vehicle') }}</button>
 </div>
 </form>
+</div>
+</div>
+
+<!-- MECHANICAL CERTIFICATE MODAL -->
+<div class="modal-overlay" id="mechanical-certificate-modal">
+<div class="modal-card certificate-modal-card">
+<div class="modal-header certificate-modal-header">
+<div class="cert-header-left">
+<div class="cert-title-wrapper">
+<svg class="cert-title-icon" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="16" y1="13" x2="8" y2="13"></line>
+<line x1="16" y1="17" x2="8" y2="17"></line>
+<polyline points="10 9 9 9 8 9"></polyline>
+</svg>
+<h2>{{ _('Certificato Meccanico') }}</h2>
+</div>
+<div class="cert-vehicle-picker">
+<label for="cert-vehicle-select">{{ _('Veicolo:') }}</label>
+<select id="cert-vehicle-select" onchange="renderMechanicalCertificate(this.value)">
+<!-- Dynamically populated -->
+</select>
+</div>
+</div>
+<div class="cert-header-actions">
+<button class="btn btn-primary btn-small btn-print-cert" onclick="printCertificate()" title="{{ _('Stampa / Salva come PDF') }}">
+<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<polyline points="6 9 6 2 18 2 18 9"></polyline>
+<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+<rect x="6" y="14" width="12" height="8"></rect>
+</svg>
+<span>{{ _('Stampa') }}</span>
+</button>
+<button class="modal-close" onclick="closeMechanicalCertificateModal()" title="{{ _('Chiudi') }}">×</button>
+</div>
+</div>
+
+<div class="certificate-modal-body" id="certificate-modal-body">
+<div class="certificate-printable-sheet" id="certificate-printable-sheet">
+<div id="certificate-content-placeholder">
+<!-- Dynamic content injected by JavaScript -->
+</div>
+</div>
+</div>
 </div>
 </div>
 <!-- Scripts -->

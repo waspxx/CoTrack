@@ -43,6 +43,7 @@ except ImportError:
 
 from drivvo_sync import drivvo_service
 from budgetbakers_sync import budgetbakers_service
+from scraping.scrape_engine import check_vin_recall
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') # Obbligatoria per i form con Flask-WTF
@@ -473,6 +474,15 @@ def init_db():
             batteryCapacityUnit TEXT DEFAULT 'Wh',
             batteryVoltage REAL,
             batteryAmpHours REAL,
+            vin TEXT,
+            engineCapacity INTEGER,
+            powerKw REAL,
+            horsePower INTEGER,
+            fiscalHp INTEGER,
+            euroClass TEXT,
+            recall_status TEXT,
+            recall_details TEXT,
+            last_recall_check TEXT,
             FOREIGN KEY (garage_id) REFERENCES garages (id) ON DELETE CASCADE
         )
     ''')
@@ -649,6 +659,42 @@ def init_db():
         pass
     try:
         conn.execute("ALTER TABLE vehicles ADD COLUMN batteryAmpHours REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN vin TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN engineCapacity INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN powerKw REAL")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN horsePower INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN fiscalHp INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN euroClass TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN recall_status TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN recall_details TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE vehicles ADD COLUMN last_recall_check TEXT")
     except sqlite3.OperationalError:
         pass
 
@@ -2382,11 +2428,242 @@ def sync_budgetbakers_monthly_job():
     finally:
         conn.close()
 
+def send_recall_alert_email(email_destinatario, vehicle, recall_details):
+    with app.app_context():
+        smtp_server = app.config.get('SMTP_SERVER')
+        smtp_port = app.config.get('SMTP_PORT')
+        smtp_user = app.config.get('SMTP_USERNAME')
+        smtp_pass = app.config.get('SMTP_PASSWORD')
+        mittente = app.config.get('MAIL_DEFAULT_SENDER') or smtp_user
+        
+        if not smtp_server or not smtp_user or not smtp_pass:
+            print(f"[RECALL ALERT] Credenziali SMTP non configurate. Notifica non inviata a {email_destinatario}")
+            return False
+
+        brand = vehicle.get('brand', '')
+        model = vehicle.get('model', '')
+        plate = vehicle.get('plate', '')
+        vin = vehicle.get('vin', '')
+        
+        veh_str = f"{brand} {model}".strip()
+        if plate:
+            veh_str += f" ({plate})"
+            
+        subject = f"⚠️ Richiamo Veicolo Rilevato: {veh_str} - CoTrack"
+        check_date = datetime.now().strftime('%d/%m/%Y %H:%M')
+        
+        portal_link = "https://recall.skoda-auto.com/it-it" if ("skoda" in brand.lower() or "škoda" in brand.lower() or (vin and vin.startswith("TMB"))) else ""
+        
+        email_body = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Avviso Campagna di Richiamo - CoTrack</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f5f6;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e4e6;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }}
+        .header p {{
+            margin: 6px 0 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }}
+        .content {{
+            padding: 30px 25px;
+        }}
+        .alert-box {{
+            background-color: #fff8f8;
+            border-left: 4px solid #d32f2f;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }}
+        .alert-title {{
+            font-size: 16px;
+            font-weight: 700;
+            color: #c62828;
+            margin-bottom: 8px;
+        }}
+        .info-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fafafa;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #eeeeee;
+        }}
+        .info-table td {{
+            padding: 10px 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #eeeeee;
+        }}
+        .info-table td.label {{
+            font-weight: 600;
+            color: #555555;
+            width: 35%;
+        }}
+        .info-table td.val {{
+            color: #111111;
+        }}
+        .btn {{
+            display: inline-block;
+            background: #d32f2f;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+        }}
+        .footer {{
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+            border-top: 1px solid #e1e4e6;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Campagna di Richiamo Rilevata</h1>
+            <p>Controllo di sicurezza veicoli CoTrack</p>
+        </div>
+        <div class="content">
+            <p>Gentile utente,</p>
+            <p>Il controllo di sicurezza di CoTrack ha rilevato che il tuo veicolo <strong>{veh_str}</strong> risulta interessato da una <strong>campagna di richiamo aperta</strong> da parte del costruttore.</p>
+            
+            <div class="alert-box">
+                <div class="alert-title">Esito Verifica</div>
+                <p style="margin: 0; color: #333; line-height: 1.5;">{recall_details}</p>
+            </div>
+            
+            <table class="info-table">
+                <tr>
+                    <td class="label">Veicolo</td>
+                    <td class="val">{brand} {model}</td>
+                </tr>
+                {f'<tr><td class="label">Targa</td><td class="val">{plate}</td></tr>' if plate else ''}
+                <tr>
+                    <td class="label">Numero Telaio (VIN)</td>
+                    <td class="val" style="font-family: monospace; font-size: 14px; font-weight: bold;">{vin}</td>
+                </tr>
+                <tr>
+                    <td class="label">Data Verifica</td>
+                    <td class="val">{check_date}</td>
+                </tr>
+            </table>
+            
+            <p style="font-size: 14px; line-height: 1.5; color: #444;">
+                Ti invitiamo a contattare al più presto un <strong>centro assistenza o concessionaria autorizzata {brand}</strong> per effettuare gratuitamente gli interventi previsti dal costruttore e viaggiare in sicurezza.
+            </p>
+            
+            {f'<div style="text-align: center; margin-top: 25px;"><a href="{portal_link}" class="btn" target="_blank">Apri Portale Richiami Ufficiale</a></div>' if portal_link else ''}
+        </div>
+        <div class="footer">
+            Generato automaticamente da CoTrack. Questa email è stata inviata per il monitoraggio dei veicoli registrati nel tuo Garage.
+        </div>
+    </div>
+</body>
+</html>
+"""
+        msg = MIMEMultipart()
+        msg['From'] = mittente
+        msg['To'] = email_destinatario
+        msg['Subject'] = subject
+        msg.attach(MIMEText(email_body, 'html'))
+        
+        try:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+            server.quit()
+            print(f"[RECALL ALERT] Email inviata con successo a {email_destinatario} per telaio {vin}")
+            return True
+        except Exception as e:
+            print(f"[RECALL ALERT] Errore invio email a {email_destinatario}: {e}")
+            return False
+
+def check_vehicle_recalls_monthly_job():
+    print("[SCHEDULER] Running monthly vehicle recall check job (1st of the month)...")
+    with app.app_context():
+        conn = get_db_connection()
+        try:
+            vehicles = conn.execute('''
+                SELECT v.id, v.brand, v.model, v.plate, v.vin, v.recall_status, v.recall_details, v.last_recall_check,
+                       u.username AS user_email, u.id AS user_id
+                FROM vehicles v
+                JOIN garages g ON v.garage_id = g.id
+                JOIN users u ON g.user_id = u.id
+                WHERE v.archived = 0 AND v.vin IS NOT NULL AND TRIM(v.vin) != ''
+            ''').fetchall()
+            
+            for v in vehicles:
+                brand = v['brand']
+                vin = v['vin']
+                try:
+                    res = check_vin_recall(brand, vin)
+                    now_str = datetime.now().isoformat()
+                    status = res.get('status')
+                    details = res.get('details', '')
+                    
+                    conn.execute('''
+                        UPDATE vehicles
+                        SET recall_status = ?, recall_details = ?, last_recall_check = ?
+                        WHERE id = ?
+                    ''', (status, details, now_str, v['id']))
+                    conn.commit()
+                    
+                    print(f"[SCHEDULER] Recall check for {brand} {v['model']} ({vin}): {status}")
+                    
+                    # If recall found, send alert email
+                    if res.get('has_recall') or status == 'found':
+                        user_email = v['user_email']
+                        if user_email and '@' in user_email:
+                            send_recall_alert_email(user_email, dict(v), details)
+                            
+                except Exception as e:
+                    print(f"[SCHEDULER] Error checking recall for vehicle {v['id']} ({brand} - {vin}): {e}")
+        except Exception as e:
+            print(f"[SCHEDULER] Exception in check_vehicle_recalls_monthly_job: {e}")
+        finally:
+            conn.close()
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
 scheduler.add_job(func=send_daily_reminders, trigger="cron", hour=8, minute=0)
 scheduler.add_job(func=update_pension_fund_prices_job, trigger="cron", day=10, hour=2, minute=0)
 scheduler.add_job(func=sync_budgetbakers_monthly_job, trigger="cron", day=20, hour=6, minute=0)
+scheduler.add_job(func=check_vehicle_recalls_monthly_job, trigger="cron", day=1, hour=4, minute=0)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
@@ -4839,15 +5116,22 @@ def vehicles_route():
         battery_voltage = float(data.get('batteryVoltage')) if data.get('batteryVoltage') is not None and data.get('batteryVoltage') != '' else None
         battery_amp_hours = float(data.get('batteryAmpHours')) if data.get('batteryAmpHours') is not None and data.get('batteryAmpHours') != '' else None
         
+        vin = (data.get('vin') or '').strip().upper() or None
+        engine_capacity = int(data.get('engineCapacity')) if data.get('engineCapacity') not in (None, '') else None
+        power_kw = float(data.get('powerKw')) if data.get('powerKw') not in (None, '') else None
+        horse_power = int(data.get('horsePower')) if data.get('horsePower') not in (None, '') else None
+        fiscal_hp = int(data.get('fiscalHp')) if data.get('fiscalHp') not in (None, '') else None
+        euro_class = (data.get('euroClass') or '').strip() or None
+        
         if not veh_id or not brand or not model:
             conn.close()
             return jsonify({"errore": "Missing required fields"}), 400
             
         try:
             conn.execute('''
-                INSERT INTO vehicles (id, brand, model, type, fuel, plate, year, odometer, tankSize, garage_id, archived, batteryCapacity, batteryCapacityUnit, batteryVoltage, batteryAmpHours)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (veh_id, brand, model, v_type, fuel, plate, year, odometer, tank_size, garage_id, 0, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours))
+                INSERT INTO vehicles (id, brand, model, type, fuel, plate, year, odometer, tankSize, garage_id, archived, batteryCapacity, batteryCapacityUnit, batteryVoltage, batteryAmpHours, vin, engineCapacity, powerKw, horsePower, fiscalHp, euroClass)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (veh_id, brand, model, v_type, fuel, plate, year, odometer, tank_size, garage_id, 0, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours, vin, engine_capacity, power_kw, horse_power, fiscal_hp, euro_class))
             conn.commit()
         except sqlite3.IntegrityError as e:
             conn.close()
@@ -4894,22 +5178,93 @@ def vehicle_detail_route(vehicle_id):
     tank_size = float(data.get('tankSize')) if data.get('tankSize') else v['tankSize']
     archived = int(data.get('archived', v['archived'])) if 'archived' in data else v['archived']
     
-    battery_capacity = float(data.get('batteryCapacity')) if 'batteryCapacity' in data and data.get('batteryCapacity') not in (None, '') else None
-    battery_capacity_unit = data.get('batteryCapacityUnit', v['batteryCapacityUnit'])
-    battery_voltage = float(data.get('batteryVoltage')) if 'batteryVoltage' in data and data.get('batteryVoltage') not in (None, '') else None
-    battery_amp_hours = float(data.get('batteryAmpHours')) if 'batteryAmpHours' in data and data.get('batteryAmpHours') not in (None, '') else None
+    battery_capacity = float(data.get('batteryCapacity')) if 'batteryCapacity' in data and data.get('batteryCapacity') not in (None, '') else (None if 'batteryCapacity' in data else (v['batteryCapacity'] if 'batteryCapacity' in v.keys() else None))
+    battery_capacity_unit = data.get('batteryCapacityUnit', v['batteryCapacityUnit'] if 'batteryCapacityUnit' in v.keys() else 'Wh')
+    battery_voltage = float(data.get('batteryVoltage')) if 'batteryVoltage' in data and data.get('batteryVoltage') not in (None, '') else (None if 'batteryVoltage' in data else (v['batteryVoltage'] if 'batteryVoltage' in v.keys() else None))
+    battery_amp_hours = float(data.get('batteryAmpHours')) if 'batteryAmpHours' in data and data.get('batteryAmpHours') not in (None, '') else (None if 'batteryAmpHours' in data else (v['batteryAmpHours'] if 'batteryAmpHours' in v.keys() else None))
+    
+    vin = (data.get('vin') or '').strip().upper() if 'vin' in data else (v['vin'] if 'vin' in v.keys() else None)
+    if not vin:
+        vin = None
+    engine_capacity = int(data.get('engineCapacity')) if 'engineCapacity' in data and data.get('engineCapacity') not in (None, '') else (None if 'engineCapacity' in data else (v['engineCapacity'] if 'engineCapacity' in v.keys() else None))
+    power_kw = float(data.get('powerKw')) if 'powerKw' in data and data.get('powerKw') not in (None, '') else (None if 'powerKw' in data else (v['powerKw'] if 'powerKw' in v.keys() else None))
+    horse_power = int(data.get('horsePower')) if 'horsePower' in data and data.get('horsePower') not in (None, '') else (None if 'horsePower' in data else (v['horsePower'] if 'horsePower' in v.keys() else None))
+    fiscal_hp = int(data.get('fiscalHp')) if 'fiscalHp' in data and data.get('fiscalHp') not in (None, '') else (None if 'fiscalHp' in data else (v['fiscalHp'] if 'fiscalHp' in v.keys() else None))
+    euro_class = (data.get('euroClass') or '').strip() if 'euroClass' in data else (v['euroClass'] if 'euroClass' in v.keys() else None)
+    if not euro_class:
+        euro_class = None
     
     conn.execute('''
         UPDATE vehicles 
         SET brand = ?, model = ?, type = ?, fuel = ?, plate = ?, year = ?, odometer = ?, tankSize = ?, archived = ?,
-            batteryCapacity = ?, batteryCapacityUnit = ?, batteryVoltage = ?, batteryAmpHours = ?
+            batteryCapacity = ?, batteryCapacityUnit = ?, batteryVoltage = ?, batteryAmpHours = ?,
+            vin = ?, engineCapacity = ?, powerKw = ?, horsePower = ?, fiscalHp = ?, euroClass = ?
         WHERE id = ?
-    ''', (brand, model, v_type, fuel, plate, year, odometer, tank_size, archived, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours, vehicle_id))
+    ''', (brand, model, v_type, fuel, plate, year, odometer, tank_size, archived, battery_capacity, battery_capacity_unit, battery_voltage, battery_amp_hours, vin, engine_capacity, power_kw, horse_power, fiscal_hp, euro_class, vehicle_id))
     conn.commit()
     
     row = conn.execute("SELECT * FROM vehicles WHERE id = ?", (vehicle_id,)).fetchone()
     conn.close()
     return jsonify(dict(row))
+
+@app.route('/api/vehicles/<vehicle_id>/check-recall', methods=['POST'])
+def check_vehicle_recall_route(vehicle_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    v = conn.execute('''
+        SELECT v.*, u.username AS user_email
+        FROM vehicles v
+        JOIN garages g ON v.garage_id = g.id
+        JOIN users u ON g.user_id = u.id
+        WHERE v.id = ? AND g.user_id = ?
+    ''', (vehicle_id, session['user_id'])).fetchone()
+    
+    if not v:
+        conn.close()
+        return jsonify({"errore": _("Vehicle not found or unauthorized")}), 404
+        
+    vin = (v['vin'] or '').strip()
+    brand = (v['brand'] or '').strip()
+    if not vin:
+        conn.close()
+        return jsonify({"errore": _("Vehicle has no chassis number (VIN) registered")}), 400
+        
+    try:
+        res = check_vin_recall(brand, vin)
+        now_str = datetime.now().isoformat()
+        status = res.get('status')
+        details = res.get('details', '')
+        
+        conn.execute('''
+            UPDATE vehicles
+            SET recall_status = ?, recall_details = ?, last_recall_check = ?
+            WHERE id = ?
+        ''', (status, details, now_str, vehicle_id))
+        conn.commit()
+        
+        email_sent = False
+        if res.get('has_recall') or status == 'found':
+            user_email = v['user_email']
+            if user_email and '@' in user_email:
+                email_sent = send_recall_alert_email(user_email, dict(v), details)
+                
+        row = conn.execute("SELECT * FROM vehicles WHERE id = ?", (vehicle_id,)).fetchone()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "vehicle": dict(row),
+            "recall_status": status,
+            "recall_details": details,
+            "last_recall_check": now_str,
+            "has_recall": res.get('has_recall', False),
+            "email_sent": email_sent
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({"errore": f"Errore durante la verifica del richiamo: {str(e)}"}), 500
 
 @app.route('/api/vehicle-entries', methods=['GET', 'POST'])
 def vehicle_entries_route():

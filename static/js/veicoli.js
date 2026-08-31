@@ -1850,13 +1850,21 @@ function renderVehiclesTab() {
             
             <div class="vehicle-card-body">
                 <div class="vehicle-card-info-item">
-                    <span class="vehicle-card-info-label">Carburante:</span>
-                    <span class="vehicle-card-info-val">${v.fuel}</span>
+                    <span class="vehicle-card-info-label">Alimentazione:</span>
+                    <span class="vehicle-card-info-val">${v.fuel}${v.euroClass ? ` (${v.euroClass})` : ''}</span>
                 </div>
                 <div class="vehicle-card-info-item">
                     <span class="vehicle-card-info-label">Contachilometri:</span>
                     <span class="vehicle-card-info-val">${curOdo.toLocaleString('it-IT')} km</span>
                 </div>
+                ${(v.powerKw || v.horsePower || v.engineCapacity) ? `
+                <div class="vehicle-card-info-item">
+                    <span class="vehicle-card-info-label">Motore:</span>
+                    <span class="vehicle-card-info-val">
+                        ${v.engineCapacity ? `${v.engineCapacity.toLocaleString('it-IT')} cc` : ''}
+                        ${v.horsePower ? `${v.engineCapacity ? ' • ' : ''}${v.horsePower} CV` : (v.powerKw ? `${v.engineCapacity ? ' • ' : ''}${v.powerKw} kW` : '')}
+                    </span>
+                </div>` : ''}
                 <div class="vehicle-card-info-item">
                     <span class="vehicle-card-info-label">${v.fuel === 'Elettrico' ? 'Batteria' : 'Serbatoio'}:</span>
                     <span class="vehicle-card-info-val">
@@ -1866,11 +1874,35 @@ function renderVehiclesTab() {
                         }
                     </span>
                 </div>
+                ${v.vin ? `
+                <div class="vehicle-card-info-item vehicle-recall-row">
+                    <span class="vehicle-card-info-label">Richiami:</span>
+                    <span class="vehicle-card-info-val vehicle-recall-cell">
+                        ${v.recall_status === 'found' ? `
+                            <span class="badge-recall badge-recall-found" title="${(v.recall_details || '').replace(/"/g, '&quot;')}">
+                                ⚠️ Richiamo Attivo
+                            </span>
+                        ` : v.recall_status === 'not_found' ? `
+                            <span class="badge-recall badge-recall-ok" title="${(v.recall_details || '').replace(/"/g, '&quot;')}">
+                                ✅ Nessun richiamo
+                            </span>
+                        ` : v.recall_status === 'unsupported' ? `
+                            <span class="badge-recall badge-recall-neutral" title="Verifica online non disponibile per questo marchio">Non supportato</span>
+                        ` : `
+                            <span class="badge-recall badge-recall-neutral">Non verificato</span>
+                        `}
+                        <button class="btn btn-small btn-check-recall" onclick="checkVehicleRecall('${v.id}', this)" title="Verifica ora le campagne di richiamo">
+                            <svg class="recall-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                            Verifica
+                        </button>
+                    </span>
+                </div>` : ''}
             </div>
             
             <div class="vehicle-card-actions">
                 ${!isActive ? `<button class="btn btn-secondary btn-small" onclick="selectVehicle('${v.id}')" style="padding: 6px 12px; font-size:12px;">Seleziona</button>` : '<span style="font-size:12px; font-weight:700; color:var(--primary-color); display:flex; align-items:center; margin-right:auto;">Attivo</span>'}
                 
+                <button class="btn btn-small btn-cert" onclick="openMechanicalCertificate('${v.id}')" title="Certificato Meccanico">Certificato</button>
                 <button class="btn btn-small btn-export" onclick="exportVehicleData('${v.id}')" title="Esporta dati Drivvo CSV">Esporta</button>
                 <button class="btn btn-small btn-import" onclick="document.getElementById('import-file-${v.id}').click()" title="Importa dati Drivvo CSV">Importa</button>
                 <input type="file" id="import-file-${v.id}" onchange="importVehicleData('${v.id}', this)" accept=".csv" style="display:none;">
@@ -3560,12 +3592,25 @@ function openVehicleModal(id = null) {
         document.getElementById('v-battery-voltage').value = v.batteryVoltage || '';
         document.getElementById('v-battery-amp-hours').value = v.batteryAmpHours || '';
         
+        document.getElementById('v-vin').value = v.vin || '';
+        document.getElementById('v-engine-capacity').value = v.engineCapacity || '';
+        document.getElementById('v-power-kw').value = v.powerKw || '';
+        document.getElementById('v-horse-power').value = v.horsePower || '';
+        document.getElementById('v-fiscal-hp').value = v.fiscalHp || '';
+        document.getElementById('v-euro-class').value = v.euroClass || '';
+        
         document.getElementById('v-archived-row').style.display = 'block';
         document.getElementById('v-archived').checked = !!v.archived;
         
         elVehicleModalTitle.textContent = "Modifica Veicolo";
     } else {
         document.getElementById('vehicle-edit-id').value = '';
+        document.getElementById('v-vin').value = '';
+        document.getElementById('v-engine-capacity').value = '';
+        document.getElementById('v-power-kw').value = '';
+        document.getElementById('v-horse-power').value = '';
+        document.getElementById('v-fiscal-hp').value = '';
+        document.getElementById('v-euro-class').value = '';
         document.getElementById('v-archived-row').style.display = 'none';
         document.getElementById('v-archived').checked = false;
         elVehicleModalTitle.textContent = "Nuovo Veicolo";
@@ -3612,7 +3657,13 @@ elVehicleForm.addEventListener('submit', async (e) => {
         batteryCapacity: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-capacity').value) || null) : null,
         batteryCapacityUnit: fuelVal === 'Elettrico' ? document.getElementById('v-battery-unit').value : 'Wh',
         batteryVoltage: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-voltage').value) || null) : null,
-        batteryAmpHours: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-amp-hours').value) || null) : null
+        batteryAmpHours: fuelVal === 'Elettrico' ? (parseFloat(document.getElementById('v-battery-amp-hours').value) || null) : null,
+        vin: (document.getElementById('v-vin').value || '').trim().toUpperCase() || null,
+        engineCapacity: parseInt(document.getElementById('v-engine-capacity').value) || null,
+        powerKw: parseFloat(document.getElementById('v-power-kw').value) || null,
+        horsePower: parseInt(document.getElementById('v-horse-power').value) || null,
+        fiscalHp: parseInt(document.getElementById('v-fiscal-hp').value) || null,
+        euroClass: document.getElementById('v-euro-class').value || null
     };
     
     try {
@@ -4135,5 +4186,807 @@ window.clearVehicleHistory = async function() {
         }
     } catch (e) {
         alert("Errore di connessione.");
+    }
+};
+
+/* -------------------------------------------------------------
+   MECHANICAL CERTIFICATE CONTROLLER
+------------------------------------------------------------- */
+let certActiveVehicleId = null;
+let currentCertServices = [];
+
+window.openMechanicalCertificate = function(vehicleId) {
+    certActiveVehicleId = vehicleId || state.activeVehicleId || (state.vehicles[0] ? state.vehicles[0].id : null);
+    if (!certActiveVehicleId || state.vehicles.length === 0) {
+        alert("Nessun veicolo registrato nel garage.");
+        return;
+    }
+    const modal = document.getElementById('mechanical-certificate-modal');
+    if (modal) {
+        modal.classList.add('open');
+        window.renderMechanicalCertificate(certActiveVehicleId);
+    }
+};
+
+window.closeMechanicalCertificateModal = function() {
+    const modal = document.getElementById('mechanical-certificate-modal');
+    if (modal) {
+        modal.classList.remove('open');
+    }
+};
+
+// Close modal if user clicks outside the modal card
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('mechanical-certificate-modal');
+    if (modal && modal.classList.contains('open') && e.target === modal) {
+        window.closeMechanicalCertificateModal();
+    }
+});
+
+window.renderMechanicalCertificate = function(vehicleId) {
+    if (vehicleId) {
+        certActiveVehicleId = vehicleId;
+    } else if (!certActiveVehicleId) {
+        certActiveVehicleId = state.activeVehicleId;
+    }
+
+    const v = state.vehicles.find(item => item.id === certActiveVehicleId) || getActiveVehicle();
+    if (!v) return;
+
+    // Populate vehicle picker in modal header
+    const sel = document.getElementById('cert-vehicle-select');
+    if (sel) {
+        sel.innerHTML = '';
+        state.vehicles.forEach(veh => {
+            const opt = document.createElement('option');
+            opt.value = veh.id;
+            opt.textContent = `${veh.brand} ${veh.model} ${veh.plate ? '(' + veh.plate + ')' : ''}`;
+            if (veh.id === v.id) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
+    const curOdo = getCurrentOdometer(v.id, true);
+    const garageName = document.getElementById('select-garage')?.selectedOptions?.[0]?.text || 'Garage Principale';
+    const now = new Date();
+    const issueDateStr = now.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const issueTimeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const todayStr = now.toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Get vehicle activities
+    const vEntries = state.entries.filter(e => e.vehicleId === v.id);
+    const services = vEntries.filter(e => e.type === 'service').sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (dateB - dateA !== 0) return dateB - dateA;
+        return (parseInt(b.odometer) || 0) - (parseInt(a.odometer) || 0);
+    });
+    currentCertServices = services;
+    const reminders = vEntries.filter(e => e.type === 'reminder');
+
+    // 1. EVALUATE TAGLIANDO (SERVICE)
+    const tagliandoReminders = reminders.filter(r => /tagliand|manutenz|serviz|cambio olio|olio|filtr/i.test(r.description || ''));
+    const lastService = services[0];
+    
+    let tagliandoCardHtml = '';
+    let tagliandoStatusClass = 'badge-neutral';
+    let tagliandoBorderClass = 'border-neutral';
+    let tagliandoStatusLabel = 'Da pianificare';
+    let tagliandoDetailsHtml = '';
+
+    if (tagliandoReminders.length > 0) {
+        const tr = tagliandoReminders[0];
+        const effectiveDate = (tr.isRecurring && tr.nextTargetDate) ? tr.nextTargetDate : tr.targetDate;
+        const targetOdo = tr.targetOdometer ? parseInt(tr.targetOdometer) : null;
+        
+        let isExp = false;
+        let isWarn = false;
+        let daysLeft = null;
+        let kmLeft = null;
+
+        if (effectiveDate) {
+            const targetD = new Date(effectiveDate);
+            targetD.setHours(0,0,0,0);
+            daysLeft = Math.ceil((targetD - today) / (1000 * 60 * 60 * 24));
+            if (effectiveDate < todayStr) isExp = true;
+            else if (daysLeft <= 30) isWarn = true;
+        }
+
+        if (targetOdo) {
+            kmLeft = targetOdo - curOdo;
+            if (curOdo >= targetOdo) isExp = true;
+            else if (kmLeft <= 1000) isWarn = true;
+        }
+
+        if (isExp) {
+            tagliandoStatusClass = 'badge-danger';
+            tagliandoBorderClass = 'border-danger';
+            tagliandoStatusLabel = 'Intervento Scaduto';
+        } else if (isWarn) {
+            tagliandoStatusClass = 'badge-warn';
+            tagliandoBorderClass = 'border-warn';
+            tagliandoStatusLabel = 'In Scadenza';
+        } else {
+            tagliandoStatusClass = 'badge-ok';
+            tagliandoBorderClass = 'border-ok';
+            tagliandoStatusLabel = 'Regolare';
+        }
+
+        let recurrenceStr = 'Singolo';
+        if (tr.isRecurring) {
+            const parts = [];
+            if (tr.recurrenceVal && tr.recurrenceUnit) {
+                const u = tr.recurrenceUnit === 'days' ? 'giorni' : (tr.recurrenceUnit === 'months' ? 'mesi' : 'anni');
+                parts.push(`Ogni ${tr.recurrenceVal} ${u}`);
+            }
+            if (tr.recurrenceKm) parts.push(`Ogni ${parseInt(tr.recurrenceKm).toLocaleString('it-IT')} km`);
+            recurrenceStr = parts.join(' / ');
+        }
+
+        tagliandoDetailsHtml = `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Intervento Programmato:</span>
+                <span class="cert-detail-val">${tr.description}</span>
+            </div>
+            ${effectiveDate ? `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Scadenza Data:</span>
+                <span class="cert-detail-val">${formatDate(effectiveDate)} ${daysLeft !== null ? (daysLeft >= 0 ? `(tra ${daysLeft} gg)` : `<span style="color:#c62828;">(scaduto da ${Math.abs(daysLeft)} gg)</span>`) : ''}</span>
+            </div>` : ''}
+            ${targetOdo ? `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Scadenza Chilometri:</span>
+                <span class="cert-detail-val">${targetOdo.toLocaleString('it-IT')} km ${kmLeft !== null ? (kmLeft >= 0 ? `(mancano ${kmLeft.toLocaleString('it-IT')} km)` : `<span style="color:#c62828;">(superato di ${Math.abs(kmLeft).toLocaleString('it-IT')} km)</span>`) : ''}</span>
+            </div>` : ''}
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Frequenza:</span>
+                <span class="cert-detail-val">${recurrenceStr}</span>
+            </div>
+            ${lastService ? `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Ultimo Eseguito:</span>
+                <span class="cert-detail-val">${formatDate(lastService.date)} a ${parseInt(lastService.odometer || 0).toLocaleString('it-IT')} km</span>
+            </div>` : ''}
+        `;
+    } else {
+        // No explicit reminder set
+        if (lastService) {
+            tagliandoStatusClass = 'badge-neutral';
+            tagliandoBorderClass = 'border-neutral';
+            tagliandoStatusLabel = 'Nessun promemoria attivo';
+            const kmSince = lastService.odometer ? (curOdo - parseInt(lastService.odometer)) : 0;
+            tagliandoDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Ultimo Tagliando Eseguito:</span>
+                    <span class="cert-detail-val">${formatDate(lastService.date)} (${parseInt(lastService.odometer || 0).toLocaleString('it-IT')} km)</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Km percorsi dall'ultimo:</span>
+                    <span class="cert-detail-val">${kmSince.toLocaleString('it-IT')} km</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Intervallo consigliato:</span>
+                    <span class="cert-detail-val">Ogni 15.000 - 20.000 km o 12 mesi</span>
+                </div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic;">
+                    Consigliato registrare un promemoria ricorrente per il prossimo tagliando.
+                </div>
+            `;
+        } else {
+            tagliandoStatusClass = 'badge-neutral';
+            tagliandoBorderClass = 'border-neutral';
+            tagliandoStatusLabel = 'Non registrato';
+            tagliandoDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Stato Manutenzione:</span>
+                    <span class="cert-detail-val">Nessun tagliando registrato a sistema</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Intervallo consigliato:</span>
+                    <span class="cert-detail-val">Ogni 15.000 - 20.000 km / 1 anno</span>
+                </div>
+            `;
+        }
+    }
+
+    tagliandoCardHtml = `
+        <div class="cert-upcoming-card ${tagliandoBorderClass}">
+            <div class="cert-upcoming-card-header">
+                <div class="cert-upcoming-card-title">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #795548;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    Prossimo Tagliando / Manutenzione
+                </div>
+                <span class="cert-status-badge ${tagliandoStatusClass}">${tagliandoStatusLabel}</span>
+            </div>
+            <div class="cert-upcoming-details">
+                ${tagliandoDetailsHtml}
+            </div>
+        </div>
+    `;
+
+    // 2. EVALUATE REVISIONE (MOT)
+    const revisioneReminders = reminders.filter(r => /revision|collaud|ispezion/i.test(r.description || '') && !/bombol|metano|gpl/i.test(r.description || ''));
+    let revisioneCardHtml = '';
+    let revStatusClass = 'badge-neutral';
+    let revBorderClass = 'border-neutral';
+    let revStatusLabel = 'Da verificare';
+    let revDetailsHtml = '';
+
+    if (revisioneReminders.length > 0) {
+        const rr = revisioneReminders[0];
+        const effectiveDate = (rr.isRecurring && rr.nextTargetDate) ? rr.nextTargetDate : rr.targetDate;
+        let isExp = false;
+        let isWarn = false;
+        let daysLeft = null;
+
+        if (effectiveDate) {
+            const targetD = new Date(effectiveDate);
+            targetD.setHours(0,0,0,0);
+            daysLeft = Math.ceil((targetD - today) / (1000 * 60 * 60 * 24));
+            if (effectiveDate < todayStr) isExp = true;
+            else if (daysLeft <= 30) isWarn = true;
+        }
+
+        if (isExp) {
+            revStatusClass = 'badge-danger';
+            revBorderClass = 'border-danger';
+            revStatusLabel = 'Revisione Scaduta';
+        } else if (isWarn) {
+            revStatusClass = 'badge-warn';
+            revBorderClass = 'border-warn';
+            revStatusLabel = 'In Scadenza';
+        } else {
+            revStatusClass = 'badge-ok';
+            revBorderClass = 'border-ok';
+            revStatusLabel = 'Regolare';
+        }
+
+        revDetailsHtml = `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Controllo Ministeriale:</span>
+                <span class="cert-detail-val">${rr.description}</span>
+            </div>
+            ${effectiveDate ? `
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Data Scadenza Prevista:</span>
+                <span class="cert-detail-val">${formatDate(effectiveDate)} ${daysLeft !== null ? (daysLeft >= 0 ? `(tra ${daysLeft} gg)` : `<span style="color:#c62828;">(scaduta da ${Math.abs(daysLeft)} gg)</span>`) : ''}</span>
+            </div>` : ''}
+            <div class="cert-detail-row">
+                <span class="cert-detail-label">Periodicità:</span>
+                <span class="cert-detail-val">Biennale (ogni 2 anni)</span>
+            </div>
+        `;
+    } else {
+        if (v.year) {
+            const currentYear = now.getFullYear();
+            const age = currentYear - v.year;
+            let estYear = null;
+            if (age < 4) {
+                estYear = v.year + 4;
+            } else {
+                estYear = currentYear + (2 - (age % 2));
+            }
+            revStatusClass = 'badge-neutral';
+            revBorderClass = 'border-neutral';
+            revStatusLabel = 'Periodicità di Legge';
+            revDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Anno Immatricolazione:</span>
+                    <span class="cert-detail-val">${v.year} (Età: ${age} anni)</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Scadenza Stimata:</span>
+                    <span class="cert-detail-val">${estYear} (Entro il mese di immatricolazione)</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Normativa:</span>
+                    <span class="cert-detail-val">Prima revisione a 4 anni, poi ogni 2 anni</span>
+                </div>
+            `;
+        } else {
+            revStatusClass = 'badge-neutral';
+            revBorderClass = 'border-neutral';
+            revStatusLabel = 'Non impostata';
+            revDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Revisione Periodica:</span>
+                    <span class="cert-detail-val">Nessuna data di revisione registrata</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Normativa:</span>
+                    <span class="cert-detail-val">Obbligatoria ogni 2 anni (4 anni da nuovo)</span>
+                </div>
+            `;
+        }
+    }
+
+    revisioneCardHtml = `
+        <div class="cert-upcoming-card ${revBorderClass}">
+            <div class="cert-upcoming-card-header">
+                <div class="cert-upcoming-card-title">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #0288d1;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                    Prossima Revisione Ministeriale
+                </div>
+                <span class="cert-status-badge ${revStatusClass}">${revStatusLabel}</span>
+            </div>
+            <div class="cert-upcoming-details">
+                ${revDetailsHtml}
+            </div>
+        </div>
+    `;
+
+    // 3. EVALUATE REVISIONE BOMBOLE METANO (CNG)
+    const isMetano = (v.fuel && /metano/i.test(v.fuel)) || reminders.some(r => /bombol|metano/i.test(r.description || '')) || vEntries.some(e => e.fuelType === 'Metano' || e.fuel2 === 'Metano' || e.fuel3 === 'Metano');
+    const metanoReminders = reminders.filter(r => /bombol|metano/i.test(r.description || ''));
+    let metanoCardHtml = '';
+
+    if (isMetano || metanoReminders.length > 0) {
+        let metStatusClass = 'badge-neutral';
+        let metBorderClass = 'border-neutral';
+        let metStatusLabel = 'Da pianificare';
+        let metDetailsHtml = '';
+
+        if (metanoReminders.length > 0) {
+            const mr = metanoReminders[0];
+            const effectiveDate = (mr.isRecurring && mr.nextTargetDate) ? mr.nextTargetDate : mr.targetDate;
+            let isExp = false;
+            let isWarn = false;
+            let daysLeft = null;
+
+            if (effectiveDate) {
+                const targetD = new Date(effectiveDate);
+                targetD.setHours(0,0,0,0);
+                daysLeft = Math.ceil((targetD - today) / (1000 * 60 * 60 * 24));
+                if (effectiveDate < todayStr) isExp = true;
+                else if (daysLeft <= 30) isWarn = true;
+            }
+
+            if (isExp) {
+                metStatusClass = 'badge-danger';
+                metBorderClass = 'border-danger';
+                metStatusLabel = 'Revisione Scaduta';
+            } else if (isWarn) {
+                metStatusClass = 'badge-warn';
+                metBorderClass = 'border-warn';
+                metStatusLabel = 'In Scadenza';
+            } else {
+                metStatusClass = 'badge-ok';
+                metBorderClass = 'border-ok';
+                metStatusLabel = 'Regolare';
+            }
+
+            let recStr = 'Quadriennale (R110) / Quinquennale (DGM)';
+            if (mr.isRecurring) {
+                const parts = [];
+                if (mr.recurrenceVal && mr.recurrenceUnit) {
+                    const u = mr.recurrenceUnit === 'days' ? 'giorni' : (mr.recurrenceUnit === 'months' ? 'mesi' : 'anni');
+                    parts.push(`Ogni ${mr.recurrenceVal} ${u}`);
+                }
+                if (mr.recurrenceKm) parts.push(`Ogni ${parseInt(mr.recurrenceKm).toLocaleString('it-IT')} km`);
+                if (parts.length > 0) recStr = parts.join(' / ');
+            }
+
+            metDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Controllo Bombole:</span>
+                    <span class="cert-detail-val">${mr.description}</span>
+                </div>
+                ${effectiveDate ? `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Data Scadenza Prevista:</span>
+                    <span class="cert-detail-val">${formatDate(effectiveDate)} ${daysLeft !== null ? (daysLeft >= 0 ? `(tra ${daysLeft} gg)` : `<span style="color:#c62828;">(scaduta da ${Math.abs(daysLeft)} gg)</span>`) : ''}</span>
+                </div>` : ''}
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Periodicità:</span>
+                    <span class="cert-detail-val">${recStr}</span>
+                </div>
+            `;
+        } else {
+            // Metano vehicle without explicit reminder
+            metStatusClass = 'badge-neutral';
+            metBorderClass = 'border-neutral';
+            metStatusLabel = 'Obbligatoria per Legge';
+            
+            let estYearStr = 'Da verificare';
+            if (v.year) {
+                const currentYear = now.getFullYear();
+                const cycle = 4; // Standard European R110
+                const yearsPassed = currentYear - v.year;
+                const nextCycleYear = v.year + (Math.floor(yearsPassed / cycle) + 1) * cycle;
+                estYearStr = `Circa ${nextCycleYear} (ogni 4 anni R110)`;
+            }
+
+            metDetailsHtml = `
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Impianto Metano:</span>
+                    <span class="cert-detail-val">Bombole CNG installate a bordo</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Normativa Collaudo:</span>
+                    <span class="cert-detail-val">ECE R110: 4 anni • DGM: 5 anni</span>
+                </div>
+                <div class="cert-detail-row">
+                    <span class="cert-detail-label">Scadenza Stimata:</span>
+                    <span class="cert-detail-val">${estYearStr}</span>
+                </div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic;">
+                    Consigliato registrare la data di scadenza del cartellino GFBM per il calcolo esatto.
+                </div>
+            `;
+        }
+
+        metanoCardHtml = `
+            <div class="cert-upcoming-card ${metBorderClass}">
+                <div class="cert-upcoming-card-header">
+                    <div class="cert-upcoming-card-title">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #10b981;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Revisione Bombole Metano
+                    </div>
+                    <span class="cert-status-badge ${metStatusClass}">${metStatusLabel}</span>
+                </div>
+                <div class="cert-upcoming-details">
+                    ${metDetailsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    // 4. OTHER ACTIVE REMINDERS
+    const gplReminders = reminders.filter(r => /gpl/i.test(r.description || ''));
+    const otherReminders = reminders.filter(r => 
+        !tagliandoReminders.some(tr => tr.id === r.id) && 
+        !revisioneReminders.some(rr => rr.id === r.id) &&
+        !metanoReminders.some(mr => mr.id === r.id) &&
+        !gplReminders.some(gr => gr.id === r.id)
+    );
+
+    let otherRemindersHtml = '';
+    if (otherReminders.length > 0) {
+        otherRemindersHtml = `
+            <div class="cert-other-reminders-list">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">Altri Promemoria e Scadenze Attive:</div>
+                ${otherReminders.map(r => {
+                    const effectiveDate = (r.isRecurring && r.nextTargetDate) ? r.nextTargetDate : r.targetDate;
+                    let badgeClass = 'badge-ok';
+                    let badgeLabel = 'Attivo';
+                    if (r._isExpired) {
+                        badgeClass = 'badge-danger';
+                        badgeLabel = 'Scaduto';
+                    }
+                    return `
+                        <div class="cert-reminder-compact-row">
+                            <span style="font-weight: 600;">📌 ${r.description}</span>
+                            <span style="color: #475569;">${effectiveDate ? formatDate(effectiveDate) : ''} ${r.targetOdometer ? `• ${parseInt(r.targetOdometer).toLocaleString('it-IT')} km` : ''}</span>
+                            <span class="cert-status-badge ${badgeClass}">${badgeLabel}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    // OVERALL STATUS
+    let overallBadgeClass = 'status-ok';
+    let overallBadgeText = 'STATO VEICOLO: REGOLARE';
+    if (reminders.some(r => r._isExpired)) {
+        overallBadgeClass = 'status-danger';
+        overallBadgeText = 'ATTENZIONE: INTERVENTI SCADUTI';
+    } else if (tagliandoStatusClass === 'badge-warn' || revStatusClass === 'badge-warn') {
+        overallBadgeClass = 'status-warn';
+        overallBadgeText = 'PROMEMORIA: INTERVENTI IN SCADENZA';
+    }
+
+    // 4. MAINTENANCE HISTORY STATS & TABLE
+    const totalMaintCost = services.reduce((sum, s) => sum + (parseFloat(s.cost) || 0), 0);
+    const avgIntervalKm = services.length > 1 && services[0].odometer && services[services.length - 1].odometer
+        ? Math.round((parseInt(services[0].odometer) - parseInt(services[services.length - 1].odometer)) / (services.length - 1))
+        : null;
+
+    const kpiRowHtml = `
+        <div class="cert-kpi-row">
+            <div class="cert-kpi-card">
+                <div class="cert-kpi-num">${services.length}</div>
+                <div class="cert-kpi-label">Manutenzioni Registrate</div>
+            </div>
+            <div class="cert-kpi-card">
+                <div class="cert-kpi-num">€ ${totalMaintCost.toFixed(2)}</div>
+                <div class="cert-kpi-label">Spesa Totale Manutenzioni</div>
+            </div>
+            <div class="cert-kpi-card">
+                <div class="cert-kpi-num">${lastService ? formatDate(lastService.date) : 'Nessuna'}</div>
+                <div class="cert-kpi-label">Ultima Manutenzione</div>
+            </div>
+            <div class="cert-kpi-card">
+                <div class="cert-kpi-num">${avgIntervalKm ? avgIntervalKm.toLocaleString('it-IT') + ' km' : '---'}</div>
+                <div class="cert-kpi-label">Intervallo Medio Rilevato</div>
+            </div>
+        </div>
+    `;
+
+    // Render Table Rows
+    const tableRowsHtml = services.length === 0
+        ? `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px; font-style: italic;">Nessuna manutenzione registrata per questo veicolo.</td></tr>`
+        : services.map((s) => {
+            let descHtml = '';
+            try {
+                const parsed = JSON.parse(s.description);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    descHtml = Object.entries(parsed).map(([item, cost]) => 
+                        `<span class="cert-service-part-item"><strong>${item}</strong> (€ ${parseFloat(cost).toFixed(2)})</span>`
+                    ).join(' ');
+                } else {
+                    descHtml = `<span class="cert-service-tag">${s.description || 'Manutenzione'}</span>`;
+                }
+            } catch(e) {
+                descHtml = `<span class="cert-service-tag">${s.description || 'Manutenzione'}</span>`;
+            }
+
+            return `
+                <tr class="cert-table-row" data-search="${(s.description + ' ' + (s.provider || '') + ' ' + (s.notes || '') + ' ' + s.date).toLowerCase()}">
+                    <td style="font-weight: 600; white-space: nowrap;">${formatDate(s.date)}</td>
+                    <td style="white-space: nowrap; font-weight: 700; color: #0284c7;">${s.odometer ? parseInt(s.odometer).toLocaleString('it-IT') + ' km' : '---'}</td>
+                    <td>${descHtml}</td>
+                    <td>${s.provider || '<span style="color:#94a3b8;">---</span>'}</td>
+                    <td class="cert-service-cost">${s.cost ? '€ ' + parseFloat(s.cost).toFixed(2) : '€ 0.00'}</td>
+                    <td style="color: #475569; font-size: 11px;">${s.notes || ''}</td>
+                </tr>
+            `;
+        }).join('');
+
+    // BUILD COMPLETE CERTIFICATE HTML
+    const certHtml = `
+        <!-- Document Header -->
+        <div class="cert-doc-header">
+            <div class="cert-brand-block">
+                <div class="cert-brand-logo">
+                    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
+                        <circle cx="7" cy="17" r="2"></circle>
+                        <path d="M9 17h6"></path>
+                        <circle cx="17" cy="17" r="2"></circle>
+                    </svg>
+                </div>
+                <div class="cert-brand-text">
+                    <h1>Certificato Meccanico e Storico Manutenzioni</h1>
+                    <p>CoTrack Vehicle Management System • Passaporto Digitale del Veicolo</p>
+                </div>
+            </div>
+            <div class="cert-meta-block">
+                <div class="cert-doc-badge ${overallBadgeClass}">${overallBadgeText}</div>
+                <div class="cert-meta-date">Emesso il: <strong>${issueDateStr} ${issueTimeStr}</strong></div>
+                <div class="cert-meta-date">Garage: <strong>${garageName}</strong></div>
+            </div>
+        </div>
+
+        <!-- Vehicle Hero Banner -->
+        <div class="cert-vehicle-hero">
+            <div class="cert-veh-main">
+                <h2>${v.brand} ${v.model}</h2>
+                <span class="cert-veh-plate">${v.plate || 'SENZA TARGA'}</span>
+                <span style="font-size: 12px; margin-left: 8px; opacity: 0.85;">${v.type} (${v.year || 'N/A'})</span>
+            </div>
+            <div class="cert-veh-odometer">
+                <div class="cert-veh-odometer-label">Chilometraggio Rilevato</div>
+                <div class="cert-veh-odometer-val">${curOdo.toLocaleString('it-IT')} km</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Dati Tecnici -->
+        <div class="cert-section">
+            <div class="cert-section-header">
+                <h3>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Dati Tecnici del Veicolo
+                </h3>
+            </div>
+            <div class="cert-tech-grid">
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Marca e Modello</div>
+                    <div class="cert-tech-value">${v.brand} ${v.model}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Targa</div>
+                    <div class="cert-tech-value" style="font-family: monospace;">${v.plate || 'Nessuna'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Numero Telaio (VIN)</div>
+                    <div class="cert-tech-value" style="font-family: monospace;">${v.vin || 'Non specificato'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Tipologia Veicolo</div>
+                    <div class="cert-tech-value">${v.type}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Anno Immatricolazione</div>
+                    <div class="cert-tech-value">${v.year || 'Non specificato'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Alimentazione</div>
+                    <div class="cert-tech-value">${v.fuel}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Classe Ambientale (Euro)</div>
+                    <div class="cert-tech-value">${v.euroClass || 'Non specificata'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Cilindrata</div>
+                    <div class="cert-tech-value">${v.engineCapacity ? v.engineCapacity.toLocaleString('it-IT') + ' cc' : 'Non specificata'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Potenza & Cavalli</div>
+                    <div class="cert-tech-value">
+                        ${(v.powerKw || v.horsePower)
+                            ? `${v.powerKw ? v.powerKw + ' kW' : ''}${v.powerKw && v.horsePower ? ' • ' : ''}${v.horsePower ? v.horsePower + ' CV' : ''}`
+                            : 'Non specificata'
+                        }
+                    </div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Cavalli Fiscali (HP)</div>
+                    <div class="cert-tech-value">${v.fiscalHp ? v.fiscalHp + ' CF / HP' : 'Non specificati'}</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">${v.fuel === 'Elettrico' ? 'Batteria' : 'Serbatoio'}</div>
+                    <div class="cert-tech-value">
+                        ${v.fuel === 'Elettrico'
+                            ? (v.batteryCapacity ? `${v.batteryCapacity} ${v.batteryCapacityUnit || 'Wh'}` : '---') + (v.batteryVoltage ? ` (${v.batteryVoltage}V)` : '')
+                            : (v.tankSize ? `${v.tankSize} ${v.fuel === 'Metano' ? 'kg' : 'Litri'}` : '---')
+                        }
+                    </div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Contachilometri Attuale</div>
+                    <div class="cert-tech-value" style="color: #0284c7;">${curOdo.toLocaleString('it-IT')} km</div>
+                </div>
+                <div class="cert-tech-item">
+                    <div class="cert-tech-label">Campagne di Richiamo</div>
+                    <div class="cert-tech-value">
+                        ${v.recall_status === 'found' ? '<span style="color: #dc2626; font-weight: bold;">⚠️ Richiamo Attivo</span>' :
+                          v.recall_status === 'not_found' ? '<span style="color: #16a34a; font-weight: bold;">✅ Nessun richiamo</span>' :
+                          v.recall_status === 'unsupported' ? '<span style="color: #64748b;">Non supportato</span>' :
+                          '<span style="color: #64748b;">Non verificato</span>'
+                        }
+                        ${v.last_recall_check ? `<span style="font-size: 11px; color: #64748b; font-weight: normal; display: block;">(${new Date(v.last_recall_check).toLocaleDateString('it-IT')})</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Prossimi Interventi da Fare -->
+        <div class="cert-section">
+            <div class="cert-section-header">
+                <h3>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Riepilogo Prossimi Interventi da Fare
+                </h3>
+            </div>
+            <div class="cert-upcoming-grid">
+                ${tagliandoCardHtml}
+                ${revisioneCardHtml}
+                ${metanoCardHtml}
+            </div>
+            ${otherRemindersHtml}
+        </div>
+
+        <!-- Section 3: Storico Manutenzioni -->
+        <div class="cert-section">
+            <div class="cert-section-header">
+                <h3>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    Storico Completo Manutenzioni Registrate
+                </h3>
+                <div class="no-print" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="text" id="cert-maint-search" placeholder="🔍 Cerca intervento / officina..." oninput="window.filterCertificateMaintenance(this.value)" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 12px; outline: none; background: #ffffff;" />
+                </div>
+            </div>
+
+            ${kpiRowHtml}
+
+            <div class="cert-table-container">
+                <table class="cert-table" id="cert-maintenance-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Data</th>
+                            <th style="width: 110px;">Chilometri</th>
+                            <th>Argomento / Lavori e Ricambi</th>
+                            <th style="width: 140px;">Officina / Fornitore</th>
+                            <th style="width: 90px;">Costo</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cert-maintenance-table-body">
+                        ${tableRowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Document Footer -->
+        <div class="cert-doc-footer">
+            <div>
+                Documento ufficiale generato dal sistema di tracciamento <strong>CoTrack</strong>.<br>
+                I dati riflettono fedelmente tutte le registrazioni e i controlli manutentivi inseriti.
+            </div>
+            <div class="cert-stamp-box">
+                CERTIFICATO DIGITALE COTRACK<br>
+                <strong style="color: #0f172a;">${v.brand.toUpperCase()} - ${v.plate ? v.plate.toUpperCase() : 'NO-PLATE'}</strong><br>
+                ${issueDateStr}
+            </div>
+        </div>
+    `;
+
+    const placeholder = document.getElementById('certificate-content-placeholder');
+    if (placeholder) {
+        placeholder.innerHTML = certHtml;
+    }
+};
+
+window.filterCertificateMaintenance = function(query) {
+    const q = (query || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#cert-maintenance-table-body tr.cert-table-row');
+    rows.forEach(row => {
+        const searchData = row.getAttribute('data-search') || '';
+        if (!q || searchData.includes(q)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+};
+
+window.printCertificate = function() {
+    window.print();
+};
+
+window.checkVehicleRecall = async function(vehicleId, btnEl) {
+    if (!vehicleId) return;
+    const originalHtml = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = `<svg class="recall-icon spinning" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Verifica...`;
+    }
+
+    try {
+        const res = await fetch(`/api/vehicles/${vehicleId}/check-recall`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+            alert(data.errore || 'Errore durante la verifica dei richiami.');
+            return;
+        }
+
+        // Update local vehicle in state
+        const idx = state.vehicles.findIndex(v => v.id === vehicleId);
+        if (idx !== -1 && data.vehicle) {
+            state.vehicles[idx] = data.vehicle;
+        } else if (idx !== -1) {
+            state.vehicles[idx].recall_status = data.recall_status;
+            state.vehicles[idx].recall_details = data.recall_details;
+            state.vehicles[idx].last_recall_check = data.last_recall_check;
+        }
+
+        renderVehiclesTab();
+
+        // Inform user with feedback
+        if (data.has_recall || data.recall_status === 'found') {
+            alert(`⚠️ ATTENZIONE: È stata rilevata una campagna di richiamo attiva per il veicolo!\n\n${data.recall_details || ''}\n\nÈ stata inviata una notifica email con i dettagli. Ti consigliamo di contattare un'officina autorizzata.`);
+        } else if (data.recall_status === 'not_found') {
+            alert(`✅ Verifica completata con successo!\n\n${data.recall_details || 'Nessuna campagna di richiamo attiva per questo veicolo.'}`);
+        } else if (data.recall_details) {
+            alert(`Esito verifica:\n\n${data.recall_details}`);
+        }
+    } catch (err) {
+        console.error('Error checking vehicle recall:', err);
+        alert('Errore di connessione durante la verifica dei richiami.');
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = originalHtml;
+        }
     }
 };
