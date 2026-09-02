@@ -181,6 +181,15 @@ window.onload = () => {
 };
 
 const formatEuro = (num) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(num);
+const escapeHtml = (text) => {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
 
 // --- LOGICA AUTH E PORTAFOGLI ---
 function toggleAuthMode() {
@@ -4342,6 +4351,8 @@ function renderTabellaInvestimenti() {
 let bolletteGlobal = [];
 let bolletteConfigGlobal = { water_unit: 'm³', electricity_unit: 'kWh', gas_unit: 'Smc' };
 let bolletteAppliancesGlobal = [];
+let bolletteSolarIncentivesGlobal = [];
+let activeSolarIncentivesFilter = 'all'; // 'all', 'conto_energia', 'scambio_posto'
 let graficoBolletteObj = null;
 let activeVisualizzazioneBollette = 'price';
 let activeBolletteAppliancePeriodKey = null; // "YYYY_M"
@@ -4371,30 +4382,30 @@ function getFilteredBollette() {
                 return b.year === y && b.month === (m + 1);
             }
             case 'previous-month': {
-                const prev = new Date(y, m - 1, 1);
-                return b.year === prev.getFullYear() && b.month === (prev.getMonth() + 1);
+                const prevM = m === 0 ? 12 : m;
+                const prevY = m === 0 ? y - 1 : y;
+                return b.year === prevY && b.month === prevM;
             }
             case 'last-month': {
-                const start = new Date(y, m - 1, 1);
-                const end = new Date(y, m + 1, 0);
-                return bDate >= start && bDate <= end;
+                if (bolletteGlobal.length === 0) return false;
+                const sorted = [...bolletteGlobal].sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month));
+                const latest = sorted[0];
+                return b.year === latest.year && b.month === latest.month;
             }
             case 'last-3-months': {
-                const start = new Date(y, m - 2, 1);
-                const end = new Date(y, m + 1, 0);
-                return bDate >= start && bDate <= end;
+                const cutoff = new Date(y, m - 3, 1);
+                return bDate >= cutoff;
             }
             case 'last-6-months': {
-                const start = new Date(y, m - 5, 1);
-                const end = new Date(y, m + 1, 0);
-                return bDate >= start && bDate <= end;
+                const cutoff = new Date(y, m - 6, 1);
+                return bDate >= cutoff;
             }
             case 'last-year': {
-                const start = new Date(y - 1, m, 1);
-                const end = new Date(y, m + 1, 0);
-                return bDate >= start && bDate <= end;
+                const cutoff = new Date(y - 1, m, 1);
+                return bDate >= cutoff;
             }
             case 'custom': {
+                if (!bolletteCustomDateFrom && !bolletteCustomDateTo) return true;
                 if (bolletteCustomDateFrom && bKey < bolletteCustomDateFrom) return false;
                 if (bolletteCustomDateTo && bKey > bolletteCustomDateTo) return false;
                 return true;
@@ -4408,16 +4419,14 @@ function getFilteredBollette() {
 function initBollettePeriodFilterListeners() {
     const sel = document.getElementById('bollette-period-filter-select');
     const customDiv = document.getElementById('bollette-custom-date-inputs');
-    const inpFrom = document.getElementById('bollette-filter-date-from');
-    const inpTo = document.getElementById('bollette-filter-date-to');
+    const fromInput = document.getElementById('bollette-filter-date-from');
+    const toInput = document.getElementById('bollette-filter-date-to');
 
-    if (sel) {
-        sel.value = bollettePeriodFilter || 'all-time';
-        if (customDiv) {
-            customDiv.style.display = bollettePeriodFilter === 'custom' ? 'flex' : 'none';
-        }
-        sel.onchange = (e) => {
-            bollettePeriodFilter = e.target.value;
+    if (sel && !sel._hasListener) {
+        sel._hasListener = true;
+        sel.value = bollettePeriodFilter;
+        sel.onchange = () => {
+            bollettePeriodFilter = sel.value;
             if (customDiv) {
                 customDiv.style.display = bollettePeriodFilter === 'custom' ? 'flex' : 'none';
             }
@@ -4425,18 +4434,18 @@ function initBollettePeriodFilterListeners() {
         };
     }
 
-    if (inpFrom) {
-        inpFrom.value = bolletteCustomDateFrom || '';
-        inpFrom.onchange = (e) => {
-            bolletteCustomDateFrom = e.target.value;
+    if (fromInput && !fromInput._hasListener) {
+        fromInput._hasListener = true;
+        fromInput.onchange = () => {
+            bolletteCustomDateFrom = fromInput.value;
             aggiornaTuttoTabBollette();
         };
     }
 
-    if (inpTo) {
-        inpTo.value = bolletteCustomDateTo || '';
-        inpTo.onchange = (e) => {
-            bolletteCustomDateTo = e.target.value;
+    if (toInput && !toInput._hasListener) {
+        toInput._hasListener = true;
+        toInput.onchange = () => {
+            bolletteCustomDateTo = toInput.value;
             aggiornaTuttoTabBollette();
         };
     }
@@ -4450,6 +4459,7 @@ function aggiornaTuttoTabBollette() {
     popolaTabellaBollette(filteredBills);
     popolaSelectMeseElettrodomestici(filteredBills);
     popolaSezioneElettrodomestici();
+    aggiornaSezioneSolarIncentives();
 }
 
 function cambiaVisualizzazioneBollette(tipo) {
@@ -4481,6 +4491,15 @@ async function caricaDatiBollette() {
             bolletteAppliancesGlobal = await resApps.json();
         } else {
             bolletteAppliancesGlobal = [];
+        }
+
+        // Carica i pagamenti ed incentivi GSE (Conto Energia e SSP)
+        let resIncentives = await fetch(`/api/bills/solar_incentives?bills_id=${activeBillsId}`);
+        if (resIncentives.ok) {
+            let dataInc = await resIncentives.json();
+            bolletteSolarIncentivesGlobal = dataInc.items || [];
+        } else {
+            bolletteSolarIncentivesGlobal = [];
         }
 
         // Carica i dati delle bollette
@@ -5767,6 +5786,209 @@ async function salvaSettingsBollette(event) {
         alert("Errore di rete.");
     }
 }
+
+// ── GSE SOLAR INCENTIVES & SCAMBIO SUL POSTO ─────────────────────────────────
+function aggiornaSezioneSolarIncentives() {
+    const tbody = document.getElementById('lista-solar-incentives-body');
+    const ceTotalEl = document.getElementById('kpi-ce-total');
+    const ceCountEl = document.getElementById('kpi-ce-count');
+    const sspTotalEl = document.getElementById('kpi-ssp-total');
+    const sspCountEl = document.getElementById('kpi-ssp-count');
+    const gseTotalEl = document.getElementById('kpi-gse-total-amount');
+    const gseCountEl = document.getElementById('kpi-gse-total-count');
+
+    if (!tbody) return;
+
+    let totCE = 0;
+    let countCE = 0;
+    let totSSP = 0;
+    let countSSP = 0;
+
+    bolletteSolarIncentivesGlobal.forEach(inc => {
+        const amt = parseFloat(inc.amount || 0);
+        if (inc.type === 'conto_energia') {
+            totCE += amt;
+            countCE++;
+        } else if (inc.type === 'scambio_posto') {
+            totSSP += amt;
+            countSSP++;
+        }
+    });
+
+    if (ceTotalEl) ceTotalEl.innerText = formatEuro(totCE);
+    if (ceCountEl) ceCountEl.innerText = `${countCE} ${countCE === 1 ? 'pagamento' : 'pagamenti'}`;
+    if (sspTotalEl) sspTotalEl.innerText = formatEuro(totSSP);
+    if (sspCountEl) sspCountEl.innerText = `${countSSP} ${countSSP === 1 ? 'pagamento' : 'pagamenti'}`;
+    if (gseTotalEl) gseTotalEl.innerText = formatEuro(totCE + totSSP);
+    if (gseCountEl) gseCountEl.innerText = `${countCE + countSSP} ${countCE + countSSP === 1 ? 'pagamento' : 'pagamenti'}`;
+
+    // Filter items according to activeSolarIncentivesFilter
+    const filtered = bolletteSolarIncentivesGlobal.filter(inc => {
+        if (activeSolarIncentivesFilter === 'conto_energia') return inc.type === 'conto_energia';
+        if (activeSolarIncentivesFilter === 'scambio_posto') return inc.type === 'scambio_posto';
+        return true;
+    });
+
+    // Sort by payment_date DESC
+    filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #6c757d; padding: 18px;">${window.Translations?.noPaymentsFound || "Nessun pagamento registrato per questo filtro."}</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(inc => {
+        const tr = document.createElement('tr');
+        
+        let badgeHtml = '';
+        if (inc.type === 'conto_energia') {
+            badgeHtml = `<span style="display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #b45309; font-weight: 600; font-size: 0.82em; padding: 3px 8px; border-radius: 6px;">☀️ Conto Energia</span>`;
+        } else {
+            badgeHtml = `<span style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; font-weight: 600; font-size: 0.82em; padding: 3px 8px; border-radius: 6px;">🔄 Scambio sul Posto</span>`;
+        }
+
+        const dateParts = (inc.payment_date || '').split('-');
+        let formattedDate = inc.payment_date;
+        if (dateParts.length === 3) {
+            formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+        }
+
+        tr.innerHTML = `
+            <td style="font-weight: 600; color: #334155;">${formattedDate}</td>
+            <td>${badgeHtml}</td>
+            <td style="font-weight: 500; color: #1e293b;">${escapeHtml(inc.description || '')}</td>
+            <td style="text-align: right; font-weight: bold; color: #059669; font-size: 1.05em;">+${formatEuro(inc.amount)}</td>
+            <td style="font-size: 0.85em; color: #64748b;">${escapeHtml(inc.notes || '-')}</td>
+            <td style="text-align: center;">
+                <button onclick="apriModalSolarIncentive(${inc.id})" style="background: none; border: none; cursor: pointer; font-size: 1em; padding: 2px 5px;" title="Modifica">✏️</button>
+                <button onclick="eliminaSolarIncentive(${inc.id})" style="background: none; border: none; cursor: pointer; font-size: 1em; padding: 2px 5px; color: #ef4444;" title="Elimina">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filtraTabellaIncentivi(tipo) {
+    activeSolarIncentivesFilter = tipo;
+    ['all', 'ce', 'ssp'].forEach(t => {
+        const btn = document.getElementById(`btn-incentives-filter-${t}`);
+        if (btn) {
+            const isMatch = (t === 'all' && tipo === 'all') || (t === 'ce' && tipo === 'conto_energia') || (t === 'ssp' && tipo === 'scambio_posto');
+            btn.classList.toggle('active', isMatch);
+        }
+    });
+    aggiornaSezioneSolarIncentives();
+}
+
+function apriModalSolarIncentive(id = null) {
+    const form = document.getElementById('form-solar-incentive');
+    if (form) form.reset();
+
+    const titleEl = document.getElementById('modal-solar-incentive-title');
+    const idInput = document.getElementById('solar-incentive-id');
+    const typeSelect = document.getElementById('solar-incentive-type');
+    const dateInput = document.getElementById('solar-incentive-date');
+    const descInput = document.getElementById('solar-incentive-description');
+    const amtInput = document.getElementById('solar-incentive-amount');
+    const notesInput = document.getElementById('solar-incentive-notes');
+
+    if (id) {
+        if (titleEl) titleEl.innerText = "Modifica Pagamento GSE";
+        const item = bolletteSolarIncentivesGlobal.find(x => x.id === id);
+        if (item) {
+            idInput.value = item.id;
+            typeSelect.value = item.type;
+            dateInput.value = item.payment_date;
+            descInput.value = item.description || '';
+            amtInput.value = item.amount;
+            notesInput.value = item.notes || '';
+        }
+    } else {
+        if (titleEl) titleEl.innerText = "Nuovo Pagamento GSE";
+        idInput.value = "";
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    document.getElementById('modal-solar-incentive').style.display = 'flex';
+}
+
+function chiudiModalSolarIncentive() {
+    document.getElementById('modal-solar-incentive').style.display = 'none';
+}
+
+async function salvaSolarIncentive(event) {
+    event.preventDefault();
+    if (!activeBillsId) return;
+
+    const id = document.getElementById('solar-incentive-id').value;
+    const type = document.getElementById('solar-incentive-type').value;
+    const payment_date = document.getElementById('solar-incentive-date').value;
+    const description = document.getElementById('solar-incentive-description').value.trim();
+    const amount = parseFloat(document.getElementById('solar-incentive-amount').value || 0);
+    const notes = document.getElementById('solar-incentive-notes').value.trim();
+
+    const payload = {
+        bills_id: parseInt(activeBillsId),
+        type: type,
+        payment_date: payment_date,
+        description: description,
+        amount: amount,
+        notes: notes
+    };
+
+    try {
+        let url = '/api/bills/solar_incentives';
+        let method = 'POST';
+        if (id) {
+            url = `/api/bills/solar_incentives/${id}`;
+            method = 'PUT';
+        }
+
+        let res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            chiudiModalSolarIncentive();
+            await caricaDatiBollette();
+        } else {
+            let err = await res.json();
+            alert(err.errore || "Errore durante il salvataggio.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore di rete.");
+    }
+}
+
+async function eliminaSolarIncentive(id) {
+    if (!confirm("Sei sicuro di voler eliminare questa registrazione di pagamento GSE?")) return;
+
+    try {
+        let res = await fetch(`/api/bills/solar_incentives/${id}`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            await caricaDatiBollette();
+        } else {
+            let err = await res.json();
+            alert(err.errore || "Errore durante l'eliminazione.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore di rete.");
+    }
+}
+
+window.apriModalSolarIncentive = apriModalSolarIncentive;
+window.chiudiModalSolarIncentive = chiudiModalSolarIncentive;
+window.salvaSolarIncentive = salvaSolarIncentive;
+window.eliminaSolarIncentive = eliminaSolarIncentive;
+window.filtraTabellaIncentivi = filtraTabellaIncentivi;
+window.aggiornaSezioneSolarIncentives = aggiornaSezioneSolarIncentives;
 
 function esportaBolletteCSV() {
     if (!activeBillsId) return;

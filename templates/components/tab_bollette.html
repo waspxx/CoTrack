@@ -208,6 +208,78 @@
         </div>
     </div>
 
+    <!-- SECTION: CONTO ENERGIA & SCAMBIO SUL POSTO (GSE) -->
+    <div class="sezione-solar-incentives" style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e9ecef;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="font-size: 1.2em; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+                    <span>☀️</span> {{ _('Conto Energia & Scambio sul Posto (GSE)') }}
+                </div>
+                <div style="font-size: 0.85em; color: #6c757d; margin-top: 3px;">
+                    {{ _('Traccia acconti, conguagli, incentivi e corrispettivi incassati dal GSE per la produzione e scambio di energia.') }}
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div class="filter-buttons" style="display: flex; gap: 4px;">
+                    <button id="btn-incentives-filter-all" class="btn-filter active" onclick="filtraTabellaIncentivi('all')">{{ _('Tutti') }}</button>
+                    <button id="btn-incentives-filter-ce" class="btn-filter" onclick="filtraTabellaIncentivi('conto_energia')">☀️ {{ _('Conto Energia') }}</button>
+                    <button id="btn-incentives-filter-ssp" class="btn-filter" onclick="filtraTabellaIncentivi('scambio_posto')">🔄 {{ _('Scambio sul Posto') }}</button>
+                </div>
+                <button onclick="apriModalSolarIncentive()" class="btn-filter" style="background-color: #10b981; color: white; display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; font-weight: 600;">
+                    ➕ {{ _('Nuovo Pagamento') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Mini Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: #f8fafc; border-radius: 10px; padding: 15px; border: 1px solid #e2e8f0; border-left-width: 4px; border-left-color: #f59e0b;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.82em; font-weight: 600; color: #64748b; text-transform: uppercase;">☀️ {{ _('Conto Energia') }}</span>
+                    <span id="kpi-ce-count" style="font-size: 0.75em; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: bold;">0 pagamenti</span>
+                </div>
+                <div id="kpi-ce-total" style="font-size: 1.45em; font-weight: bold; color: #0f172a; margin-top: 6px;">0,00 €</div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 10px; padding: 15px; border: 1px solid #e2e8f0; border-left-width: 4px; border-left-color: #06b6d4;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.82em; font-weight: 600; color: #64748b; text-transform: uppercase;">🔄 {{ _('Scambio sul Posto (SSP)') }}</span>
+                    <span id="kpi-ssp-count" style="font-size: 0.75em; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-weight: bold;">0 pagamenti</span>
+                </div>
+                <div id="kpi-ssp-total" style="font-size: 1.45em; font-weight: bold; color: #0f172a; margin-top: 6px;">0,00 €</div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 10px; padding: 15px; border: 1px solid #e2e8f0; border-left-width: 4px; border-left-color: #10b981;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.82em; font-weight: 600; color: #64748b; text-transform: uppercase;">💰 {{ _('Totale Incassato GSE') }}</span>
+                    <span id="kpi-gse-total-count" style="font-size: 0.75em; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 12px; font-weight: bold;">0 pagamenti</span>
+                </div>
+                <div id="kpi-gse-total-amount" style="font-size: 1.45em; font-weight: bold; color: #059669; margin-top: 6px;">0,00 €</div>
+            </div>
+        </div>
+
+        <!-- Table of Payments -->
+        <div style="overflow-x: auto;">
+            <table class="tabella-pmc" id="tabella-solar-incentives" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">📅 {{ _('Data Pagamento') }}</th>
+                        <th style="width: 170px;">⚡ {{ _('Categoria') }}</th>
+                        <th>🏷️ {{ _('Tipo Corrispettivo / Descrizione') }}</th>
+                        <th style="width: 150px; text-align: right;">💶 {{ _('Importo Incassato') }}</th>
+                        <th>📝 {{ _('Note') }}</th>
+                        <th style="width: 100px; text-align: center;">{{ _('Azioni') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-solar-incentives-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #6c757d; padding: 18px;">{{ _('Nessun pagamento registrato.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- History list table & CSV Management -->
     <div class="contenitore-dati">
         <div class="sezione-tabella" style="flex: 1; overflow-x: auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e9ecef;">
@@ -499,6 +571,51 @@
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="chiudiModalSettingsBollette()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
                     <button type="submit" class="btn-filter" style="background-color: #0d6efd; color: white; border-radius: 6px;">{{ _('Save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Pagamento GSE / Incentivi (Add / Edit) -->
+    <div id="modal-solar-incentive" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 480px; width: 92%; box-shadow: 0 6px 25px rgba(0,0,0,0.2); position: relative; margin: auto;">
+            <span onclick="chiudiModalSolarIncentive()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
+            <h3 id="modal-solar-incentive-title" style="margin-top: 0; margin-bottom: 20px; color: #2c3e50; font-size: 1.25em;">{{ _('Nuovo Pagamento GSE') }}</h3>
+            
+            <form id="form-solar-incentive" onsubmit="salvaSolarIncentive(event)">
+                <input type="hidden" id="solar-incentive-id" value="">
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="solar-incentive-type">{{ _('Categoria Pagamento') }} *</label>
+                    <select id="solar-incentive-type" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                        <option value="conto_energia">☀️ {{ _('Conto Energia (Incentivo Fotovoltaico)') }}</option>
+                        <option value="scambio_posto">🔄 {{ _('Scambio sul Posto (SSP - Contributo / Conguaglio / Eccedenze)') }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="solar-incentive-date">{{ _('Data Pagamento') }} *</label>
+                    <input type="date" id="solar-incentive-date" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="solar-incentive-description">{{ _('Tipo Corrispettivo / Descrizione') }} *</label>
+                    <input type="text" id="solar-incentive-description" class="input-form" placeholder="{{ _('es. Conguaglio 2023, acconto Contributo in conto scambio, ecc.') }}" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="solar-incentive-amount">{{ _('Importo Incassato (€)') }} *</label>
+                    <input type="number" step="0.01" min="0" id="solar-incentive-amount" class="input-form" placeholder="0.00" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="filter-label" for="solar-incentive-notes">{{ _('Note (Opzionale)') }}</label>
+                    <input type="text" id="solar-incentive-notes" class="input-form" placeholder="{{ _('Eventuali annotazioni...') }}" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="chiudiModalSolarIncentive()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn-filter" style="background-color: #10b981; color: white; border-radius: 6px; font-weight: bold;">{{ _('Save') }}</button>
                 </div>
             </form>
         </div>

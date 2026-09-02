@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-02 15:41+0200\n"
+"POT-Creation-Date: 2026-09-02 15:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,444 +21,461 @@ msgstr ""
 msgid "Too many requests. Please try again later."
 msgstr ""
 
-#: app.py:2745
+#: app.py:2759
 msgid "Login successful"
 msgstr ""
 
-#: app.py:2746
+#: app.py:2760
 msgid "Invalid credentials"
 msgstr ""
 
-#: app.py:2784
+#: app.py:2798
 msgid "Username must be a valid email address"
 msgstr ""
 
-#: app.py:2786 app.py:2860 app.py:3230 app.py:3298 app.py:4129
+#: app.py:2800 app.py:2874 app.py:3244 app.py:3312 app.py:4143
 msgid "Missing data"
 msgstr ""
 
-#: app.py:2796 app.py:2799
+#: app.py:2810 app.py:2813
 msgid "Registration completed"
 msgstr ""
 
-#: app.py:2806
+#: app.py:2820
 msgid "Logout successful"
 msgstr ""
 
-#: app.py:2840
+#: app.py:2854
 msgid "Valid email required"
 msgstr ""
 
-#: app.py:2853
+#: app.py:2867
 msgid "If the email exists, a reset link has been sent."
 msgstr ""
 
-#: app.py:2865
+#: app.py:2879
 msgid "Invalid or expired token"
 msgstr ""
 
-#: app.py:2870
+#: app.py:2884
 msgid "Password updated successfully"
 msgstr ""
 
-#: app.py:2876 app.py:2891 app.py:2902 app.py:2925 app.py:2958 app.py:2967
-#: app.py:2984 app.py:3006 app.py:3024 app.py:3039 app.py:3057 app.py:3073
-#: app.py:3088 app.py:3106 app.py:3124 app.py:3139 app.py:3157 app.py:3174
-#: app.py:3218 app.py:3280 app.py:3290 app.py:3310 app.py:3343 app.py:3355
-#: app.py:3413 app.py:3455 app.py:3571 app.py:3648 app.py:3674 app.py:3804
-#: app.py:4077 app.py:4086 app.py:4107 app.py:4166 app.py:4191 app.py:4201
-#: app.py:4225 app.py:4254 app.py:4448 app.py:4579 app.py:4599 app.py:4625
-#: app.py:4669 app.py:4800 app.py:4829 app.py:4892 app.py:4945 app.py:5020
-#: app.py:5084 app.py:5125 app.py:5409 app.py:5470 app.py:5532 app.py:5591
-#: app.py:5683 app.py:5736 app.py:5806 app.py:5835 app.py:5906 app.py:5935
-#: app.py:5986 app.py:6001 app.py:6019 app.py:6037 app.py:6091 app.py:6136
-#: app.py:6188 app.py:6228 app.py:6357 app.py:7582 app.py:7602 app.py:7696
-#: app.py:7819 app.py:7833 app.py:7847 app.py:7861
+#: app.py:2890 app.py:2905 app.py:2916 app.py:2939 app.py:2972 app.py:2981
+#: app.py:2998 app.py:3020 app.py:3038 app.py:3053 app.py:3071 app.py:3087
+#: app.py:3102 app.py:3120 app.py:3138 app.py:3153 app.py:3171 app.py:3188
+#: app.py:3232 app.py:3294 app.py:3304 app.py:3324 app.py:3357 app.py:3369
+#: app.py:3427 app.py:3469 app.py:3585 app.py:3662 app.py:3688 app.py:3818
+#: app.py:4091 app.py:4100 app.py:4121 app.py:4180 app.py:4205 app.py:4215
+#: app.py:4239 app.py:4268 app.py:4462 app.py:4593 app.py:4613 app.py:4639
+#: app.py:4683 app.py:4814 app.py:4843 app.py:4906 app.py:4959 app.py:5034
+#: app.py:5100 app.py:5193 app.py:5253 app.py:5316 app.py:5643 app.py:5704
+#: app.py:5766 app.py:5825 app.py:5917 app.py:5970 app.py:6040 app.py:6069
+#: app.py:6140 app.py:6169 app.py:6220 app.py:6235 app.py:6253 app.py:6271
+#: app.py:6325 app.py:6370 app.py:6422 app.py:6462 app.py:6591 app.py:7816
+#: app.py:7836 app.py:7930 app.py:8053 app.py:8067 app.py:8081 app.py:8095
 msgid "Not authenticated"
 msgstr ""
 
-#: app.py:2943
+#: app.py:2957
 msgid "Settings updated successfully"
 msgstr ""
 
-#: app.py:2971 templates/components/tab_investimenti.html:7
+#: app.py:2985 templates/components/tab_investimenti.html:7
 msgid "New Portfolio"
 msgstr ""
 
-#: app.py:2976
+#: app.py:2990
 msgid "Portfolio created"
 msgstr ""
 
-#: app.py:2988 app.py:3042 app.py:3091 app.py:3142 app.py:4914
+#: app.py:3002 app.py:3056 app.py:3105 app.py:3156 app.py:4928
 msgid "Name cannot be empty"
 msgstr ""
 
-#: app.py:2999 app.py:3012
+#: app.py:3013 app.py:3026
 msgid "Portfolio not found or unauthorized"
 msgstr ""
 
-#: app.py:3002
+#: app.py:3016
 msgid "Portfolio renamed successfully"
 msgstr ""
 
-#: app.py:3019
+#: app.py:3033
 msgid "Portfolio deleted successfully"
 msgstr ""
 
-#: app.py:3027 templates/components/tab_wallet.html:7
+#: app.py:3041 templates/components/tab_wallet.html:7
 msgid "New Wallet"
 msgstr ""
 
-#: app.py:3032
+#: app.py:3046
 msgid "Wallet created"
 msgstr ""
 
-#: app.py:3051 app.py:3062 app.py:4637
+#: app.py:3065 app.py:3076 app.py:4651
 msgid "Wallet not found or unauthorized"
 msgstr ""
 
-#: app.py:3053
+#: app.py:3067
 msgid "Wallet renamed successfully"
 msgstr ""
 
-#: app.py:3068
+#: app.py:3082
 msgid "Wallet deleted successfully"
 msgstr ""
 
-#: app.py:3076 templates/components/tab_bollette.html:8
+#: app.py:3090 templates/components/tab_bollette.html:8
 msgid "New Bills Group"
 msgstr ""
 
-#: app.py:3081
+#: app.py:3095
 msgid "Bills group created"
 msgstr ""
 
-#: app.py:3100 app.py:3111 app.py:4687 app.py:4759 app.py:4847 app.py:4882
-#: app.py:4962 app.py:4995 app.py:5038 app.py:5066 app.py:5091 app.py:5135
+#: app.py:3114 app.py:3125 app.py:4701 app.py:4773 app.py:4861 app.py:4896
+#: app.py:4976 app.py:5009 app.py:5052 app.py:5080 app.py:5125 app.py:5150
+#: app.py:5260 app.py:5326
 msgid "Bills group not found or unauthorized"
 msgstr ""
 
-#: app.py:3102
+#: app.py:3116
 msgid "Bills group renamed successfully"
 msgstr ""
 
-#: app.py:3119
+#: app.py:3133
 msgid "Bills group deleted successfully"
 msgstr ""
 
-#: app.py:3127 templates/components/tab_veicoli.html:6
+#: app.py:3141 templates/components/tab_veicoli.html:6
 msgid "New Garage"
 msgstr ""
 
-#: app.py:3132
+#: app.py:3146
 msgid "Garage created"
 msgstr ""
 
-#: app.py:3151 app.py:3162 app.py:5419 app.py:5601 app.py:5746 app.py:5916
-#: app.py:5948
+#: app.py:3165 app.py:3176 app.py:5653 app.py:5835 app.py:5980 app.py:6150
+#: app.py:6182
 msgid "Garage not found or unauthorized"
 msgstr ""
 
-#: app.py:3153
+#: app.py:3167
 msgid "Garage renamed successfully"
 msgstr ""
 
-#: app.py:3170
+#: app.py:3184
 msgid "Garage deleted successfully"
 msgstr ""
 
-#: app.py:3208
+#: app.py:3222
 msgid "Transaction saved successfully!"
 msgstr ""
 
-#: app.py:3224
+#: app.py:3238
 msgid "Transaction deleted!"
 msgstr ""
 
-#: app.py:3235
+#: app.py:3249
 msgid "Instrument (ISIN) is required"
 msgstr ""
 
-#: app.py:3251
+#: app.py:3265
 msgid "Invalid numeric values"
 msgstr ""
 
-#: app.py:3267 app.py:4119
+#: app.py:3281 app.py:4133
 msgid "Transaction not found or unauthorized"
 msgstr ""
 
-#: app.py:3276
+#: app.py:3290
 msgid "Transaction updated successfully!"
 msgstr ""
 
-#: app.py:3286
+#: app.py:3300
 msgid "All transactions deleted!"
 msgstr ""
 
-#: app.py:3305
+#: app.py:3319
 msgid "Asset type updated successfully!"
 msgstr ""
 
-#: app.py:3346
+#: app.py:3360
 msgid "Database not found"
 msgstr ""
 
-#: app.py:3359 app.py:3416 app.py:3459 app.py:3575 app.py:3651 app.py:4256
-#: app.py:4452 app.py:5127 app.py:6238 app.py:7584 app.py:7609 app.py:7702
+#: app.py:3373 app.py:3430 app.py:3473 app.py:3589 app.py:3665 app.py:4270
+#: app.py:4466 app.py:5318 app.py:6472 app.py:7818 app.py:7843 app.py:7936
 msgid "No file uploaded"
 msgstr ""
 
-#: app.py:3365 app.py:3420 app.py:3581 app.py:3655 app.py:4259 app.py:5129
+#: app.py:3379 app.py:3434 app.py:3595 app.py:3669 app.py:4273 app.py:5320
 msgid "No file selected"
 msgstr ""
 
-#: app.py:3404
+#: app.py:3418
 #, python-format
 msgid "CSV format error: %(err)s"
 msgstr ""
 
-#: app.py:3407
+#: app.py:3421
 msgid "Import completed successfully!"
 msgstr ""
 
-#: app.py:3409 app.py:3450 app.py:4444
+#: app.py:3423 app.py:3464 app.py:4458
 msgid "Invalid file format. Expected CSV."
 msgstr ""
 
-#: app.py:3432 app.py:3476 app.py:4267 app.py:4469 app.py:5145 app.py:6261
-#: app.py:7626 app.py:7719
+#: app.py:3446 app.py:3490 app.py:4281 app.py:4483 app.py:5336 app.py:6495
+#: app.py:7860 app.py:7953
 msgid "The uploaded file is empty."
 msgstr ""
 
-#: app.py:3444 app.py:7732
+#: app.py:3458 app.py:7966
 msgid "CSV format error."
 msgstr ""
 
-#: app.py:3464 app.py:4457 app.py:6244 app.py:7614 app.py:7707
+#: app.py:3478 app.py:4471 app.py:6478 app.py:7848 app.py:7941
 msgid "Missing column mapping"
 msgstr ""
 
-#: app.py:3469 app.py:4462 app.py:6250 app.py:7619 app.py:7712
+#: app.py:3483 app.py:4476 app.py:6484 app.py:7853 app.py:7946
 msgid "Invalid mapping format"
 msgstr ""
 
-#: app.py:3564
+#: app.py:3578
 #, python-format
 msgid "Import error: %(err)s"
 msgstr ""
 
-#: app.py:3566
+#: app.py:3580
 msgid "Custom import completed successfully!"
 msgstr ""
 
-#: app.py:3585
+#: app.py:3599
 msgid ""
 "PyPDF2 library not installed. Add it to the server with 'pip install "
 "PyPDF2'."
 msgstr ""
 
-#: app.py:3604
+#: app.py:3618
 msgid "ISIN code not found in PDF"
 msgstr ""
 
-#: app.py:3623
+#: app.py:3637
 msgid "Execution data (quantity, price, total) not found in PDF"
 msgstr ""
 
-#: app.py:3637
+#: app.py:3651
 #, python-format
 msgid "Transaction for %(name)s imported successfully!"
 msgstr ""
 
-#: app.py:3639
+#: app.py:3653
 msgid "This transaction has already been imported into the portfolio."
 msgstr ""
 
-#: app.py:3642 app.py:3668
+#: app.py:3656 app.py:3682
 #, python-format
 msgid "Error reading PDF: %(err)s"
 msgstr ""
 
-#: app.py:3644 app.py:3670
+#: app.py:3658 app.py:3684
 msgid "Invalid file format. Expected PDF."
 msgstr ""
 
-#: app.py:3659
+#: app.py:3673
 msgid "PyPDF2 library not installed."
 msgstr ""
 
-#: app.py:3677
+#: app.py:3691
 msgid "Google Generative AI SDK not installed. Run 'pip install google-genai'."
 msgstr ""
 
-#: app.py:3681
+#: app.py:3695
 msgid ""
 "Gemini API key not configured. Please set GEMINI_API_KEY environment "
 "variable."
 msgstr ""
 
-#: app.py:4092
+#: app.py:4106
 msgid "Missing category"
 msgstr ""
 
-#: app.py:4098
+#: app.py:4112
 msgid "Category updated successfully"
 msgstr ""
 
-#: app.py:4124
+#: app.py:4138
 msgid "Transaction deleted successfully"
 msgstr ""
 
-#: app.py:4141
+#: app.py:4155 app.py:5120 app.py:5234
 msgid "Invalid amount"
 msgstr ""
 
-#: app.py:4144
+#: app.py:4158
 msgid "Date, account and category are required"
 msgstr ""
 
-#: app.py:4157
+#: app.py:4171
 msgid "Transaction updated successfully"
 msgstr ""
 
-#: app.py:4182
+#: app.py:4196
 msgid "Configuration saved!"
 msgstr ""
 
-#: app.py:4197
+#: app.py:4211
 msgid "All Wallet transactions deleted!"
 msgstr ""
 
-#: app.py:4208
+#: app.py:4222
 msgid "No transactions selected"
 msgstr ""
 
-#: app.py:4216
+#: app.py:4230
 msgid "Selected transactions deleted!"
 msgstr ""
 
-#: app.py:4435 app.py:4566
+#: app.py:4449 app.py:4580
 #, python-format
 msgid ""
 "Imported %(count)s new transactions. (Ignored %(ignored)s already "
 "present). WARNING: %(errors)s rows were not read correctly."
 msgstr ""
 
-#: app.py:4437 app.py:4568
+#: app.py:4451 app.py:4582
 #, python-format
 msgid ""
 "Imported %(count)s new transactions successfully! (Ignored %(ignored)s "
 "already present)."
 msgstr ""
 
-#: app.py:4612
+#: app.py:4626
 msgid "BudgetBakers token saved successfully!"
 msgstr ""
 
-#: app.py:4642
+#: app.py:4656
 msgid "No wallet found for this user"
 msgstr ""
 
-#: app.py:4649
+#: app.py:4663
 msgid "Sync failed"
 msgstr ""
 
-#: app.py:4657
+#: app.py:4671
 #, python-format
 msgid ""
 "Sync completed! %(imported)s new transactions imported, %(ignored)s "
 "already present (total fetched: %(total)s from %(start)s to %(end)s)."
 msgstr ""
 
-#: app.py:4681 app.py:4957
+#: app.py:4695 app.py:4971 app.py:5114 app.py:5228
 msgid "Missing required fields"
 msgstr ""
 
-#: app.py:4743
+#: app.py:4757
 msgid "Bill saved successfully"
 msgstr ""
 
-#: app.py:4754 app.py:4877 app.py:4990 app.py:5033 app.py:5061
+#: app.py:4768 app.py:4891 app.py:5004 app.py:5047 app.py:5075 app.py:5145
 msgid "Missing bills_id"
 msgstr ""
 
-#: app.py:4812
+#: app.py:4826
 msgid "Bill not found or unauthorized"
 msgstr ""
 
-#: app.py:4818
+#: app.py:4832
 msgid "Bill deleted successfully"
 msgstr ""
 
-#: app.py:4842
+#: app.py:4856
 msgid "Name and bills group are required"
 msgstr ""
 
-#: app.py:4857
+#: app.py:4871
 msgid "Appliance added successfully"
 msgstr ""
 
-#: app.py:4903
+#: app.py:4917
 msgid "Appliance not found or unauthorized"
 msgstr ""
 
-#: app.py:4922
+#: app.py:4936
 msgid "Appliance updated successfully"
 msgstr ""
 
-#: app.py:4934
+#: app.py:4948
 msgid "Appliance deleted successfully"
 msgstr ""
 
-#: app.py:4976
+#: app.py:4990
 msgid "Appliance consumptions saved successfully"
 msgstr ""
 
-#: app.py:5050
+#: app.py:5064
 msgid "Config saved successfully"
 msgstr ""
 
-#: app.py:5204
+#: app.py:5135
+msgid "Payment saved successfully"
+msgstr ""
+
+#: app.py:5205
+msgid "Record not found or unauthorized"
+msgstr ""
+
+#: app.py:5212
+msgid "Payment deleted successfully"
+msgstr ""
+
+#: app.py:5244
+msgid "Payment updated successfully"
+msgstr ""
+
+#: app.py:5438
 #, python-format
 msgid "Imported %(count)s bills successfully!"
 msgstr ""
 
-#: app.py:5212
+#: app.py:5446
 msgid "Invalid file type"
 msgstr ""
 
-#: app.py:5413 app.py:5595 app.py:5740 app.py:5910 app.py:5942
+#: app.py:5647 app.py:5829 app.py:5974 app.py:6144 app.py:6176
 msgid "Missing garage_id"
 msgstr ""
 
-#: app.py:5480 app.py:5545 app.py:7824
+#: app.py:5714 app.py:5779 app.py:8058
 msgid "Vehicle not found or unauthorized"
 msgstr ""
 
-#: app.py:5551
+#: app.py:5785
 msgid "Vehicle has no chassis number (VIN) registered"
 msgstr ""
 
-#: app.py:5694
+#: app.py:5928
 msgid "Activity not found or unauthorized"
 msgstr ""
 
-#: app.py:6097 app.py:6143 app.py:6234 app.py:7838
+#: app.py:6331 app.py:6377 app.py:6468 app.py:8072
 msgid "Loan not found or unauthorized"
 msgstr ""
 
-#: app.py:6200
+#: app.py:6434
 msgid "Payment not found or unauthorized"
 msgstr ""
 
-#: app.py:6347
+#: app.py:6581
 #, python-format
 msgid ""
 "Import completed: %(imported)d payments imported, %(skipped)d skipped as "
 "duplicates."
 msgstr ""
 
-#: app.py:7587
+#: app.py:7821
 msgid "The file must be a PDF"
 msgstr ""
 
@@ -557,8 +574,8 @@ msgid "Network error."
 msgstr ""
 
 #: templates/components/tab_bollette.html:56
-#: templates/components/tab_bollette.html:219
-#: templates/components/tab_bollette.html:282 templates/index.html:62
+#: templates/components/tab_bollette.html:291
+#: templates/components/tab_bollette.html:354 templates/index.html:62
 msgid "Water"
 msgstr ""
 
@@ -567,8 +584,8 @@ msgid "Electricity"
 msgstr ""
 
 #: templates/components/tab_bollette.html:66
-#: templates/components/tab_bollette.html:221
-#: templates/components/tab_bollette.html:312 templates/index.html:64
+#: templates/components/tab_bollette.html:293
+#: templates/components/tab_bollette.html:384 templates/index.html:64
 msgid "Gas"
 msgstr ""
 
@@ -747,7 +764,7 @@ msgid "solar coverage"
 msgstr ""
 
 #: templates/components/tab_bollette.html:151
-#: templates/components/tab_bollette.html:224 templates/index.html:108
+#: templates/components/tab_bollette.html:296 templates/index.html:108
 msgid "Appliances"
 msgstr ""
 
@@ -778,10 +795,11 @@ msgid ""
 "field."
 msgstr ""
 
-#: templates/components/tab_bollette.html:373
-#: templates/components/tab_bollette.html:426
-#: templates/components/tab_bollette.html:470
-#: templates/components/tab_bollette.html:500
+#: templates/components/tab_bollette.html:445
+#: templates/components/tab_bollette.html:498
+#: templates/components/tab_bollette.html:542
+#: templates/components/tab_bollette.html:572
+#: templates/components/tab_bollette.html:614
 #: templates/components/tab_fondopensione.html:253
 #: templates/components/tab_fondopensione.html:375
 #: templates/components/tab_fondopensione.html:410
@@ -962,7 +980,7 @@ msgid "Settings"
 msgstr ""
 
 #: templates/components/tab_bollette.html:45
-#: templates/components/tab_bollette.html:384
+#: templates/components/tab_bollette.html:456
 msgid "Add Appliance"
 msgstr ""
 
@@ -971,13 +989,13 @@ msgid "Add Bill / Energy Data"
 msgstr ""
 
 #: templates/components/tab_bollette.html:61
-#: templates/components/tab_bollette.html:220
+#: templates/components/tab_bollette.html:292
 msgid "Electricity (Grid)"
 msgstr ""
 
 #: templates/components/tab_bollette.html:71
-#: templates/components/tab_bollette.html:222
-#: templates/components/tab_bollette.html:327
+#: templates/components/tab_bollette.html:294
+#: templates/components/tab_bollette.html:399
 msgid "Waste / TARI"
 msgstr ""
 
@@ -998,7 +1016,7 @@ msgid "Latest recorded month"
 msgstr ""
 
 #: templates/components/tab_bollette.html:108
-#: templates/components/tab_bollette.html:348
+#: templates/components/tab_bollette.html:420
 msgid "Grid Feed-in (Immissione)"
 msgstr ""
 
@@ -1007,7 +1025,7 @@ msgid "Self-Consumption (Autoconsumo)"
 msgstr ""
 
 #: templates/components/tab_bollette.html:116
-#: templates/components/tab_bollette.html:304
+#: templates/components/tab_bollette.html:376
 msgid "Grid Withdrawal (Prelievo)"
 msgstr ""
 
@@ -1037,7 +1055,7 @@ msgid "Consumptions"
 msgstr ""
 
 #: templates/components/tab_bollette.html:150
-#: templates/components/tab_bollette.html:223
+#: templates/components/tab_bollette.html:295
 msgid "Solar & Energy"
 msgstr ""
 
@@ -1081,19 +1099,85 @@ msgstr ""
 msgid "Add First Appliance"
 msgstr ""
 
-#: templates/components/tab_bollette.html:214
-msgid "Bills & Energy History"
+#: templates/components/tab_bollette.html:216
+msgid "Conto Energia & Scambio sul Posto (GSE)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:218
-msgid "Month/Year"
+#: templates/components/tab_bollette.html:219
+msgid ""
+"Traccia acconti, conguagli, incentivi e corrispettivi incassati dal GSE "
+"per la produzione e scambio di energia."
+msgstr ""
+
+#: templates/components/tab_bollette.html:224
+msgid "Tutti"
 msgstr ""
 
 #: templates/components/tab_bollette.html:225
-msgid "Total Cost"
+#: templates/components/tab_bollette.html:238
+msgid "Conto Energia"
 msgstr ""
 
 #: templates/components/tab_bollette.html:226
+msgid "Scambio sul Posto"
+msgstr ""
+
+#: templates/components/tab_bollette.html:229
+msgid "Nuovo Pagamento"
+msgstr ""
+
+#: templates/components/tab_bollette.html:246
+msgid "Scambio sul Posto (SSP)"
+msgstr ""
+
+#: templates/components/tab_bollette.html:254
+msgid "Totale Incassato GSE"
+msgstr ""
+
+#: templates/components/tab_bollette.html:266
+#: templates/components/tab_bollette.html:594
+msgid "Data Pagamento"
+msgstr ""
+
+#: templates/components/tab_bollette.html:267
+msgid "Categoria"
+msgstr ""
+
+#: templates/components/tab_bollette.html:268
+#: templates/components/tab_bollette.html:599
+msgid "Tipo Corrispettivo / Descrizione"
+msgstr ""
+
+#: templates/components/tab_bollette.html:269
+msgid "Importo Incassato"
+msgstr ""
+
+#: templates/components/tab_bollette.html:270
+#: templates/components/tab_wallet.html:320
+msgid "Note"
+msgstr ""
+
+#: templates/components/tab_bollette.html:271
+msgid "Azioni"
+msgstr ""
+
+#: templates/components/tab_bollette.html:276
+msgid "Nessun pagamento registrato."
+msgstr ""
+
+#: templates/components/tab_bollette.html:286
+msgid "Bills & Energy History"
+msgstr ""
+
+#: templates/components/tab_bollette.html:290
+msgid "Month/Year"
+msgstr ""
+
+#: templates/components/tab_bollette.html:297
+msgid "Total Cost"
+msgstr ""
+
+#: templates/components/tab_bollette.html:298
 #: templates/components/tab_fondopensione.html:301
 #: templates/components/tab_investimenti.html:430
 #: templates/components/tab_stipendi.html:384
@@ -1106,37 +1190,37 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: templates/components/tab_bollette.html:231
+#: templates/components/tab_bollette.html:303
 msgid "No bills added yet."
 msgstr ""
 
-#: templates/components/tab_bollette.html:238
+#: templates/components/tab_bollette.html:310
 msgid "Bills Management"
 msgstr ""
 
-#: templates/components/tab_bollette.html:240
+#: templates/components/tab_bollette.html:312
 #: templates/components/tab_investimenti.html:387
 #: templates/components/tab_wallet.html:247
 msgid "Import CSV"
 msgstr ""
 
-#: templates/components/tab_bollette.html:241
+#: templates/components/tab_bollette.html:313
 #: templates/components/tab_investimenti.html:388
 #: templates/components/tab_wallet.html:248
 msgid "Export CSV"
 msgstr ""
 
-#: templates/components/tab_bollette.html:251
+#: templates/components/tab_bollette.html:323
 msgid "Add Bill / Energy Entry"
 msgstr ""
 
-#: templates/components/tab_bollette.html:258
-#: templates/components/tab_bollette.html:443
+#: templates/components/tab_bollette.html:330
+#: templates/components/tab_bollette.html:515
 msgid "Year"
 msgstr ""
 
-#: templates/components/tab_bollette.html:262
-#: templates/components/tab_bollette.html:447
+#: templates/components/tab_bollette.html:334
+#: templates/components/tab_bollette.html:519
 #: templates/components/tab_fondopensione.html:189
 #: templates/components/tab_fondopensione.html:293
 #: templates/components/tab_fondopensione.html:395
@@ -1149,116 +1233,117 @@ msgstr ""
 msgid "Month"
 msgstr ""
 
-#: templates/components/tab_bollette.html:264
-#: templates/components/tab_bollette.html:449
+#: templates/components/tab_bollette.html:336
+#: templates/components/tab_bollette.html:521
 msgid "January"
 msgstr ""
 
-#: templates/components/tab_bollette.html:265
-#: templates/components/tab_bollette.html:450
+#: templates/components/tab_bollette.html:337
+#: templates/components/tab_bollette.html:522
 msgid "February"
 msgstr ""
 
-#: templates/components/tab_bollette.html:266
-#: templates/components/tab_bollette.html:451
+#: templates/components/tab_bollette.html:338
+#: templates/components/tab_bollette.html:523
 msgid "March"
 msgstr ""
 
-#: templates/components/tab_bollette.html:267
-#: templates/components/tab_bollette.html:452
+#: templates/components/tab_bollette.html:339
+#: templates/components/tab_bollette.html:524
 msgid "April"
 msgstr ""
 
-#: templates/components/tab_bollette.html:268
-#: templates/components/tab_bollette.html:453
+#: templates/components/tab_bollette.html:340
+#: templates/components/tab_bollette.html:525
 msgid "May"
 msgstr ""
 
-#: templates/components/tab_bollette.html:269
-#: templates/components/tab_bollette.html:454
+#: templates/components/tab_bollette.html:341
+#: templates/components/tab_bollette.html:526
 msgid "June"
 msgstr ""
 
-#: templates/components/tab_bollette.html:270
-#: templates/components/tab_bollette.html:455
+#: templates/components/tab_bollette.html:342
+#: templates/components/tab_bollette.html:527
 msgid "July"
 msgstr ""
 
-#: templates/components/tab_bollette.html:271
-#: templates/components/tab_bollette.html:456
+#: templates/components/tab_bollette.html:343
+#: templates/components/tab_bollette.html:528
 msgid "August"
 msgstr ""
 
-#: templates/components/tab_bollette.html:272
-#: templates/components/tab_bollette.html:457
+#: templates/components/tab_bollette.html:344
+#: templates/components/tab_bollette.html:529
 msgid "September"
 msgstr ""
 
-#: templates/components/tab_bollette.html:273
-#: templates/components/tab_bollette.html:458
+#: templates/components/tab_bollette.html:345
+#: templates/components/tab_bollette.html:530
 msgid "October"
 msgstr ""
 
-#: templates/components/tab_bollette.html:274
-#: templates/components/tab_bollette.html:459
+#: templates/components/tab_bollette.html:346
+#: templates/components/tab_bollette.html:531
 msgid "November"
 msgstr ""
 
-#: templates/components/tab_bollette.html:275
-#: templates/components/tab_bollette.html:460
+#: templates/components/tab_bollette.html:347
+#: templates/components/tab_bollette.html:532
 msgid "December"
 msgstr ""
 
-#: templates/components/tab_bollette.html:285
-#: templates/components/tab_bollette.html:315
-#: templates/components/tab_bollette.html:330
+#: templates/components/tab_bollette.html:357
+#: templates/components/tab_bollette.html:387
+#: templates/components/tab_bollette.html:402
 msgid "Price (€)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:289
-#: templates/components/tab_bollette.html:319
+#: templates/components/tab_bollette.html:361
+#: templates/components/tab_bollette.html:391
 #: templates/components/tab_veicoli.html:318
 msgid "Consumption"
 msgstr ""
 
-#: templates/components/tab_bollette.html:297
+#: templates/components/tab_bollette.html:369
 msgid "Electricity (Grid Withdrawal / Prelievo)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:300
+#: templates/components/tab_bollette.html:372
 msgid "Bill Price (€)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:332
+#: templates/components/tab_bollette.html:404
 msgid "Cost only (no consumption unit)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:340
+#: templates/components/tab_bollette.html:412
 msgid "Photovoltaic & Solar Energy"
 msgstr ""
 
-#: templates/components/tab_bollette.html:344
+#: templates/components/tab_bollette.html:416
 msgid "Solar Production (Produzione FV)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:354
+#: templates/components/tab_bollette.html:426
 msgid "Self-consumption:"
 msgstr ""
 
-#: templates/components/tab_bollette.html:355
+#: templates/components/tab_bollette.html:427
 msgid "Total Home:"
 msgstr ""
 
-#: templates/components/tab_bollette.html:362
+#: templates/components/tab_bollette.html:434
 msgid "Appliances Consumption (Month)"
 msgstr ""
 
-#: templates/components/tab_bollette.html:364
+#: templates/components/tab_bollette.html:436
 msgid "Add new appliance"
 msgstr ""
 
-#: templates/components/tab_bollette.html:374
-#: templates/components/tab_bollette.html:501
+#: templates/components/tab_bollette.html:446
+#: templates/components/tab_bollette.html:573
+#: templates/components/tab_bollette.html:615
 #: templates/components/tab_fondopensione.html:376
 #: templates/components/tab_settings.html:99
 #: templates/components/tab_stipendi.html:344
@@ -1267,98 +1352,130 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: templates/components/tab_bollette.html:390
+#: templates/components/tab_bollette.html:462
 msgid "Appliance Name"
 msgstr ""
 
-#: templates/components/tab_bollette.html:395
+#: templates/components/tab_bollette.html:467
 msgid "Type & Icon"
 msgstr ""
 
-#: templates/components/tab_bollette.html:397
+#: templates/components/tab_bollette.html:469
 msgid "Heat Pump / Air Conditioning"
 msgstr ""
 
-#: templates/components/tab_bollette.html:398
+#: templates/components/tab_bollette.html:470
 msgid "Washing Machine"
 msgstr ""
 
-#: templates/components/tab_bollette.html:399
+#: templates/components/tab_bollette.html:471
 msgid "Dishwasher"
 msgstr ""
 
-#: templates/components/tab_bollette.html:400
+#: templates/components/tab_bollette.html:472
 msgid "Induction Cooktop / Kitchen"
 msgstr ""
 
-#: templates/components/tab_bollette.html:401
+#: templates/components/tab_bollette.html:473
 msgid "Refrigerator / Freezer"
 msgstr ""
 
-#: templates/components/tab_bollette.html:402
+#: templates/components/tab_bollette.html:474
 msgid "Oven"
 msgstr ""
 
-#: templates/components/tab_bollette.html:403
+#: templates/components/tab_bollette.html:475
 msgid "Dryer"
 msgstr ""
 
-#: templates/components/tab_bollette.html:404
+#: templates/components/tab_bollette.html:476
 msgid "Water Heater / Boiler"
 msgstr ""
 
-#: templates/components/tab_bollette.html:405
+#: templates/components/tab_bollette.html:477
 msgid "Electric Vehicle / Wallbox"
 msgstr ""
 
-#: templates/components/tab_bollette.html:406
+#: templates/components/tab_bollette.html:478
 msgid "PC / Server / Home Lab"
 msgstr ""
 
-#: templates/components/tab_bollette.html:407
+#: templates/components/tab_bollette.html:479
 msgid "Other Device"
 msgstr ""
 
-#: templates/components/tab_bollette.html:416
+#: templates/components/tab_bollette.html:488
 msgid "Somma valori per il consumo totale"
 msgstr ""
 
-#: templates/components/tab_bollette.html:419
+#: templates/components/tab_bollette.html:491
 msgid ""
 "Se selezionato, i consumi di questo elettrodomestico verranno conteggiati"
 " nel totale della ripartizione energetica."
 msgstr ""
 
-#: templates/components/tab_bollette.html:427
+#: templates/components/tab_bollette.html:499
 msgid "Save Appliance"
 msgstr ""
 
-#: templates/components/tab_bollette.html:437
+#: templates/components/tab_bollette.html:509
 msgid "Quick Monthly Appliances Consumptions"
 msgstr ""
 
-#: templates/components/tab_bollette.html:438
+#: templates/components/tab_bollette.html:510
 msgid "Enter recorded kWh consumptions for each appliance for the selected month."
 msgstr ""
 
-#: templates/components/tab_bollette.html:471
+#: templates/components/tab_bollette.html:543
 msgid "Save Consumptions"
 msgstr ""
 
-#: templates/components/tab_bollette.html:481
+#: templates/components/tab_bollette.html:553
 msgid "Bills Units Settings"
 msgstr ""
 
-#: templates/components/tab_bollette.html:485
+#: templates/components/tab_bollette.html:557
 msgid "Water Consumption Unit"
 msgstr ""
 
-#: templates/components/tab_bollette.html:490
+#: templates/components/tab_bollette.html:562
 msgid "Electricity Consumption Unit"
 msgstr ""
 
-#: templates/components/tab_bollette.html:495
+#: templates/components/tab_bollette.html:567
 msgid "Gas Consumption Unit"
+msgstr ""
+
+#: templates/components/tab_bollette.html:580
+msgid "Nuovo Pagamento GSE"
+msgstr ""
+
+#: templates/components/tab_bollette.html:586
+msgid "Categoria Pagamento"
+msgstr ""
+
+#: templates/components/tab_bollette.html:588
+msgid "Conto Energia (Incentivo Fotovoltaico)"
+msgstr ""
+
+#: templates/components/tab_bollette.html:589
+msgid "Scambio sul Posto (SSP - Contributo / Conguaglio / Eccedenze)"
+msgstr ""
+
+#: templates/components/tab_bollette.html:600
+msgid "es. Conguaglio 2023, acconto Contributo in conto scambio, ecc."
+msgstr ""
+
+#: templates/components/tab_bollette.html:604
+msgid "Importo Incassato (€)"
+msgstr ""
+
+#: templates/components/tab_bollette.html:609
+msgid "Note (Opzionale)"
+msgstr ""
+
+#: templates/components/tab_bollette.html:610
+msgid "Eventuali annotazioni..."
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:5
@@ -4383,10 +4500,6 @@ msgstr ""
 
 #: templates/components/tab_wallet.html:315
 msgid "Delete selected transactions"
-msgstr ""
-
-#: templates/components/tab_wallet.html:320
-msgid "Note"
 msgstr ""
 
 #: templates/components/tab_wallet.html:341

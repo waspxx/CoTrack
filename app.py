@@ -501,6 +501,20 @@ def init_db():
             FOREIGN KEY (bills_id) REFERENCES bills_profiles (id)
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS bills_solar_incentives (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bills_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            description TEXT NOT NULL,
+            amount REAL NOT NULL DEFAULT 0,
+            payment_date TEXT NOT NULL,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (bills_id) REFERENCES bills_profiles (id) ON DELETE CASCADE
+        )
+    ''')
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bills_solar_inc_lookup ON bills_solar_incentives(bills_id, payment_date)")
 
     # Vehicles table
     conn.execute('''
@@ -5079,6 +5093,161 @@ def manage_bills_config():
             "gas_unit": "Smc"
         })
 
+
+@app.route('/api/bills/solar_incentives', methods=['GET', 'POST'])
+def manage_bills_solar_incentives():
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    
+    conn = get_db_connection()
+    if request.method == 'POST':
+        data = request.json or {}
+        bills_id = data.get('bills_id')
+        inc_type = data.get('type')  # 'conto_energia' or 'scambio_posto'
+        description = (data.get('description') or '').strip()
+        amount = data.get('amount')
+        payment_date = (data.get('payment_date') or '').strip()
+        notes = (data.get('notes') or '').strip()
+        
+        if not bills_id or not inc_type or not description or amount is None or not payment_date:
+            conn.close()
+            return jsonify({"errore": _("Missing required fields")}), 400
+            
+        try:
+            amount = float(amount)
+        except (ValueError, TypeError):
+            conn.close()
+            return jsonify({"errore": _("Invalid amount")}), 400
+            
+        p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+        if not p:
+            conn.close()
+            return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+            
+        try:
+            cursor = conn.execute('''
+                INSERT INTO bills_solar_incentives (bills_id, type, description, amount, payment_date, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (bills_id, inc_type, description, amount, payment_date, notes))
+            conn.commit()
+            new_id = cursor.lastrowid
+            conn.close()
+            return jsonify({"messaggio": _("Payment saved successfully"), "id": new_id}), 201
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return jsonify({"errore": str(e)}), 500
+            
+    # GET method
+    bills_id = request.args.get('bills_id')
+    if not bills_id:
+        conn.close()
+        return jsonify({"errore": _("Missing bills_id")}), 400
+        
+    p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+        
+    rows = conn.execute('''
+        SELECT * FROM bills_solar_incentives 
+        WHERE bills_id = ? 
+        ORDER BY payment_date DESC, id DESC
+    ''', (bills_id,)).fetchall()
+    
+    total_conto_energia = 0.0
+    count_conto_energia = 0
+    total_scambio_posto = 0.0
+    count_scambio_posto = 0
+    
+    items = []
+    for r in rows:
+        d = dict(r)
+        amt = float(d.get('amount') or 0.0)
+        t = d.get('type')
+        if t == 'conto_energia':
+            total_conto_energia += amt
+            count_conto_energia += 1
+        elif t == 'scambio_posto':
+            total_scambio_posto += amt
+            count_scambio_posto += 1
+        items.append(d)
+        
+    conn.close()
+    return jsonify({
+        "items": items,
+        "summary": {
+            "total_conto_energia": total_conto_energia,
+            "count_conto_energia": count_conto_energia,
+            "total_scambio_posto": total_scambio_posto,
+            "count_scambio_posto": count_scambio_posto,
+            "total_overall": total_conto_energia + total_scambio_posto,
+            "count_overall": len(items)
+        }
+    })
+
+
+@app.route('/api/bills/solar_incentives/<int:incentive_id>', methods=['PUT', 'DELETE'])
+def manage_single_bills_solar_incentive(incentive_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    row = conn.execute('''
+        SELECT i.id, i.bills_id 
+        FROM bills_solar_incentives i
+        JOIN bills_profiles p ON i.bills_id = p.id
+        WHERE i.id = ? AND p.user_id = ?
+    ''', (incentive_id, session['user_id'])).fetchone()
+    
+    if not row:
+        conn.close()
+        return jsonify({"errore": _("Record not found or unauthorized")}), 404
+        
+    if request.method == 'DELETE':
+        try:
+            conn.execute('DELETE FROM bills_solar_incentives WHERE id = ?', (incentive_id,))
+            conn.commit()
+            conn.close()
+            return jsonify({"messaggio": _("Payment deleted successfully")}), 200
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return jsonify({"errore": str(e)}), 500
+            
+    if request.method == 'PUT':
+        data = request.json or {}
+        inc_type = data.get('type')
+        description = (data.get('description') or '').strip()
+        amount = data.get('amount')
+        payment_date = (data.get('payment_date') or '').strip()
+        notes = (data.get('notes') or '').strip()
+        
+        if not inc_type or not description or amount is None or not payment_date:
+            conn.close()
+            return jsonify({"errore": _("Missing required fields")}), 400
+            
+        try:
+            amount = float(amount)
+        except (ValueError, TypeError):
+            conn.close()
+            return jsonify({"errore": _("Invalid amount")}), 400
+            
+        try:
+            conn.execute('''
+                UPDATE bills_solar_incentives 
+                SET type = ?, description = ?, amount = ?, payment_date = ?, notes = ?
+                WHERE id = ?
+            ''', (inc_type, description, amount, payment_date, notes, incentive_id))
+            conn.commit()
+            conn.close()
+            return jsonify({"messaggio": _("Payment updated successfully")}), 200
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return jsonify({"errore": str(e)}), 500
+
+
 @app.route('/api/bills/export_csv', methods=['GET'])
 def export_bills_csv():
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
@@ -5093,14 +5262,32 @@ def export_bills_csv():
     nome_portafoglio = p_row['name']
     
     bills = conn.execute('SELECT * FROM bills WHERE bills_id = ? ORDER BY year ASC, month ASC', (bills_id,)).fetchall()
+    appliances = conn.execute('SELECT * FROM bills_appliances WHERE bills_id = ? ORDER BY id ASC', (bills_id,)).fetchall()
+    
+    # Pre-fetch appliance consumptions
+    app_cons = conn.execute('SELECT year, month, appliance_id, consumption FROM bills_appliance_consumptions WHERE bills_id = ?', (bills_id,)).fetchall()
+    cons_map = {}
+    for ac in app_cons:
+        cons_map[(ac['year'], ac['month'], ac['appliance_id'])] = ac['consumption']
+        
     conn.close()
 
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(['year', 'month', 'water_price', 'water_consumption', 'electricity_price', 'electricity_consumption', 'gas_price', 'gas_consumption', 'waste_price', 'solar_production', 'grid_feed_in'])
+    
+    base_headers = [
+        'year', 'month', 
+        'water_price', 'water_consumption', 
+        'electricity_price', 'electricity_consumption', 
+        'gas_price', 'gas_consumption', 
+        'waste_price', 
+        'solar_production', 'grid_feed_in'
+    ]
+    app_headers = [f"appliance:{app['name']}" for app in appliances]
+    cw.writerow(base_headers + app_headers)
     
     for b in bills:
-        cw.writerow([
+        row = [
             b['year'], b['month'], 
             b['water_price'], b['water_consumption'], 
             b['electricity_price'], b['electricity_consumption'], 
@@ -5108,7 +5295,11 @@ def export_bills_csv():
             b['waste_price'] if 'waste_price' in b.keys() and b['waste_price'] is not None else 0.0,
             b['solar_production'] if 'solar_production' in b.keys() and b['solar_production'] is not None else 0.0,
             b['grid_feed_in'] if 'grid_feed_in' in b.keys() and b['grid_feed_in'] is not None else 0.0
-        ])
+        ]
+        for app in appliances:
+            val = cons_map.get((b['year'], b['month'], app['id']), 0.0)
+            row.append(val if val is not None else 0.0)
+        cw.writerow(row)
 
     data_str = datetime.today().strftime('%Y%m%d')
     username = session.get('username', 'utente')
@@ -5151,6 +5342,10 @@ def import_bills_csv():
             stream = StringIO('\n'.join(lines), newline=None)
             csv_reader = csv.DictReader(stream, delimiter=delimiter)
             
+            # Preload existing appliances for this profile
+            existing_apps = conn.execute('SELECT id, name FROM bills_appliances WHERE bills_id = ?', (bills_id,)).fetchall()
+            app_name_to_id = {a['name'].strip().lower(): a['id'] for a in existing_apps}
+
             inserted_count = 0
             for row in csv_reader:
                 if not any(row.values()): continue
@@ -5198,6 +5393,45 @@ def import_bills_csv():
                     waste_price,
                     solar_production, grid_feed_in
                 ))
+                
+                # Check for any appliance columns: e.g. appliance:Pompa di calore, elettrodomestico:Lavatrice, etc.
+                for col_name, col_val in row.items():
+                    if not col_name: continue
+                    clean_col = col_name.strip()
+                    app_name = None
+                    if clean_col.lower().startswith('appliance:'):
+                        app_name = clean_col[10:].strip()
+                    elif clean_col.lower().startswith('elettrodomestico:'):
+                        app_name = clean_col[17:].strip()
+                    elif clean_col.lower().startswith('appliance_'):
+                        app_name = clean_col[10:].strip()
+                    elif clean_col.lower().startswith('app_'):
+                        app_name = clean_col[4:].strip()
+                        
+                    if app_name and col_val is not None and str(col_val).strip() != '':
+                        try:
+                            val_cons = float(col_val or 0)
+                        except (ValueError, TypeError):
+                            val_cons = 0.0
+                            
+                        app_key = app_name.lower()
+                        if app_key not in app_name_to_id:
+                            # Create new appliance
+                            cur_ins = conn.execute('''
+                                INSERT INTO bills_appliances (bills_id, name, category, icon, sum_to_total)
+                                VALUES (?, ?, 'other', '🔌', 0)
+                            ''', (bills_id, app_name))
+                            new_app_id = cur_ins.lastrowid
+                            app_name_to_id[app_key] = new_app_id
+                            
+                        app_id = app_name_to_id[app_key]
+                        conn.execute('''
+                            INSERT INTO bills_appliance_consumptions (bills_id, appliance_id, year, month, consumption)
+                            VALUES (?, ?, ?, ?, ?)
+                            ON CONFLICT(bills_id, appliance_id, year, month) DO UPDATE SET
+                                consumption=excluded.consumption
+                        ''', (bills_id, app_id, year, month, val_cons))
+
                 inserted_count += 1
                 
             conn.commit()

@@ -10,6 +10,8 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tab Bollette: Sezione Conto Energia e Scambio sul Posto (GSE) con KPI di riepilogo (totali Conto Energia, SSP e complessivo incassato), tabella filtrabile con badge, modale CRUD e importazione dei 25 dati storici dei pagamenti ricevuti dal file Excel
+- [x] **Feature** Tab Bollette: Esportazione e importazione CSV completa e retrocompatibile con supporto a produzione solare (`solar_production`), immissione in rete (`grid_feed_in`), spazzatura TARI (`waste_price`) e consumi dinamici dei singoli elettrodomestici (`appliance:<nome>`)
 - [x] **Feature** Tab Bollette: Gestione spazzatura (TARI) come solo costo con card KPI dedicata, inserimento/modifica nella modale bolletta, colonna nello storico, integrazione nel grafico costi e importazione dei dati storici TARI
 - [x] **Feature** Tab Bollette: Selettore del periodo (Mese corrente, Mese precedente, Ultimo mese, Ultimi 3 mesi, Ultimi 6 mesi, Ultimo anno, Tutto il periodo, Personalizza) con aggiornamento dinamico coordinato di KPI, bilancio energetico, grafici, storico e ripartizione elettrodomestici
 - [x] **Feature** Tab Bollette: Tracciamento fotovoltaico ed energia di casa (produzione FV, immissione, prelievo rete, autoconsumo, autosufficienza energetica) e gestione e monitoraggio dei singoli elettrodomestici con sezione dedicata, modali di inserimento e grafici
