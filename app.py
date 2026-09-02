@@ -442,10 +442,56 @@ def init_db():
             electricity_consumption REAL DEFAULT 0,
             gas_price REAL DEFAULT 0,
             gas_consumption REAL DEFAULT 0,
+            waste_price REAL DEFAULT 0,
+            solar_production REAL DEFAULT 0,
+            grid_feed_in REAL DEFAULT 0,
             FOREIGN KEY (bills_id) REFERENCES bills_profiles (id),
             UNIQUE(bills_id, year, month)
         )
     ''')
+    try:
+        conn.execute("ALTER TABLE bills ADD COLUMN waste_price REAL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE bills ADD COLUMN solar_production REAL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE bills ADD COLUMN grid_feed_in REAL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS bills_appliances (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bills_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            category TEXT DEFAULT 'other',
+            icon TEXT DEFAULT '🔌',
+            sum_to_total INTEGER DEFAULT 0,
+            FOREIGN KEY (bills_id) REFERENCES bills_profiles (id) ON DELETE CASCADE
+        )
+    ''')
+    try:
+        conn.execute("ALTER TABLE bills_appliances ADD COLUMN sum_to_total INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS bills_appliance_consumptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bills_id INTEGER NOT NULL,
+            appliance_id INTEGER NOT NULL,
+            year INTEGER NOT NULL,
+            month INTEGER NOT NULL,
+            consumption REAL DEFAULT 0,
+            FOREIGN KEY (bills_id) REFERENCES bills_profiles (id) ON DELETE CASCADE,
+            FOREIGN KEY (appliance_id) REFERENCES bills_appliances (id) ON DELETE CASCADE,
+            UNIQUE(bills_id, appliance_id, year, month)
+        )
+    ''')
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bills_appliances_bills_id ON bills_appliances(bills_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bills_app_cons_lookup ON bills_appliance_consumptions(bills_id, year, month)")
     conn.execute('''
         CREATE TABLE IF NOT EXISTS bills_config (
             bills_id INTEGER PRIMARY KEY,
@@ -1221,7 +1267,8 @@ def get_bills_summary(conn, bills_profile_id):
         return None
         
     b_curr = rows[0]
-    total_curr = (b_curr['water_price'] or 0.0) + (b_curr['electricity_price'] or 0.0) + (b_curr['gas_price'] or 0.0)
+    waste_curr = b_curr['waste_price'] if 'waste_price' in b_curr.keys() and b_curr['waste_price'] is not None else 0.0
+    total_curr = (b_curr['water_price'] or 0.0) + (b_curr['electricity_price'] or 0.0) + (b_curr['gas_price'] or 0.0) + waste_curr
     
     b_prev = None
     if len(rows) > 1:
@@ -1233,9 +1280,13 @@ def get_bills_summary(conn, bills_profile_id):
             b_year_ago = r
             break
             
-    total_prev = ((b_prev['water_price'] or 0.0) + (b_prev['electricity_price'] or 0.0) + (b_prev['gas_price'] or 0.0)) if b_prev else None
-    total_year_ago = ((b_year_ago['water_price'] or 0.0) + (b_year_ago['electricity_price'] or 0.0) + (b_year_ago['gas_price'] or 0.0)) if b_year_ago else None
+    total_prev = ((b_prev['water_price'] or 0.0) + (b_prev['electricity_price'] or 0.0) + (b_prev['gas_price'] or 0.0) + ((b_prev['waste_price'] or 0.0) if 'waste_price' in b_prev.keys() else 0.0)) if b_prev else None
+    total_year_ago = ((b_year_ago['water_price'] or 0.0) + (b_year_ago['electricity_price'] or 0.0) + (b_year_ago['gas_price'] or 0.0) + ((b_year_ago['waste_price'] or 0.0) if 'waste_price' in b_year_ago.keys() else 0.0)) if b_year_ago else None
     
+    solar_prod_curr = b_curr['solar_production'] if 'solar_production' in b_curr.keys() and b_curr['solar_production'] is not None else 0.0
+    grid_feed_curr = b_curr['grid_feed_in'] if 'grid_feed_in' in b_curr.keys() and b_curr['grid_feed_in'] is not None else 0.0
+    self_cons_curr = max(0.0, solar_prod_curr - grid_feed_curr)
+
     return {
         'curr_year': b_curr['year'],
         'curr_month': b_curr['month'],
@@ -1243,13 +1294,18 @@ def get_bills_summary(conn, bills_profile_id):
         'curr_details': {
             'water': b_curr['water_price'] or 0.0,
             'elec': b_curr['electricity_price'] or 0.0,
-            'gas': b_curr['gas_price'] or 0.0
+            'gas': b_curr['gas_price'] or 0.0,
+            'waste': waste_curr,
+            'solar_production': solar_prod_curr,
+            'grid_feed_in': grid_feed_curr,
+            'self_consumption': self_cons_curr
         },
         'prev_total': total_prev,
         'prev_details': {
             'water': b_prev['water_price'] or 0.0,
             'elec': b_prev['electricity_price'] or 0.0,
-            'gas': b_prev['gas_price'] or 0.0
+            'gas': b_prev['gas_price'] or 0.0,
+            'waste': (b_prev['waste_price'] or 0.0) if 'waste_price' in b_prev.keys() else 0.0
         } if b_prev else None,
         'year_ago_total': total_year_ago
     }
@@ -3053,6 +3109,8 @@ def delete_bills_profile(bills_id):
     if not bp:
         conn.close()
         return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+    conn.execute("DELETE FROM bills_appliance_consumptions WHERE bills_id = ?", (bills_id,))
+    conn.execute("DELETE FROM bills_appliances WHERE bills_id = ?", (bills_id,))
     conn.execute("DELETE FROM bills WHERE bills_id = ?", (bills_id,))
     conn.execute("DELETE FROM bills_config WHERE bills_id = ?", (bills_id,))
     conn.execute("DELETE FROM bills_profiles WHERE id = ?", (bills_id,))
@@ -4634,6 +4692,9 @@ def manage_bills():
         electricity_consumption = float(data.get('electricity_consumption', 0) or 0)
         gas_price = float(data.get('gas_price', 0) or 0)
         gas_consumption = float(data.get('gas_consumption', 0) or 0)
+        waste_price = float(data.get('waste_price', 0) or 0)
+        solar_production = float(data.get('solar_production', 0) or 0)
+        grid_feed_in = float(data.get('grid_feed_in', 0) or 0)
         
         try:
             conn.execute('''
@@ -4641,21 +4702,43 @@ def manage_bills():
                     bills_id, year, month, 
                     water_price, water_consumption, 
                     electricity_price, electricity_consumption, 
-                    gas_price, gas_consumption
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    gas_price, gas_consumption,
+                    waste_price,
+                    solar_production, grid_feed_in
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(bills_id, year, month) DO UPDATE SET
                     water_price=excluded.water_price,
                     water_consumption=excluded.water_consumption,
                     electricity_price=excluded.electricity_price,
                     electricity_consumption=excluded.electricity_consumption,
                     gas_price=excluded.gas_price,
-                    gas_consumption=excluded.gas_consumption
+                    gas_consumption=excluded.gas_consumption,
+                    waste_price=excluded.waste_price,
+                    solar_production=excluded.solar_production,
+                    grid_feed_in=excluded.grid_feed_in
             ''', (
                 bills_id, year, month,
                 water_price, water_consumption,
                 electricity_price, electricity_consumption,
-                gas_price, gas_consumption
+                gas_price, gas_consumption,
+                waste_price,
+                solar_production, grid_feed_in
             ))
+            
+            # Update appliances if passed
+            appliances = data.get('appliances')
+            if isinstance(appliances, list):
+                for item in appliances:
+                    app_id = item.get('appliance_id')
+                    cons = float(item.get('consumption', 0) or 0)
+                    if app_id:
+                        conn.execute('''
+                            INSERT INTO bills_appliance_consumptions (bills_id, appliance_id, year, month, consumption)
+                            VALUES (?, ?, ?, ?, ?)
+                            ON CONFLICT(bills_id, appliance_id, year, month) DO UPDATE SET
+                                consumption=excluded.consumption
+                        ''', (bills_id, int(app_id), year, month, cons))
+            
             conn.commit()
             return jsonify({"messaggio": _("Bill saved successfully")}), 200
         except Exception as e:
@@ -4676,8 +4759,39 @@ def manage_bills():
         return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
         
     rows = conn.execute('SELECT * FROM bills WHERE bills_id = ? ORDER BY year DESC, month DESC', (bills_id,)).fetchall()
+    
+    app_cons = conn.execute('''
+        SELECT c.year, c.month, c.appliance_id, c.consumption, a.name, a.icon, a.category, a.sum_to_total
+        FROM bills_appliance_consumptions c
+        JOIN bills_appliances a ON c.appliance_id = a.id
+        WHERE c.bills_id = ?
+    ''', (bills_id,)).fetchall()
+    
+    cons_by_period = {}
+    for ac in app_cons:
+        k = f"{ac['year']}_{ac['month']}"
+        if k not in cons_by_period:
+            cons_by_period[k] = []
+        cons_by_period[k].append({
+            'appliance_id': ac['appliance_id'],
+            'name': ac['name'],
+            'icon': ac['icon'] or '🔌',
+            'category': ac['category'] or 'other',
+            'sum_to_total': 1 if ac['sum_to_total'] else 0,
+            'consumption': ac['consumption'] or 0.0
+        })
+        
+    result = []
+    for r in rows:
+        d = dict(r)
+        d['solar_production'] = d.get('solar_production') or 0.0
+        d['grid_feed_in'] = d.get('grid_feed_in') or 0.0
+        k = f"{d['year']}_{d['month']}"
+        d['appliances'] = cons_by_period.get(k, [])
+        result.append(d)
+        
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    return jsonify(result)
 
 
 @app.route('/api/bills/<int:bill_id>', methods=['DELETE'])
@@ -4688,7 +4802,7 @@ def delete_bill(bill_id):
     conn = get_db_connection()
     # Check if bill belongs to a bills profile owned by this user
     bill = conn.execute('''
-        SELECT b.id, b.bills_id FROM bills b 
+        SELECT b.id, b.bills_id, b.year, b.month FROM bills b 
         JOIN bills_profiles p ON b.bills_id = p.id 
         WHERE b.id = ? AND p.user_id = ?
     ''', (bill_id, session['user_id'])).fetchone()
@@ -4699,6 +4813,7 @@ def delete_bill(bill_id):
         
     try:
         conn.execute('DELETE FROM bills WHERE id = ?', (bill_id,))
+        conn.execute('DELETE FROM bills_appliance_consumptions WHERE bills_id = ? AND year = ? AND month = ?', (bill['bills_id'], bill['year'], bill['month']))
         conn.commit()
         return jsonify({"messaggio": _("Bill deleted successfully")}), 200
     except Exception as e:
@@ -4706,6 +4821,197 @@ def delete_bill(bill_id):
         return jsonify({"errore": str(e)}), 500
     finally:
         conn.close()
+
+
+@app.route('/api/bills/appliances', methods=['GET', 'POST'])
+def manage_bills_appliances():
+    if 'user_id' not in session: 
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    if request.method == 'POST':
+        data = request.json or {}
+        bills_id = data.get('bills_id')
+        name = (data.get('name') or '').strip()
+        category = data.get('category', 'other')
+        icon = data.get('icon', '🔌')
+        sum_to_total = 1 if data.get('sum_to_total') else 0
+        
+        if not bills_id or not name:
+            conn.close()
+            return jsonify({"errore": _("Name and bills group are required")}), 400
+            
+        p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+        if not p:
+            conn.close()
+            return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+            
+        try:
+            cursor = conn.execute(
+                "INSERT INTO bills_appliances (bills_id, name, category, icon, sum_to_total) VALUES (?, ?, ?, ?, ?)",
+                (bills_id, name, category, icon, sum_to_total)
+            )
+            appliance_id = cursor.lastrowid
+            conn.commit()
+            return jsonify({
+                "messaggio": _("Appliance added successfully"),
+                "appliance": {
+                    "id": appliance_id,
+                    "bills_id": bills_id,
+                    "name": name,
+                    "category": category,
+                    "icon": icon,
+                    "sum_to_total": sum_to_total
+                }
+            }), 201
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"errore": str(e)}), 500
+        finally:
+            conn.close()
+            
+    # GET method
+    bills_id = request.args.get('bills_id')
+    if not bills_id:
+        conn.close()
+        return jsonify({"errore": _("Missing bills_id")}), 400
+        
+    p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+        
+    rows = conn.execute("SELECT * FROM bills_appliances WHERE bills_id = ? ORDER BY id ASC", (bills_id,)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/bills/appliances/<int:appliance_id>', methods=['PUT', 'DELETE'])
+def manage_single_bills_appliance(appliance_id):
+    if 'user_id' not in session: 
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    appliance = conn.execute('''
+        SELECT a.id, a.bills_id FROM bills_appliances a 
+        JOIN bills_profiles p ON a.bills_id = p.id 
+        WHERE a.id = ? AND p.user_id = ?
+    ''', (appliance_id, session['user_id'])).fetchone()
+    
+    if not appliance:
+        conn.close()
+        return jsonify({"errore": _("Appliance not found or unauthorized")}), 404
+        
+    if request.method == 'PUT':
+        data = request.json or {}
+        name = (data.get('name') or '').strip()
+        category = data.get('category', 'other')
+        icon = data.get('icon', '🔌')
+        sum_to_total = 1 if data.get('sum_to_total') else 0
+        
+        if not name:
+            conn.close()
+            return jsonify({"errore": _("Name cannot be empty")}), 400
+            
+        try:
+            conn.execute(
+                "UPDATE bills_appliances SET name = ?, category = ?, icon = ?, sum_to_total = ? WHERE id = ?",
+                (name, category, icon, sum_to_total, appliance_id)
+            )
+            conn.commit()
+            return jsonify({"messaggio": _("Appliance updated successfully")}), 200
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"errore": str(e)}), 500
+        finally:
+            conn.close()
+            
+    # DELETE method
+    try:
+        conn.execute("DELETE FROM bills_appliance_consumptions WHERE appliance_id = ?", (appliance_id,))
+        conn.execute("DELETE FROM bills_appliances WHERE id = ?", (appliance_id,))
+        conn.commit()
+        return jsonify({"messaggio": _("Appliance deleted successfully")}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"errore": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/bills/appliance_consumptions', methods=['GET', 'POST'])
+def manage_bills_appliance_consumptions():
+    if 'user_id' not in session: 
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    conn = get_db_connection()
+    if request.method == 'POST':
+        data = request.json or {}
+        bills_id = data.get('bills_id')
+        year = data.get('year')
+        month = data.get('month')
+        consumptions = data.get('consumptions', [])
+        
+        if not bills_id or not year or not month:
+            conn.close()
+            return jsonify({"errore": _("Missing required fields")}), 400
+            
+        p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+        if not p:
+            conn.close()
+            return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+            
+        try:
+            for item in consumptions:
+                app_id = item.get('appliance_id')
+                val = float(item.get('consumption', 0) or 0)
+                if app_id:
+                    conn.execute('''
+                        INSERT INTO bills_appliance_consumptions (bills_id, appliance_id, year, month, consumption)
+                        VALUES (?, ?, ?, ?, ?)
+                        ON CONFLICT(bills_id, appliance_id, year, month) DO UPDATE SET
+                            consumption=excluded.consumption
+                    ''', (bills_id, int(app_id), int(year), int(month), val))
+            conn.commit()
+            return jsonify({"messaggio": _("Appliance consumptions saved successfully")}), 200
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"errore": str(e)}), 500
+        finally:
+            conn.close()
+            
+    # GET method
+    bills_id = request.args.get('bills_id')
+    year = request.args.get('year')
+    month = request.args.get('month')
+    
+    if not bills_id:
+        conn.close()
+        return jsonify({"errore": _("Missing bills_id")}), 400
+        
+    p = conn.execute("SELECT id FROM bills_profiles WHERE id = ? AND user_id = ?", (bills_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({"errore": _("Bills group not found or unauthorized")}), 404
+        
+    query = '''
+        SELECT c.*, a.name, a.icon, a.category 
+        FROM bills_appliance_consumptions c
+        JOIN bills_appliances a ON c.appliance_id = a.id
+        WHERE c.bills_id = ?
+    '''
+    params = [bills_id]
+    if year:
+        query += " AND c.year = ?"
+        params.append(int(year))
+    if month:
+        query += " AND c.month = ?"
+        params.append(int(month))
+        
+    query += " ORDER BY c.year DESC, c.month DESC, a.id ASC"
+    rows = conn.execute(query, tuple(params)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
 
 
 @app.route('/api/bills/config', methods=['GET', 'POST'])
@@ -4791,14 +5097,17 @@ def export_bills_csv():
 
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(['year', 'month', 'water_price', 'water_consumption', 'electricity_price', 'electricity_consumption', 'gas_price', 'gas_consumption'])
+    cw.writerow(['year', 'month', 'water_price', 'water_consumption', 'electricity_price', 'electricity_consumption', 'gas_price', 'gas_consumption', 'waste_price', 'solar_production', 'grid_feed_in'])
     
     for b in bills:
         cw.writerow([
             b['year'], b['month'], 
             b['water_price'], b['water_consumption'], 
             b['electricity_price'], b['electricity_consumption'], 
-            b['gas_price'], b['gas_consumption']
+            b['gas_price'], b['gas_consumption'],
+            b['waste_price'] if 'waste_price' in b.keys() and b['waste_price'] is not None else 0.0,
+            b['solar_production'] if 'solar_production' in b.keys() and b['solar_production'] is not None else 0.0,
+            b['grid_feed_in'] if 'grid_feed_in' in b.keys() and b['grid_feed_in'] is not None else 0.0
         ])
 
     data_str = datetime.today().strftime('%Y%m%d')
@@ -4858,26 +5167,36 @@ def import_bills_csv():
                 electricity_consumption = float(row.get('electricity_consumption', 0) or 0)
                 gas_price = float(row.get('gas_price', 0) or 0)
                 gas_consumption = float(row.get('gas_consumption', 0) or 0)
+                waste_price = float(row.get('waste_price', 0) or 0)
+                solar_production = float(row.get('solar_production', 0) or 0)
+                grid_feed_in = float(row.get('grid_feed_in', 0) or 0)
                 
                 conn.execute('''
                     INSERT INTO bills (
                         bills_id, year, month, 
                         water_price, water_consumption, 
                         electricity_price, electricity_consumption, 
-                        gas_price, gas_consumption
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        gas_price, gas_consumption,
+                        waste_price,
+                        solar_production, grid_feed_in
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(bills_id, year, month) DO UPDATE SET
                         water_price=excluded.water_price,
                         water_consumption=excluded.water_consumption,
                         electricity_price=excluded.electricity_price,
                         electricity_consumption=excluded.electricity_consumption,
                         gas_price=excluded.gas_price,
-                        gas_consumption=excluded.gas_consumption
+                        gas_consumption=excluded.gas_consumption,
+                        waste_price=excluded.waste_price,
+                        solar_production=excluded.solar_production,
+                        grid_feed_in=excluded.grid_feed_in
                 ''', (
                     bills_id, year, month,
                     water_price, water_consumption,
                     electricity_price, electricity_consumption,
-                    gas_price, gas_consumption
+                    gas_price, gas_consumption,
+                    waste_price,
+                    solar_production, grid_feed_in
                 ))
                 inserted_count += 1
                 

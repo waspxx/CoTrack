@@ -1,34 +1,64 @@
 <div id="tab-bollette" class="tab-content">
-    <!-- SELETTORE BOLLETTE -->
-    <div class="bills-selector-container" style="display: flex; align-items: center; gap: 10px; background: white; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #dee2e6; margin-top: 10px;">
-        <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Bills Group:') }}</span>
-        <select id="select-bills" onchange="cambiaBills()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: #0ea5e9; cursor: pointer; background: white;"></select>
-        <button onclick="nuovoBills()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Bills Group') }}">+</button>
-        <button onclick="rinominaBills()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Bills Group') }}">✏️ {{ _('Rename') }}</button>
-        <button onclick="eliminaBills()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Bills Group') }}">🗑️ {{ _('Delete') }}</button>
+    <!-- SELETTORE BOLLETTE & FILTRO PERIODO -->
+    <div class="bills-selector-container" style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: white; padding: 12px 18px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #dee2e6; margin-top: 10px; flex-wrap: wrap;">
+        <!-- Selettore Gruppo Bollette -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.9em; font-weight: 600; color: #495057;">{{ _('Bills Group:') }}</span>
+            <select id="select-bills" onchange="cambiaBills()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 5px 10px; outline: none; font-weight: bold; color: #0ea5e9; cursor: pointer; background: white;"></select>
+            <button onclick="nuovoBills()" style="background: #e8f5e9; border: 1px solid #c8e6c9; font-size: 1em; cursor: pointer; color: #2e7d32; padding: 5px 10px; border-radius: 6px; font-weight: bold;" title="{{ _('New Bills Group') }}">+</button>
+            <button onclick="rinominaBills()" style="background: #f5f5f5; border: 1px solid #e0e0e0; font-size: 1em; cursor: pointer; color: #616161; padding: 5px 10px; border-radius: 6px;" title="{{ _('Rename Bills Group') }}">✏️ {{ _('Rename') }}</button>
+            <button onclick="eliminaBills()" style="background: #ffebee; border: 1px solid #ffcdd2; font-size: 1em; cursor: pointer; color: #c62828; padding: 5px 10px; border-radius: 6px;" title="{{ _('Delete Bills Group') }}">🗑️ {{ _('Delete') }}</button>
+        </div>
+
+        <!-- Filtro Periodo (come nel tab Veicoli) -->
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <label for="bollette-period-filter-select" style="font-size: 0.9em; font-weight: 600; color: #495057; margin: 0; display: flex; align-items: center; gap: 4px;">
+                📅 {{ _('Periodo') }}
+            </label>
+            <select id="bollette-period-filter-select" style="border: 1px solid #ced4da; border-radius: 6px; padding: 6px 12px; font-weight: 600; color: #1e293b; background: white; cursor: pointer; outline: none;">
+                <option value="current-month">{{ _('Mese corrente') }}</option>
+                <option value="previous-month">{{ _('Mese precedente') }}</option>
+                <option value="last-month">{{ _('Ultimo mese') }}</option>
+                <option value="last-3-months">{{ _('Ultimi 3 mesi') }}</option>
+                <option value="last-6-months">{{ _('Ultimi 6 mesi') }}</option>
+                <option value="last-year">{{ _('Ultimo anno') }}</option>
+                <option value="all-time" selected>{{ _('Tutto il periodo') }}</option>
+                <option value="custom">{{ _('Personalizza') }}</option>
+            </select>
+            <div id="bollette-custom-date-inputs" style="display: none; align-items: center; gap: 6px;">
+                <span style="font-size: 0.8em; color: #6c757d;">{{ _('Dal') }}</span>
+                <input type="month" id="bollette-filter-date-from" style="padding: 4px 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em;">
+                <span style="font-size: 0.8em; color: #6c757d;">{{ _('Al') }}</span>
+                <input type="month" id="bollette-filter-date-to" style="padding: 4px 8px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em;">
+            </div>
+        </div>
     </div>
-    <!-- Dashboard header & settings -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; text-align: left;">{{ _('Bills & Consumption Dashboard') }}</h2>
-        <div style="display: flex; gap: 10px;">
+
+    <!-- Dashboard header & actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0; text-align: left;">{{ _('Bills & Energy Dashboard') }}</h2>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button onclick="apriModalSettingsBollette()" class="btn-filter" style="background-color: #6c757d; color: white; display: flex; align-items: center; gap: 5px;">
                 ⚙️ {{ _('Settings') }}
             </button>
+            <button onclick="apriModalAppliance()" class="btn-filter" style="background-color: #0284c7; color: white; display: flex; align-items: center; gap: 5px;">
+                🔌 {{ _('Add Appliance') }}
+            </button>
             <button onclick="apriModalBolletta()" class="btn-filter" style="background-color: #28a745; color: white; display: flex; align-items: center; gap: 5px;">
-                ➕ {{ _('Add Bill') }}
+                ➕ {{ _('Add Bill / Energy Data') }}
             </button>
         </div>
     </div>
 
     <!-- Summary KPI cards -->
-    <div class="kpi-grid" style="margin-bottom: 25px;">
+    <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; margin-bottom: 25px;">
         <div class="kpi-card" style="border-left: 5px solid #0ea5e9;">
             <div class="kpi-titolo" style="color: #0ea5e9;">💧 {{ _('Water') }}</div>
             <div class="kpi-valore" id="kpi-acqua-costo">-</div>
             <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-acqua-consumo">-</div>
         </div>
         <div class="kpi-card" style="border-left: 5px solid #f59e0b;">
-            <div class="kpi-titolo" style="color: #f59e0b;">⚡ {{ _('Electricity') }}</div>
+            <div class="kpi-titolo" style="color: #f59e0b;">⚡ {{ _('Electricity (Grid)') }}</div>
             <div class="kpi-valore" id="kpi-luce-costo">-</div>
             <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-luce-consumo">-</div>
         </div>
@@ -37,20 +67,88 @@
             <div class="kpi-valore" id="kpi-gas-costo">-</div>
             <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-gas-consumo">-</div>
         </div>
+        <div class="kpi-card" style="border-left: 5px solid #64748b;">
+            <div class="kpi-titolo" style="color: #64748b;">🗑️ {{ _('Waste / TARI') }}</div>
+            <div class="kpi-valore" id="kpi-waste-costo">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-waste-desc">{{ _('Cost only') }}</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #10b981;">
+            <div class="kpi-titolo" style="color: #10b981;">☀️ {{ _('Solar Production') }}</div>
+            <div class="kpi-valore" id="kpi-fv-produzione">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-fv-immissione">-</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #06b6d4;">
+            <div class="kpi-titolo" style="color: #06b6d4;">🔄 {{ _('Self-Consumption & Coverage') }}</div>
+            <div class="kpi-valore" id="kpi-autoconsumo">-</div>
+            <div style="font-size: 0.8em; color: #6c757d; margin-top: 5px;" id="kpi-autoconsumo-perc">-</div>
+        </div>
+    </div>
+
+    <!-- Energy Flow & Solar Balance Card -->
+    <div id="card-bilancio-energetico" style="background: white; border-radius: 12px; padding: 20px 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e9ecef;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.4em;">☀️</span>
+                <div>
+                    <div style="font-size: 1.1em; font-weight: bold; color: #2c3e50;">{{ _('Home Energy & Photovoltaic Balance') }}</div>
+                    <div style="font-size: 0.82em; color: #6c757d;" id="bilancio-mese-riferimento">{{ _('Latest recorded month') }}</div>
+                </div>
+            </div>
+            <div id="bilancio-badges-container" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <!-- Popolato da JS -->
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px;">
+            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid #10b981;">
+                <div style="font-size: 0.78em; color: #64748b; font-weight: 600; text-transform: uppercase;">{{ _('Solar Production') }}</div>
+                <div style="font-size: 1.25em; font-weight: bold; color: #0f172a; margin-top: 4px;" id="flow-fv-prod">0.0 kWh</div>
+            </div>
+            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid #eab308;">
+                <div style="font-size: 0.78em; color: #64748b; font-weight: 600; text-transform: uppercase;">{{ _('Grid Feed-in (Immissione)') }}</div>
+                <div style="font-size: 1.25em; font-weight: bold; color: #0f172a; margin-top: 4px;" id="flow-grid-feed">0.0 kWh</div>
+            </div>
+            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid #06b6d4;">
+                <div style="font-size: 0.78em; color: #64748b; font-weight: 600; text-transform: uppercase;">{{ _('Self-Consumption (Autoconsumo)') }}</div>
+                <div style="font-size: 1.25em; font-weight: bold; color: #0f172a; margin-top: 4px;" id="flow-self-cons">0.0 kWh</div>
+            </div>
+            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid #f59e0b;">
+                <div style="font-size: 0.78em; color: #64748b; font-weight: 600; text-transform: uppercase;">{{ _('Grid Withdrawal (Prelievo)') }}</div>
+                <div style="font-size: 1.25em; font-weight: bold; color: #0f172a; margin-top: 4px;" id="flow-grid-withdraw">0.0 kWh</div>
+            </div>
+            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border-left: 4px solid #8b5cf6;">
+                <div style="font-size: 0.78em; color: #64748b; font-weight: 600; text-transform: uppercase;">{{ _('Total Home Consumption') }}</div>
+                <div style="font-size: 1.25em; font-weight: bold; color: #0f172a; margin-top: 4px;" id="flow-home-total">0.0 kWh</div>
+            </div>
+        </div>
+
+        <!-- Visual Energy Flow Bar -->
+        <div style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #64748b; margin-bottom: 6px;">
+                <span>{{ _('Home Electricity Sources:') }} <strong id="flow-bar-autonomy-txt">0% {{ _('Solar Autonomy') }}</strong></span>
+                <span><span style="display: inline-block; width: 10px; height: 10px; background: #06b6d4; border-radius: 2px; margin-right: 4px;"></span>{{ _('Self-consumed Solar') }} | <span style="display: inline-block; width: 10px; height: 10px; background: #f59e0b; border-radius: 2px; margin-right: 4px; margin-left: 6px;"></span>{{ _('Grid Withdrawal') }}</span>
+            </div>
+            <div style="height: 14px; background: #e2e8f0; border-radius: 7px; overflow: hidden; display: flex;">
+                <div id="flow-bar-solar" style="background: #06b6d4; width: 0%; transition: width 0.4s ease;" title="{{ _('Self-consumed Solar') }}"></div>
+                <div id="flow-bar-grid" style="background: #f59e0b; width: 100%; transition: width 0.4s ease;" title="{{ _('Grid Withdrawal') }}"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Chart container -->
-    <div class="andamento-container">
+    <div class="andamento-container" style="margin-bottom: 25px;">
         <div class="andamento-header-row">
             <div>
-                <div class="andamento-title">{{ _('Consumption & Cost History') }}</div>
+                <div class="andamento-title">{{ _('Consumption, Costs & Energy History') }}</div>
             </div>
             <div class="filters-container">
                 <div class="filter-group">
                     <span class="filter-label">{{ _('Show') }}</span>
-                    <div class="filter-buttons">
+                    <div class="filter-buttons" style="flex-wrap: wrap; gap: 4px;">
                         <button id="btn-bollette-view-price" class="btn-filter active" onclick="cambiaVisualizzazioneBollette('price')">{{ _('Costs (€)') }}</button>
                         <button id="btn-bollette-view-consumption" class="btn-filter" onclick="cambiaVisualizzazioneBollette('consumption')">{{ _('Consumptions') }}</button>
+                        <button id="btn-bollette-view-energy" class="btn-filter" onclick="cambiaVisualizzazioneBollette('energy')">☀️ {{ _('Solar & Energy') }}</button>
+                        <button id="btn-bollette-view-appliances" class="btn-filter" onclick="cambiaVisualizzazioneBollette('appliances')">🔌 {{ _('Appliances') }}</button>
                     </div>
                 </div>
             </div>
@@ -60,30 +158,83 @@
         </div>
     </div>
 
+    <!-- SECTION: SINGLE APPLIANCES CONSUMPTION -->
+    <div class="sezione-elettrodomestici" style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e9ecef;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="font-size: 1.2em; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+                    <span>🔌</span> {{ _('Appliances & Devices Consumption') }}
+                </div>
+                <div style="font-size: 0.85em; color: #6c757d; margin-top: 3px;">
+                    {{ _('Track individual appliance consumptions, measure home energy share and estimated costs.') }}
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.85em; font-weight: 600; color: #495057;">{{ _('Period:') }}</span>
+                    <select id="select-mese-elettrodomestici" onchange="cambiaMeseElettrodomestici()" style="border: 1px solid #ced4da; border-radius: 6px; padding: 6px 10px; outline: none; font-weight: 600; color: #0284c7; background: white; cursor: pointer;"></select>
+                </div>
+                <button onclick="apriModalConsumiElettrodomestici()" class="btn-filter" style="background-color: #0284c7; color: white; display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 6px;">
+                    📝 {{ _('Quick Monthly Input') }}
+                </button>
+                <button onclick="apriModalAppliance()" class="btn-filter" style="background-color: #28a745; color: white; display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 6px;">
+                    ➕ {{ _('New Appliance') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Appliances Breakdown progress bar -->
+        <div id="elettrodomestici-summary-bar" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: none;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 6px; font-weight: 600; color: #334155;">
+                <span id="txt-appliances-total-kwh">{{ _('Measured Appliances Total:') }} 0 kWh</span>
+                <span id="txt-appliances-share-pct">0% {{ _('of home electricity') }}</span>
+            </div>
+            <div id="bar-appliances-breakdown" style="height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; display: flex;"></div>
+        </div>
+
+        <!-- Appliances Grid Container -->
+        <div id="lista-elettrodomestici-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 15px;">
+            <!-- Popolato dinamicamente da JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div id="elettrodomestici-empty-state" style="text-align: center; padding: 35px 20px; color: #6c757d; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+            <div style="font-size: 2.2em; margin-bottom: 10px;">🔌</div>
+            <div style="font-size: 1em; font-weight: 600; color: #475569; margin-bottom: 6px;">{{ _('No appliances added yet.') }}</div>
+            <div style="font-size: 0.85em; margin-bottom: 15px; max-width: 450px; margin-left: auto; margin-right: auto;">{{ _('Add household appliances (heat pump, induction, washing machine, dishwasher, EV charger, etc.) to monitor where your electricity goes.') }}</div>
+            <button onclick="apriModalAppliance()" class="btn-filter" style="background-color: #0284c7; color: white; display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px; border-radius: 6px;">
+                ➕ {{ _('Add First Appliance') }}
+            </button>
+        </div>
+    </div>
+
     <!-- History list table & CSV Management -->
     <div class="contenitore-dati">
-        <div class="sezione-tabella" style="flex: 1; overflow-x: auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <div class="andamento-title" style="margin-bottom: 15px; text-align: left;">{{ _('Bills History') }}</div>
+        <div class="sezione-tabella" style="flex: 1; overflow-x: auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e9ecef;">
+            <div class="andamento-title" style="margin-bottom: 15px; text-align: left;">{{ _('Bills & Energy History') }}</div>
             <table class="tabella-pmc" id="tabella-bollette" style="width: 100%;">
                 <thead>
                     <tr>
                         <th>{{ _('Month/Year') }}</th>
                         <th>💧 {{ _('Water') }}</th>
-                        <th>⚡ {{ _('Electricity') }}</th>
+                        <th>⚡ {{ _('Electricity (Grid)') }}</th>
                         <th>🔥 {{ _('Gas') }}</th>
+                        <th>🗑️ {{ _('Waste / TARI') }}</th>
+                        <th>☀️ {{ _('Solar & Energy') }}</th>
+                        <th>🔌 {{ _('Appliances') }}</th>
                         <th>💰 {{ _('Total Cost') }}</th>
                         <th>{{ _('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody id="lista-bollette-body">
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #6c757d;">{{ _('No bills added yet.') }}</td>
+                        <td colspan="9" style="text-align: center; color: #6c757d;">{{ _('No bills added yet.') }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="modulo-inserimento" style="width: 280px; flex-shrink: 0; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); align-self: flex-start; box-sizing: border-box;">
+        <div class="modulo-inserimento" style="width: 280px; flex-shrink: 0; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); align-self: flex-start; box-sizing: border-box; border: 1px solid #e9ecef;">
             <div class="modulo-header"><p>{{ _('Bills Management') }}</p></div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button class="btn-filter" onclick="document.getElementById('file-bollette-csv').click()" style="background-color: #17a2b8; color: white; display: block; width: 100%; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center;">📤 {{ _('Import CSV') }}</button>
@@ -94,22 +245,22 @@
     </div>
 
     <!-- Modal bolletta (Add / Edit) -->
-    <div id="modal-bolletta" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
-        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; margin: auto;">
+    <div id="modal-bolletta" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; box-shadow: 0 6px 25px rgba(0,0,0,0.2); position: relative; margin: auto;">
             <span onclick="chiudiModalBolletta()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
-            <h3 id="modal-bolletta-title" style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Add Bill') }}</h3>
+            <h3 id="modal-bolletta-title" style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Add Bill / Energy Entry') }}</h3>
             
             <form id="form-bolletta" onsubmit="salvaBolletta(event)">
                 <input type="hidden" id="bolletta-id">
                 
-                <div class="form-row">
+                <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label class="filter-label" for="bolletta-year">{{ _('Year') }}</label>
-                        <select id="bolletta-year" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required></select>
+                        <select id="bolletta-year" onchange="aggiornaCampiApplianceModalBolletta()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required></select>
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label class="filter-label" for="bolletta-month">{{ _('Month') }}</label>
-                        <select id="bolletta-month" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                        <select id="bolletta-month" onchange="aggiornaCampiApplianceModalBolletta()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
                             <option value="1">{{ _('January') }}</option>
                             <option value="2">{{ _('February') }}</option>
                             <option value="3">{{ _('March') }}</option>
@@ -126,9 +277,10 @@
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: #0ea5e9;">💧 {{ _('Water') }}</h4>
-                    <div class="form-row">
+                <!-- 💧 Acqua -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px;">
+                    <h4 style="margin: 0 0 8px 0; color: #0ea5e9; font-size: 0.95em;">💧 {{ _('Water') }}</h4>
+                    <div class="form-row" style="display: flex; gap: 12px;">
                         <div class="form-group" style="flex: 1;">
                             <label class="filter-label" for="bolletta-water-price">{{ _('Price (€)') }}</label>
                             <input type="number" step="0.01" id="bolletta-water-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
@@ -140,23 +292,25 @@
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: #f59e0b;">⚡ {{ _('Electricity') }}</h4>
-                    <div class="form-row">
+                <!-- ⚡ Elettricità (Rete) -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px;">
+                    <h4 style="margin: 0 0 8px 0; color: #f59e0b; font-size: 0.95em;">⚡ {{ _('Electricity (Grid Withdrawal / Prelievo)') }}</h4>
+                    <div class="form-row" style="display: flex; gap: 12px;">
                         <div class="form-group" style="flex: 1;">
-                            <label class="filter-label" for="bolletta-electricity-price">{{ _('Price (€)') }}</label>
+                            <label class="filter-label" for="bolletta-electricity-price">{{ _('Bill Price (€)') }}</label>
                             <input type="number" step="0.01" id="bolletta-electricity-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
                         </div>
                         <div class="form-group" style="flex: 1;">
-                            <label class="filter-label" for="bolletta-electricity-consumption">{{ _('Consumption') }} (<span class="unit-electricity-lbl">kWh</span>)</label>
-                            <input type="number" step="0.01" id="bolletta-electricity-consumption" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                            <label class="filter-label" for="bolletta-electricity-consumption">{{ _('Grid Withdrawal (Prelievo)') }} (<span class="unit-electricity-lbl">kWh</span>)</label>
+                            <input type="number" step="0.01" id="bolletta-electricity-consumption" oninput="ricalcolaAnteprimaEnergiaModal()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
                         </div>
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 10px 0; color: #a855f7;">🔥 {{ _('Gas') }}</h4>
-                    <div class="form-row">
+                <!-- 🔥 Gas -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px;">
+                    <h4 style="margin: 0 0 8px 0; color: #a855f7; font-size: 0.95em;">🔥 {{ _('Gas') }}</h4>
+                    <div class="form-row" style="display: flex; gap: 12px;">
                         <div class="form-group" style="flex: 1;">
                             <label class="filter-label" for="bolletta-gas-price">{{ _('Price (€)') }}</label>
                             <input type="number" step="0.01" id="bolletta-gas-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
@@ -168,6 +322,53 @@
                     </div>
                 </div>
 
+                <!-- 🗑️ Spazzatura / TARI -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px;">
+                    <h4 style="margin: 0 0 8px 0; color: #64748b; font-size: 0.95em;">🗑️ {{ _('Waste / TARI') }}</h4>
+                    <div class="form-row" style="display: flex; gap: 12px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-waste-price">{{ _('Price (€)') }}</label>
+                            <input type="number" step="0.01" id="bolletta-waste-price" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="0.00">
+                            <span style="font-size: 0.75em; color: #64748b;">{{ _('Cost only (no consumption unit)') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ☀️ Fotovoltaico & Energia -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <h4 style="margin: 0 0 8px 0; color: #16a34a; font-size: 0.95em; display: flex; align-items: center; gap: 5px;">
+                        <span>☀️</span> {{ _('Photovoltaic & Solar Energy') }}
+                    </h4>
+                    <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 8px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-solar-production">{{ _('Solar Production (Produzione FV)') }} (kWh)</label>
+                            <input type="number" step="0.01" id="bolletta-solar-production" oninput="ricalcolaAnteprimaEnergiaModal()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; background: white;" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="filter-label" for="bolletta-grid-feed-in">{{ _('Grid Feed-in (Immissione)') }} (kWh)</label>
+                            <input type="number" step="0.01" id="bolletta-grid-feed-in" oninput="ricalcolaAnteprimaEnergiaModal()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; background: white;" placeholder="0.00">
+                        </div>
+                    </div>
+                    <!-- Live preview banner inside modal -->
+                    <div id="modal-energy-preview" style="font-size: 0.8em; color: #166534; background: #dcfce7; padding: 6px 10px; border-radius: 6px; display: flex; justify-content: space-between; flex-wrap: wrap;">
+                        <span id="modal-preview-autoconsumo">{{ _('Self-consumption:') }} 0.0 kWh</span>
+                        <span id="modal-preview-tot-casa">{{ _('Total Home:') }} 0.0 kWh</span>
+                    </div>
+                </div>
+
+                <!-- 🔌 Consumi Singoli Elettrodomestici (Mese) -->
+                <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="margin: 0; color: #0284c7; font-size: 0.95em;">🔌 {{ _('Appliances Consumption (Month)') }}</h4>
+                        <button type="button" onclick="apriModalAppliance(null, true)" style="background: none; border: none; color: #0284c7; font-size: 0.8em; font-weight: 600; cursor: pointer; text-decoration: underline;">
+                            + {{ _('Add new appliance') }}
+                        </button>
+                    </div>
+                    <div id="modal-bolletta-appliances-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Popolato dinamicamente da JS -->
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="chiudiModalBolletta()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
                     <button type="submit" class="btn-filter" style="background-color: #0d6efd; color: white; border-radius: 6px;">{{ _('Save') }}</button>
@@ -176,9 +377,106 @@
         </div>
     </div>
 
+    <!-- Modal Appliance (Add / Edit Single Appliance Definition) -->
+    <div id="modal-appliance" class="modal" style="display: none; position: fixed; z-index: 1060; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 420px; width: 90%; box-shadow: 0 6px 25px rgba(0,0,0,0.2); position: relative; margin: auto;">
+            <span onclick="chiudiModalAppliance()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
+            <h3 id="modal-appliance-title" style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Add Appliance') }}</h3>
+            
+            <form id="form-appliance" onsubmit="salvaAppliance(event)">
+                <input type="hidden" id="appliance-id">
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="filter-label" for="appliance-name">{{ _('Appliance Name') }}</label>
+                    <input type="text" id="appliance-name" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" placeholder="es. Lavatrice, Pompa di calore, Piano induzione..." required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="filter-label" for="appliance-category-select">{{ _('Type & Icon') }}</label>
+                    <select id="appliance-category-select" onchange="aggiornaIconaApplianceDaSelect()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;">
+                        <option value="heat_pump|🌡️">🌡️ {{ _('Heat Pump / Air Conditioning') }}</option>
+                        <option value="washing_machine|🧺">🧺 {{ _('Washing Machine') }}</option>
+                        <option value="dishwasher|🍽️">🍽️ {{ _('Dishwasher') }}</option>
+                        <option value="induction|🍳">🍳 {{ _('Induction Cooktop / Kitchen') }}</option>
+                        <option value="fridge|🧊">🧊 {{ _('Refrigerator / Freezer') }}</option>
+                        <option value="oven|🍕">🍕 {{ _('Oven') }}</option>
+                        <option value="dryer|👕">👕 {{ _('Dryer') }}</option>
+                        <option value="water_heater|🚿">🚿 {{ _('Water Heater / Boiler') }}</option>
+                        <option value="ev_charger|🚗">🚗 {{ _('Electric Vehicle / Wallbox') }}</option>
+                        <option value="it_pc|💻">💻 {{ _('PC / Server / Home Lab') }}</option>
+                        <option value="other|🔌" selected>🔌 {{ _('Other Device') }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 18px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <input type="checkbox" id="appliance-sum-to-total" name="sum_to_total" style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+                        <div>
+                            <label class="filter-label" for="appliance-sum-to-total" style="font-weight: 600; color: #1e293b; cursor: pointer; margin-bottom: 2px; display: block;">
+                                {{ _('Somma valori per il consumo totale') }}
+                            </label>
+                            <p style="font-size: 0.78em; color: #64748b; margin: 0;">
+                                {{ _('Se selezionato, i consumi di questo elettrodomestico verranno conteggiati nel totale della ripartizione energetica.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="chiudiModalAppliance()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn-filter" style="background-color: #0284c7; color: white; border-radius: 6px;">{{ _('Save Appliance') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Quick Monthly Appliances Consumptions -->
+    <div id="modal-appliance-consumptions" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 480px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 6px 25px rgba(0,0,0,0.2); position: relative; margin: auto;">
+            <span onclick="chiudiModalConsumiElettrodomestici()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">📝 {{ _('Quick Monthly Appliances Consumptions') }}</h3>
+            <p style="font-size: 0.85em; color: #6c757d; margin-top: 0; margin-bottom: 15px;">{{ _('Enter recorded kWh consumptions for each appliance for the selected month.') }}</p>
+
+            <form id="form-appliance-consumptions" onsubmit="salvaConsumiElettrodomestici(event)">
+                <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="filter-label" for="quick-app-year">{{ _('Year') }}</label>
+                        <select id="quick-app-year" onchange="caricaConsumiPerModalRapido()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required></select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="filter-label" for="quick-app-month">{{ _('Month') }}</label>
+                        <select id="quick-app-month" onchange="caricaConsumiPerModalRapido()" class="input-form" style="width: 100%; border: 1px solid #ced4da; border-radius: 6px; padding: 8px;" required>
+                            <option value="1">{{ _('January') }}</option>
+                            <option value="2">{{ _('February') }}</option>
+                            <option value="3">{{ _('March') }}</option>
+                            <option value="4">{{ _('April') }}</option>
+                            <option value="5">{{ _('May') }}</option>
+                            <option value="6">{{ _('June') }}</option>
+                            <option value="7">{{ _('July') }}</option>
+                            <option value="8">{{ _('August') }}</option>
+                            <option value="9">{{ _('September') }}</option>
+                            <option value="10">{{ _('October') }}</option>
+                            <option value="11">{{ _('November') }}</option>
+                            <option value="12">{{ _('December') }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="quick-app-inputs-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    <!-- Popolato dinamicamente da JS -->
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="chiudiModalConsumiElettrodomestici()" class="btn-filter" style="background-color: #6c757d; color: white; border-radius: 6px;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn-filter" style="background-color: #0284c7; color: white; border-radius: 6px;">{{ _('Save Consumptions') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal settings bollette -->
-    <div id="modal-settings-bollette" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
-        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; margin: auto;">
+    <div id="modal-settings-bollette" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+        <div style="background-color: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 6px 25px rgba(0,0,0,0.2); position: relative; margin: auto;">
             <span onclick="chiudiModalSettingsBollette()" style="position: absolute; right: 20px; top: 15px; font-size: 1.5em; cursor: pointer; color: #aaa;">&times;</span>
             <h3 style="margin-top: 0; margin-bottom: 20px; color: #2c3e50;">{{ _('Bills Units Settings') }}</h3>
             
@@ -206,3 +504,4 @@
         </div>
     </div>
 </div>
+

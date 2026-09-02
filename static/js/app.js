@@ -4338,18 +4338,126 @@ function renderTabellaInvestimenti() {
     }
 }
 
-// --- LOGICA BOLLETTE & CONSUMI ---
+// --- LOGICA BOLLETTE, ENERGIA & FOTOVOLTAICO ---
 let bolletteGlobal = [];
 let bolletteConfigGlobal = { water_unit: 'm³', electricity_unit: 'kWh', gas_unit: 'Smc' };
+let bolletteAppliancesGlobal = [];
 let graficoBolletteObj = null;
 let activeVisualizzazioneBollette = 'price';
+let activeBolletteAppliancePeriodKey = null; // "YYYY_M"
+let _applianceOpenedFromBillModal = false;
+
+// Period Filter State (Bollette)
+let bollettePeriodFilter = 'all-time';
+let bolletteCustomDateFrom = '';
+let bolletteCustomDateTo = '';
+
+function getFilteredBollette() {
+    if (!bolletteGlobal || bolletteGlobal.length === 0) return [];
+    if (bollettePeriodFilter === 'all-time') {
+        return bolletteGlobal;
+    }
+
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth(); // 0-11
+
+    return bolletteGlobal.filter(b => {
+        const bKey = `${b.year}-${String(b.month).padStart(2, '0')}`;
+        const bDate = new Date(b.year, b.month - 1, 15);
+
+        switch (bollettePeriodFilter) {
+            case 'current-month': {
+                return b.year === y && b.month === (m + 1);
+            }
+            case 'previous-month': {
+                const prev = new Date(y, m - 1, 1);
+                return b.year === prev.getFullYear() && b.month === (prev.getMonth() + 1);
+            }
+            case 'last-month': {
+                const start = new Date(y, m - 1, 1);
+                const end = new Date(y, m + 1, 0);
+                return bDate >= start && bDate <= end;
+            }
+            case 'last-3-months': {
+                const start = new Date(y, m - 2, 1);
+                const end = new Date(y, m + 1, 0);
+                return bDate >= start && bDate <= end;
+            }
+            case 'last-6-months': {
+                const start = new Date(y, m - 5, 1);
+                const end = new Date(y, m + 1, 0);
+                return bDate >= start && bDate <= end;
+            }
+            case 'last-year': {
+                const start = new Date(y - 1, m, 1);
+                const end = new Date(y, m + 1, 0);
+                return bDate >= start && bDate <= end;
+            }
+            case 'custom': {
+                if (bolletteCustomDateFrom && bKey < bolletteCustomDateFrom) return false;
+                if (bolletteCustomDateTo && bKey > bolletteCustomDateTo) return false;
+                return true;
+            }
+            default:
+                return true;
+        }
+    });
+}
+
+function initBollettePeriodFilterListeners() {
+    const sel = document.getElementById('bollette-period-filter-select');
+    const customDiv = document.getElementById('bollette-custom-date-inputs');
+    const inpFrom = document.getElementById('bollette-filter-date-from');
+    const inpTo = document.getElementById('bollette-filter-date-to');
+
+    if (sel) {
+        sel.value = bollettePeriodFilter || 'all-time';
+        if (customDiv) {
+            customDiv.style.display = bollettePeriodFilter === 'custom' ? 'flex' : 'none';
+        }
+        sel.onchange = (e) => {
+            bollettePeriodFilter = e.target.value;
+            if (customDiv) {
+                customDiv.style.display = bollettePeriodFilter === 'custom' ? 'flex' : 'none';
+            }
+            aggiornaTuttoTabBollette();
+        };
+    }
+
+    if (inpFrom) {
+        inpFrom.value = bolletteCustomDateFrom || '';
+        inpFrom.onchange = (e) => {
+            bolletteCustomDateFrom = e.target.value;
+            aggiornaTuttoTabBollette();
+        };
+    }
+
+    if (inpTo) {
+        inpTo.value = bolletteCustomDateTo || '';
+        inpTo.onchange = (e) => {
+            bolletteCustomDateTo = e.target.value;
+            aggiornaTuttoTabBollette();
+        };
+    }
+}
+
+function aggiornaTuttoTabBollette() {
+    const filteredBills = getFilteredBollette();
+    aggiornaKPIBollette(filteredBills);
+    aggiornaBilancioEnergetico(filteredBills);
+    disegnaGraficoBollette(filteredBills);
+    popolaTabellaBollette(filteredBills);
+    popolaSelectMeseElettrodomestici(filteredBills);
+    popolaSezioneElettrodomestici();
+}
 
 function cambiaVisualizzazioneBollette(tipo) {
     activeVisualizzazioneBollette = tipo;
-    const btnPrice = document.getElementById('btn-bollette-view-price');
-    const btnCons = document.getElementById('btn-bollette-view-consumption');
-    if (btnPrice) btnPrice.classList.toggle('active', tipo === 'price');
-    if (btnCons) btnCons.classList.toggle('active', tipo === 'consumption');
+    ['price', 'consumption', 'energy', 'appliances'].forEach(t => {
+        const btn = document.getElementById(`btn-bollette-view-${t}`);
+        if (btn) btn.classList.toggle('active', t === tipo);
+    });
     disegnaGraficoBollette();
 }
 
@@ -4363,46 +4471,128 @@ async function caricaDatiBollette() {
         }
         
         // Aggiorna le etichette nei modal e form
-        document.querySelectorAll('.unit-water-lbl').forEach(el => el.innerText = bolletteConfigGlobal.water_unit);
-        document.querySelectorAll('.unit-electricity-lbl').forEach(el => el.innerText = bolletteConfigGlobal.electricity_unit);
-        document.querySelectorAll('.unit-gas-lbl').forEach(el => el.innerText = bolletteConfigGlobal.gas_unit);
+        document.querySelectorAll('.unit-water-lbl').forEach(el => el.innerText = bolletteConfigGlobal.water_unit || 'm³');
+        document.querySelectorAll('.unit-electricity-lbl').forEach(el => el.innerText = bolletteConfigGlobal.electricity_unit || 'kWh');
+        document.querySelectorAll('.unit-gas-lbl').forEach(el => el.innerText = bolletteConfigGlobal.gas_unit || 'Smc');
         
+        // Carica la lista degli elettrodomestici registrati
+        let resApps = await fetch(`/api/bills/appliances?bills_id=${activeBillsId}`);
+        if (resApps.ok) {
+            bolletteAppliancesGlobal = await resApps.json();
+        } else {
+            bolletteAppliancesGlobal = [];
+        }
+
         // Carica i dati delle bollette
         let resBills = await fetch(`/api/bills?bills_id=${activeBillsId}`);
         if (resBills.ok) {
             bolletteGlobal = await resBills.json();
-            aggiornaKPIBollette();
-            disegnaGraficoBollette();
-            popolaTabellaBollette();
+            initBollettePeriodFilterListeners();
+            aggiornaTuttoTabBollette();
         }
     } catch (error) {
         console.error("Errore nel caricamento bollette:", error);
     }
 }
 
-function aggiornaKPIBollette() {
+function aggiornaKPIBollette(bills = null) {
     const kpiAcquaCosto = document.getElementById('kpi-acqua-costo');
     const kpiAcquaConsumo = document.getElementById('kpi-acqua-consumo');
     const kpiLuceCosto = document.getElementById('kpi-luce-costo');
     const kpiLuceConsumo = document.getElementById('kpi-luce-consumo');
     const kpiGasCosto = document.getElementById('kpi-gas-costo');
     const kpiGasConsumo = document.getElementById('kpi-gas-consumo');
+    const kpiWasteCosto = document.getElementById('kpi-waste-costo');
+    const kpiWasteDesc = document.getElementById('kpi-waste-desc');
+    const kpiFvProduzione = document.getElementById('kpi-fv-produzione');
+    const kpiFvImmissione = document.getElementById('kpi-fv-immissione');
+    const kpiAutoconsumo = document.getElementById('kpi-autoconsumo');
+    const kpiAutoconsumoPerc = document.getElementById('kpi-autoconsumo-perc');
     
     if (!kpiAcquaCosto) return;
     
-    if (bolletteGlobal && bolletteGlobal.length > 0) {
-        const latest = bolletteGlobal[0]; // ordinati DESC per data
+    const targetBills = bills !== null ? bills : getFilteredBollette();
+
+    if (targetBills && targetBills.length > 0) {
         const meseNomi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
-        const dataStr = `${meseNomi[latest.month - 1]} ${latest.year}`;
         
-        kpiAcquaCosto.innerText = formatEuro(latest.water_price);
-        kpiAcquaConsumo.innerText = `${latest.water_consumption.toFixed(1)} ${bolletteConfigGlobal.water_unit} (${dataStr})`;
-        
-        kpiLuceCosto.innerText = formatEuro(latest.electricity_price);
-        kpiLuceConsumo.innerText = `${latest.electricity_consumption.toFixed(1)} ${bolletteConfigGlobal.electricity_unit} (${dataStr})`;
-        
-        kpiGasCosto.innerText = formatEuro(latest.gas_price);
-        kpiGasConsumo.innerText = `${latest.gas_consumption.toFixed(1)} ${bolletteConfigGlobal.gas_unit} (${dataStr})`;
+        if (targetBills.length === 1) {
+            const latest = targetBills[0];
+            const dataStr = `${meseNomi[latest.month - 1]} ${latest.year}`;
+            
+            kpiAcquaCosto.innerText = formatEuro(latest.water_price);
+            kpiAcquaConsumo.innerText = `${(latest.water_consumption || 0).toFixed(1)} ${bolletteConfigGlobal.water_unit} (${dataStr})`;
+            
+            kpiLuceCosto.innerText = formatEuro(latest.electricity_price);
+            kpiLuceConsumo.innerText = `${(latest.electricity_consumption || 0).toFixed(1)} ${bolletteConfigGlobal.electricity_unit} (${dataStr})`;
+            
+            kpiGasCosto.innerText = formatEuro(latest.gas_price);
+            kpiGasConsumo.innerText = `${(latest.gas_consumption || 0).toFixed(1)} ${bolletteConfigGlobal.gas_unit} (${dataStr})`;
+
+            if (kpiWasteCosto) {
+                kpiWasteCosto.innerText = formatEuro(latest.waste_price || 0);
+                kpiWasteDesc.innerText = `Solo costo (${dataStr})`;
+            }
+
+            const fvProd = latest.solar_production || 0;
+            const gridFeed = latest.grid_feed_in || 0;
+            const gridWithdraw = latest.electricity_consumption || 0;
+            const selfCons = Math.max(0, fvProd - gridFeed);
+            const summedAppliances = (latest.appliances || [])
+                .filter(a => a.sum_to_total)
+                .reduce((acc, curr) => acc + (curr.consumption || 0), 0);
+            const totalHome = gridWithdraw + selfCons + summedAppliances;
+
+            if (kpiFvProduzione) {
+                kpiFvProduzione.innerText = `${fvProd.toFixed(1)} kWh`;
+                kpiFvImmissione.innerText = `Immessi: ${gridFeed.toFixed(1)} kWh (${dataStr})`;
+            }
+            if (kpiAutoconsumo) {
+                const autonomy = totalHome > 0 ? ((selfCons / totalHome) * 100).toFixed(0) : 0;
+                kpiAutoconsumo.innerText = `${selfCons.toFixed(1)} kWh`;
+                kpiAutoconsumoPerc.innerText = `${autonomy}% copertura solare (${dataStr})`;
+            }
+        } else {
+            // Aggregazione su più mesi
+            const totAcquaCosto = targetBills.reduce((acc, b) => acc + (b.water_price || 0), 0);
+            const totAcquaConsumo = targetBills.reduce((acc, b) => acc + (b.water_consumption || 0), 0);
+            const totLuceCosto = targetBills.reduce((acc, b) => acc + (b.electricity_price || 0), 0);
+            const totLuceConsumo = targetBills.reduce((acc, b) => acc + (b.electricity_consumption || 0), 0);
+            const totGasCosto = targetBills.reduce((acc, b) => acc + (b.gas_price || 0), 0);
+            const totGasConsumo = targetBills.reduce((acc, b) => acc + (b.gas_consumption || 0), 0);
+            const totWasteCosto = targetBills.reduce((acc, b) => acc + (b.waste_price || 0), 0);
+
+            const totFvProd = targetBills.reduce((acc, b) => acc + (b.solar_production || 0), 0);
+            const totGridFeed = targetBills.reduce((acc, b) => acc + (b.grid_feed_in || 0), 0);
+            const totSelfCons = targetBills.reduce((acc, b) => acc + Math.max(0, (b.solar_production || 0) - (b.grid_feed_in || 0)), 0);
+            const totSummedApps = targetBills.reduce((acc, b) => acc + (b.appliances || []).filter(a => a.sum_to_total).reduce((s, a) => s + (a.consumption || 0), 0), 0);
+            const totHome = totLuceConsumo + totSelfCons + totSummedApps;
+            const autonomy = totHome > 0 ? ((totSelfCons / totHome) * 100).toFixed(0) : 0;
+            const countStr = `Tot. ${targetBills.length} mesi`;
+
+            kpiAcquaCosto.innerText = formatEuro(totAcquaCosto);
+            kpiAcquaConsumo.innerText = `${totAcquaConsumo.toFixed(1)} ${bolletteConfigGlobal.water_unit} (${countStr})`;
+
+            kpiLuceCosto.innerText = formatEuro(totLuceCosto);
+            kpiLuceConsumo.innerText = `${totLuceConsumo.toFixed(1)} ${bolletteConfigGlobal.electricity_unit} (${countStr})`;
+
+            kpiGasCosto.innerText = formatEuro(totGasCosto);
+            kpiGasConsumo.innerText = `${totGasConsumo.toFixed(1)} ${bolletteConfigGlobal.gas_unit} (${countStr})`;
+
+            if (kpiWasteCosto) {
+                kpiWasteCosto.innerText = formatEuro(totWasteCosto);
+                kpiWasteDesc.innerText = `Solo costo (${countStr})`;
+            }
+
+            if (kpiFvProduzione) {
+                kpiFvProduzione.innerText = `${totFvProd.toFixed(1)} kWh`;
+                kpiFvImmissione.innerText = `Imm: ${totGridFeed.toFixed(1)} kWh (${countStr})`;
+            }
+            if (kpiAutoconsumo) {
+                kpiAutoconsumo.innerText = `${totSelfCons.toFixed(1)} kWh`;
+                kpiAutoconsumoPerc.innerText = `${autonomy}% copertura solare (${countStr})`;
+            }
+        }
     } else {
         kpiAcquaCosto.innerText = "-";
         kpiAcquaConsumo.innerText = "-";
@@ -4410,10 +4600,92 @@ function aggiornaKPIBollette() {
         kpiLuceConsumo.innerText = "-";
         kpiGasCosto.innerText = "-";
         kpiGasConsumo.innerText = "-";
+        if (kpiWasteCosto) {
+            kpiWasteCosto.innerText = "-";
+            kpiWasteDesc.innerText = "-";
+        }
+        if (kpiFvProduzione) kpiFvProduzione.innerText = "-";
+        if (kpiFvImmissione) kpiFvImmissione.innerText = "-";
+        if (kpiAutoconsumo) kpiAutoconsumo.innerText = "-";
+        if (kpiAutoconsumoPerc) kpiAutoconsumoPerc.innerText = "-";
     }
 }
 
-function disegnaGraficoBollette() {
+function aggiornaBilancioEnergetico(bills = null) {
+    const card = document.getElementById('card-bilancio-energetico');
+    if (!card) return;
+    
+    const targetBills = bills !== null ? bills : getFilteredBollette();
+
+    if (!targetBills || targetBills.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+    card.style.display = 'block';
+
+    const meseNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    const billsSorted = [...targetBills].sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
+    
+    let dataStr = '';
+    if (billsSorted.length === 1) {
+        dataStr = `${meseNomi[billsSorted[0].month - 1]} ${billsSorted[0].year}`;
+    } else {
+        const first = billsSorted[0];
+        const last = billsSorted[billsSorted.length - 1];
+        dataStr = `${meseNomi[first.month - 1]} ${first.year} - ${meseNomi[last.month - 1]} ${last.year} (${billsSorted.length} mesi)`;
+    }
+    
+    const fvProd = billsSorted.reduce((acc, b) => acc + (b.solar_production || 0), 0);
+    const gridFeed = billsSorted.reduce((acc, b) => acc + (b.grid_feed_in || 0), 0);
+    const gridWithdraw = billsSorted.reduce((acc, b) => acc + (b.electricity_consumption || 0), 0);
+    const selfCons = billsSorted.reduce((acc, b) => acc + Math.max(0, (b.solar_production || 0) - (b.grid_feed_in || 0)), 0);
+    const summedAppliances = billsSorted.reduce((acc, b) => acc + (b.appliances || []).filter(a => a.sum_to_total).reduce((s, a) => s + (a.consumption || 0), 0), 0);
+    const totalHome = gridWithdraw + selfCons + summedAppliances;
+
+    const selfConsPctOfSolar = fvProd > 0 ? Math.min(100, Math.round((selfCons / fvProd) * 100)) : 0;
+    const autonomyPct = totalHome > 0 ? Math.min(100, Math.round((selfCons / totalHome) * 100)) : 0;
+
+    const refLabel = document.getElementById('bilancio-mese-riferimento');
+    if (refLabel) refLabel.innerText = dataStr;
+
+    const badgesContainer = document.getElementById('bilancio-badges-container');
+    if (badgesContainer) {
+        badgesContainer.innerHTML = `
+            <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">
+                🔄 Autoconsumo FV: ${selfConsPctOfSolar}%
+            </span>
+            <span style="background: ${autonomyPct >= 50 ? '#dcfce7' : '#fef3c7'}; color: ${autonomyPct >= 50 ? '#15803d' : '#b45309'}; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">
+                ☀️ Autosufficienza Casa: ${autonomyPct}%
+            </span>
+        `;
+    }
+
+    const elFvProd = document.getElementById('flow-fv-prod');
+    const elGridFeed = document.getElementById('flow-grid-feed');
+    const elSelfCons = document.getElementById('flow-self-cons');
+    const elGridWithdraw = document.getElementById('flow-grid-withdraw');
+    const elHomeTotal = document.getElementById('flow-home-total');
+
+    if (elFvProd) elFvProd.innerText = `${fvProd.toFixed(1)} kWh`;
+    if (elGridFeed) elGridFeed.innerText = `${gridFeed.toFixed(1)} kWh`;
+    if (elSelfCons) elSelfCons.innerText = `${selfCons.toFixed(1)} kWh`;
+    if (elGridWithdraw) elGridWithdraw.innerText = `${gridWithdraw.toFixed(1)} kWh`;
+    if (elHomeTotal) elHomeTotal.innerText = `${totalHome.toFixed(1)} kWh`;
+
+    const txtAutonomy = document.getElementById('flow-bar-autonomy-txt');
+    if (txtAutonomy) {
+        txtAutonomy.innerText = `${autonomyPct}% ${window.Translations?.solarAutonomy || 'Autosufficienza Solare'}`;
+    }
+
+    const barSolar = document.getElementById('flow-bar-solar');
+    const barGrid = document.getElementById('flow-bar-grid');
+    if (barSolar && barGrid) {
+        barSolar.style.width = `${autonomyPct}%`;
+        barGrid.style.width = `${100 - autonomyPct}%`;
+    }
+}
+
+function disegnaGraficoBollette(bills = null) {
     const canvas = document.getElementById('graficoBollette');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -4424,14 +4696,12 @@ function disegnaGraficoBollette() {
         graficoBolletteObj = null;
     }
     
+    const targetBills = bills !== null ? bills : getFilteredBollette();
+
     // Ordine cronologico crescente (da più vecchio a più recente) per il grafico
-    const billsSorted = [...bolletteGlobal].reverse();
+    const billsSorted = [...targetBills].sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
     
     const labels = [];
-    const waterData = [];
-    const electricityData = [];
-    const gasData = [];
-    
     const lang = document.documentElement.lang || 'en';
     const meseNomi = lang.startsWith('it') 
         ? ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
@@ -4439,52 +4709,168 @@ function disegnaGraficoBollette() {
     
     billsSorted.forEach(b => {
         labels.push(`${meseNomi[b.month - 1]} ${b.year}`);
-        if (activeVisualizzazioneBollette === 'price') {
-            waterData.push(b.water_price);
-            electricityData.push(b.electricity_price);
-            gasData.push(b.gas_price);
-        } else {
-            waterData.push(b.water_consumption);
-            electricityData.push(b.electricity_consumption);
-            gasData.push(b.gas_consumption);
-        }
     });
-    
-    const isPrice = activeVisualizzazioneBollette === 'price';
-    
-    const labelWater = window.Translations.water || 'Water';
-    const labelElectricity = window.Translations.electricity || 'Electricity';
-    const labelGas = window.Translations.gas || 'Gas';
 
-    const datasets = [
-        {
-            label: isPrice ? `${labelWater} (€)` : `${labelWater} (${bolletteConfigGlobal.water_unit})`,
-            data: waterData,
-            backgroundColor: 'rgba(14, 165, 233, 0.7)',
-            borderColor: 'rgb(14, 165, 233)',
-            borderWidth: 1,
-            borderRadius: 4
-        },
-        {
-            label: isPrice ? `${labelElectricity} (€)` : `${labelElectricity} (${bolletteConfigGlobal.electricity_unit})`,
-            data: electricityData,
-            backgroundColor: 'rgba(245, 158, 11, 0.7)',
-            borderColor: 'rgb(245, 158, 11)',
-            borderWidth: 1,
-            borderRadius: 4
-        },
-        {
-            label: isPrice ? `${labelGas} (€)` : `${labelGas} (${bolletteConfigGlobal.gas_unit})`,
-            data: gasData,
-            backgroundColor: 'rgba(168, 85, 247, 0.7)',
-            borderColor: 'rgb(168, 85, 247)',
-            borderWidth: 1,
-            borderRadius: 4
+    let datasets = [];
+    let chartType = 'bar';
+    let isPrice = activeVisualizzazioneBollette === 'price';
+    let isStacked = false;
+
+    if (activeVisualizzazioneBollette === 'price') {
+        const labelWater = window.Translations?.water || 'Acqua';
+        const labelElectricity = window.Translations?.electricity || 'Luce (Rete)';
+        const labelGas = window.Translations?.gas || 'Gas';
+        const labelWaste = window.Translations?.waste || 'Spazzatura / TARI';
+
+        datasets = [
+            {
+                label: `${labelWater} (€)`,
+                data: billsSorted.map(b => b.water_price || 0),
+                backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                borderColor: 'rgb(14, 165, 233)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: `${labelElectricity} (€)`,
+                data: billsSorted.map(b => b.electricity_price || 0),
+                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                borderColor: 'rgb(245, 158, 11)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: `${labelGas} (€)`,
+                data: billsSorted.map(b => b.gas_price || 0),
+                backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                borderColor: 'rgb(168, 85, 247)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: `${labelWaste} (€)`,
+                data: billsSorted.map(b => b.waste_price || 0),
+                backgroundColor: 'rgba(100, 116, 139, 0.7)',
+                borderColor: 'rgb(100, 116, 139)',
+                borderWidth: 1,
+                borderRadius: 4
+            }
+        ];
+    } else if (activeVisualizzazioneBollette === 'consumption') {
+        const labelWater = window.Translations?.water || 'Acqua';
+        const labelElectricity = window.Translations?.electricity || 'Prelievo Luce';
+        const labelGas = window.Translations?.gas || 'Gas';
+
+        datasets = [
+            {
+                label: `${labelWater} (${bolletteConfigGlobal.water_unit})`,
+                data: billsSorted.map(b => b.water_consumption || 0),
+                backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                borderColor: 'rgb(14, 165, 233)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: `${labelElectricity} (${bolletteConfigGlobal.electricity_unit})`,
+                data: billsSorted.map(b => b.electricity_consumption || 0),
+                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                borderColor: 'rgb(245, 158, 11)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: `${labelGas} (${bolletteConfigGlobal.gas_unit})`,
+                data: billsSorted.map(b => b.gas_consumption || 0),
+                backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                borderColor: 'rgb(168, 85, 247)',
+                borderWidth: 1,
+                borderRadius: 4
+            }
+        ];
+    } else if (activeVisualizzazioneBollette === 'energy') {
+        // Bilancio energetico & FV
+        datasets = [
+            {
+                label: '☀️ Produzione FV (kWh)',
+                data: billsSorted.map(b => b.solar_production || 0),
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: 'rgb(16, 185, 129)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: '🔄 Autoconsumo FV (kWh)',
+                data: billsSorted.map(b => Math.max(0, (b.solar_production || 0) - (b.grid_feed_in || 0))),
+                backgroundColor: 'rgba(6, 182, 212, 0.75)',
+                borderColor: 'rgb(6, 182, 212)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: '📤 Immissione in Rete (kWh)',
+                data: billsSorted.map(b => b.grid_feed_in || 0),
+                backgroundColor: 'rgba(234, 179, 8, 0.75)',
+                borderColor: 'rgb(234, 179, 8)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: '⚡ Prelievo da Rete (kWh)',
+                data: billsSorted.map(b => b.electricity_consumption || 0),
+                backgroundColor: 'rgba(245, 158, 11, 0.75)',
+                borderColor: 'rgb(245, 158, 11)',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: '🏠 Consumo Totale Casa (kWh)',
+                data: billsSorted.map(b => {
+                    const selfC = Math.max(0, (b.solar_production || 0) - (b.grid_feed_in || 0));
+                    const sumApp = (b.appliances || []).filter(a => a.sum_to_total).reduce((acc, curr) => acc + (curr.consumption || 0), 0);
+                    return (b.electricity_consumption || 0) + selfC + sumApp;
+                }),
+                backgroundColor: 'rgba(139, 92, 246, 0.75)',
+                borderColor: 'rgb(139, 92, 246)',
+                borderWidth: 1,
+                borderRadius: 4
+            }
+        ];
+    } else if (activeVisualizzazioneBollette === 'appliances') {
+        isStacked = true;
+        const colorPalette = [
+            'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)',
+            'rgba(20, 184, 166, 0.8)', 'rgba(99, 102, 241, 0.8)', 'rgba(249, 115, 22, 0.8)',
+            'rgba(14, 165, 233, 0.8)', 'rgba(100, 116, 139, 0.8)'
+        ];
+
+        if (bolletteAppliancesGlobal.length === 0) {
+            datasets = [{
+                label: 'Nessun elettrodomestico registrato',
+                data: billsSorted.map(() => 0),
+                backgroundColor: 'rgba(203, 213, 225, 0.5)'
+            }];
+        } else {
+            datasets = bolletteAppliancesGlobal.map((app, idx) => {
+                const color = colorPalette[idx % colorPalette.length];
+                const appData = billsSorted.map(b => {
+                    const match = (b.appliances || []).find(a => a.appliance_id === app.id);
+                    return match ? match.consumption : 0;
+                });
+                return {
+                    label: `${app.icon || '🔌'} ${app.name} (kWh)`,
+                    data: appData,
+                    backgroundColor: color,
+                    borderColor: color.replace('0.8', '1'),
+                    borderWidth: 1,
+                    borderRadius: 4
+                };
+            });
         }
-    ];
+    }
     
     graficoBolletteObj = new Chart(ctx, {
-        type: 'bar',
+        type: chartType,
         data: {
             labels: labels,
             datasets: datasets
@@ -4493,25 +4879,30 @@ function disegnaGraficoBollette() {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                x: {
+                    stacked: isStacked
+                },
                 y: {
+                    stacked: isStacked,
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return isPrice ? formatEuro(value) : value;
+                            return isPrice ? formatEuro(value) : `${value} ${activeVisualizzazioneBollette === 'consumption' ? '' : 'kWh'}`;
                         }
                     }
                 }
             },
             plugins: {
+                legend: {
+                    position: 'top',
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
+                            if (label) label += ': ';
                             if (context.parsed.y !== null) {
-                                label += isPrice ? formatEuro(context.parsed.y) : context.parsed.y;
+                                label += isPrice ? formatEuro(context.parsed.y) : `${context.parsed.y} ${activeVisualizzazioneBollette === 'consumption' ? '' : 'kWh'}`;
                             }
                             return label;
                         }
@@ -4522,47 +4913,592 @@ function disegnaGraficoBollette() {
     });
 }
 
-function popolaTabellaBollette() {
+function popolaTabellaBollette(bills = null) {
     const tbody = document.getElementById('lista-bollette-body');
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    if (!bolletteGlobal || bolletteGlobal.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #6c757d;">${window.Translations.noBills || "No bills inserted."}</td></tr>`;
+    const targetBills = bills !== null ? bills : getFilteredBollette();
+
+    if (!targetBills || targetBills.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #6c757d;">${window.Translations?.noBills || "Nessuna bolletta registrata per il periodo selezionato."}</td></tr>`;
         return;
     }
     
     const meseNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-    
-    bolletteGlobal.forEach(b => {
+    const billsSortedDesc = [...targetBills].sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month));
+
+    billsSortedDesc.forEach(b => {
         const dataStr = `${meseNomi[b.month - 1]} ${b.year}`;
-        const totCosto = b.water_price + b.electricity_price + b.gas_price;
+        const totCosto = (b.water_price || 0) + (b.electricity_price || 0) + (b.gas_price || 0) + (b.waste_price || 0);
         
+        const fvProd = b.solar_production || 0;
+        const gridFeed = b.grid_feed_in || 0;
+        const selfCons = Math.max(0, fvProd - gridFeed);
+
+        let solarHtml = '<span style="color: #94a3b8;">-</span>';
+        if (fvProd > 0 || gridFeed > 0) {
+            solarHtml = `
+                <div style="font-weight: 600; color: #16a34a;">Prod: ${fvProd} kWh</div>
+                <div style="font-size: 0.8em; color: #64748b;">Imm: ${gridFeed} kWh | Auto: ${selfCons.toFixed(1)} kWh</div>
+            `;
+        }
+
+        let appliancesHtml = '<span style="color: #94a3b8;">-</span>';
+        if (b.appliances && b.appliances.length > 0) {
+            const totSummedKwh = b.appliances.filter(a => a.sum_to_total).reduce((acc, curr) => acc + (curr.consumption || 0), 0);
+            const totAllKwh = b.appliances.reduce((acc, curr) => acc + (curr.consumption || 0), 0);
+            const pills = b.appliances.map(a => `${a.icon || '🔌'} ${a.name}${a.sum_to_total ? ' (Σ)' : ''}: ${a.consumption} kWh`).join('\n');
+            appliancesHtml = `
+                <div style="font-weight: 600; color: #0284c7;" title="${pills}">
+                    ${totSummedKwh.toFixed(1)} kWh <span style="font-size: 0.8em; font-weight: normal; color: #64748b;">(${b.appliances.length} disp.)</span>
+                </div>
+            `;
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="font-weight: 600;">${dataStr}</td>
             <td>
                 <div style="font-weight: bold; color: #2c3e50;">${formatEuro(b.water_price)}</div>
-                <div style="font-size: 0.8em; color: #6c757d;">${b.water_consumption} ${bolletteConfigGlobal.water_unit}</div>
+                <div style="font-size: 0.8em; color: #6c757d;">${b.water_consumption || 0} ${bolletteConfigGlobal.water_unit}</div>
             </td>
             <td>
                 <div style="font-weight: bold; color: #2c3e50;">${formatEuro(b.electricity_price)}</div>
-                <div style="font-size: 0.8em; color: #6c757d;">${b.electricity_consumption} ${bolletteConfigGlobal.electricity_unit}</div>
+                <div style="font-size: 0.8em; color: #6c757d;">${b.electricity_consumption || 0} ${bolletteConfigGlobal.electricity_unit}</div>
             </td>
             <td>
                 <div style="font-weight: bold; color: #2c3e50;">${formatEuro(b.gas_price)}</div>
-                <div style="font-size: 0.8em; color: #6c757d;">${b.gas_consumption} ${bolletteConfigGlobal.gas_unit}</div>
+                <div style="font-size: 0.8em; color: #6c757d;">${b.gas_consumption || 0} ${bolletteConfigGlobal.gas_unit}</div>
             </td>
-            <td style="font-weight: bold; color: #2c3e50; font-size: 1.1em;">${formatEuro(totCosto)}</td>
             <td>
-                <button onclick="modificaBolletta(${b.id})" class="btn-filter" style="padding: 4px 8px; font-size: 0.8em; background-color: #0d6efd; color: white;">✏️</button>
-                <button onclick="eliminaBolletta(${b.id})" class="btn-filter" style="padding: 4px 8px; font-size: 0.8em; background-color: #dc3545; color: white;">🗑️</button>
+                <div style="font-weight: bold; color: #2c3e50;">${(b.waste_price || 0) > 0 ? formatEuro(b.waste_price) : '<span style="color: #94a3b8;">-</span>'}</div>
+            </td>
+            <td>${solarHtml}</td>
+            <td>${appliancesHtml}</td>
+            <td style="font-weight: bold; color: #2c3e50; font-size: 1.05em;">${formatEuro(totCosto)}</td>
+            <td>
+                <button onclick="modificaBolletta(${b.id})" class="btn-filter" style="padding: 4px 8px; font-size: 0.8em; background-color: #0d6efd; color: white; cursor: pointer;">✏️</button>
+                <button onclick="eliminaBolletta(${b.id})" class="btn-filter" style="padding: 4px 8px; font-size: 0.8em; background-color: #dc3545; color: white; cursor: pointer;">🗑️</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
+function popolaSelectMeseElettrodomestici(bills = null) {
+    const sel = document.getElementById('select-mese-elettrodomestici');
+    if (!sel) return;
+    sel.innerHTML = '';
+    
+    const targetBills = bills !== null ? bills : getFilteredBollette();
+
+    if (!targetBills || targetBills.length === 0) {
+        const cur = new Date();
+        const opt = document.createElement('option');
+        opt.value = `${cur.getFullYear()}_${cur.getMonth() + 1}`;
+        opt.innerText = `${cur.getFullYear()} - ${cur.getMonth() + 1}`;
+        sel.appendChild(opt);
+        activeBolletteAppliancePeriodKey = opt.value;
+        return;
+    }
+
+    const meseNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    const billsSortedDesc = [...targetBills].sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month));
+    
+    let keyFound = false;
+
+    // Se ci sono più mesi nel periodo selezionato, aggiungi come prima opzione l'aggregato totale
+    if (billsSortedDesc.length > 1) {
+        const optAll = document.createElement('option');
+        optAll.value = 'period_total';
+        optAll.innerText = `📊 Totale Periodo (${billsSortedDesc.length} mesi)`;
+        if (activeBolletteAppliancePeriodKey === 'period_total' || !activeBolletteAppliancePeriodKey) {
+            optAll.selected = true;
+            activeBolletteAppliancePeriodKey = 'period_total';
+            keyFound = true;
+        }
+        sel.appendChild(optAll);
+    }
+
+    billsSortedDesc.forEach((b, idx) => {
+        const opt = document.createElement('option');
+        const k = `${b.year}_${b.month}`;
+        opt.value = k;
+        opt.innerText = `${meseNomi[b.month - 1]} ${b.year}`;
+        if (activeBolletteAppliancePeriodKey === k) {
+            opt.selected = true;
+            keyFound = true;
+        }
+        sel.appendChild(opt);
+    });
+
+    if (!keyFound && sel.options.length > 0) {
+        sel.options[0].selected = true;
+        activeBolletteAppliancePeriodKey = sel.options[0].value;
+    }
+}
+
+function cambiaMeseElettrodomestici() {
+    const sel = document.getElementById('select-mese-elettrodomestici');
+    if (sel) {
+        activeBolletteAppliancePeriodKey = sel.value;
+    }
+    popolaSezioneElettrodomestici();
+}
+
+function popolaSezioneElettrodomestici() {
+    const container = document.getElementById('lista-elettrodomestici-grid');
+    const emptyState = document.getElementById('elettrodomestici-empty-state');
+    const summaryBar = document.getElementById('elettrodomestici-summary-bar');
+    if (!container) return;
+
+    if (!bolletteAppliancesGlobal || bolletteAppliancesGlobal.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        if (summaryBar) summaryBar.style.display = 'none';
+        return;
+    }
+
+    const targetBills = getFilteredBollette();
+    if (!targetBills || targetBills.length === 0) {
+        container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 20px;">Nessun dato registrato per il periodo selezionato.</div>';
+        if (emptyState) emptyState.style.display = 'none';
+        if (summaryBar) summaryBar.style.display = 'none';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+    if (summaryBar) summaryBar.style.display = 'block';
+
+    let gridWithdraw = 0;
+    let fvProd = 0;
+    let gridFeed = 0;
+    let selfCons = 0;
+    let unitPrice = 0.28;
+    let totalSummedKwh = 0;
+    let totalAllKwh = 0;
+    let consumoLabel = 'Consumo Mese:';
+    let rawList = [];
+
+    const isPeriodTotal = (activeBolletteAppliancePeriodKey === 'period_total' || (targetBills.length > 1 && !activeBolletteAppliancePeriodKey));
+
+    if (isPeriodTotal) {
+        consumoLabel = `Consumo (${targetBills.length} mesi):`;
+        gridWithdraw = targetBills.reduce((acc, b) => acc + (b.electricity_consumption || 0), 0);
+        fvProd = targetBills.reduce((acc, b) => acc + (b.solar_production || 0), 0);
+        gridFeed = targetBills.reduce((acc, b) => acc + (b.grid_feed_in || 0), 0);
+        selfCons = targetBills.reduce((acc, b) => acc + Math.max(0, (b.solar_production || 0) - (b.grid_feed_in || 0)), 0);
+        
+        const totElecCost = targetBills.reduce((acc, b) => acc + (b.electricity_price || 0), 0);
+        unitPrice = gridWithdraw > 0 ? (totElecCost / gridWithdraw) : 0.28;
+
+        rawList = bolletteAppliancesGlobal.map(app => {
+            const kwh = targetBills.reduce((acc, b) => {
+                const match = (b.appliances || []).find(a => a.appliance_id === app.id);
+                return acc + (match ? (match.consumption || 0) : 0);
+            }, 0);
+            totalAllKwh += kwh;
+            if (app.sum_to_total) {
+                totalSummedKwh += kwh;
+            }
+            return { app, kwh, isSummed: Boolean(app.sum_to_total) };
+        });
+    } else {
+        let selYear = 0, selMonth = 0;
+        if (activeBolletteAppliancePeriodKey) {
+            const parts = activeBolletteAppliancePeriodKey.split('_');
+            selYear = parseInt(parts[0]);
+            selMonth = parseInt(parts[1]);
+        }
+
+        const currentBill = (bolletteGlobal || []).find(b => b.year === selYear && b.month === selMonth);
+        gridWithdraw = currentBill ? (currentBill.electricity_consumption || 0) : 0;
+        fvProd = currentBill ? (currentBill.solar_production || 0) : 0;
+        gridFeed = currentBill ? (currentBill.grid_feed_in || 0) : 0;
+        selfCons = Math.max(0, fvProd - gridFeed);
+        unitPrice = (currentBill && currentBill.electricity_consumption > 0)
+            ? (currentBill.electricity_price / currentBill.electricity_consumption)
+            : 0.28;
+        
+        const currentAppliancesConsumptions = currentBill ? (currentBill.appliances || []) : [];
+        consumoLabel = 'Consumo Mese:';
+
+        rawList = bolletteAppliancesGlobal.map(app => {
+            const match = currentAppliancesConsumptions.find(a => a.appliance_id === app.id);
+            const kwh = match ? (match.consumption || 0) : 0;
+            totalAllKwh += kwh;
+            if (app.sum_to_total) {
+                totalSummedKwh += kwh;
+            }
+            return { app, kwh, isSummed: Boolean(app.sum_to_total) };
+        });
+    }
+
+    const homeTotalElec = gridWithdraw + selfCons + totalSummedKwh;
+
+    const cardDataList = rawList.map(item => {
+        const sharePct = homeTotalElec > 0 ? ((item.kwh / homeTotalElec) * 100).toFixed(1) : 0;
+        const estCost = item.kwh * unitPrice;
+        return { ...item, sharePct, estCost };
+    });
+
+    // Aggiorna la barra riassuntiva
+    const txtTotalKwh = document.getElementById('txt-appliances-total-kwh');
+    const txtSharePct = document.getElementById('txt-appliances-share-pct');
+    const barBreakdown = document.getElementById('bar-appliances-breakdown');
+
+    const totalSharePct = homeTotalElec > 0 ? Math.min(100, ((totalSummedKwh / homeTotalElec) * 100)).toFixed(0) : 0;
+    if (txtTotalKwh) {
+        let txt = `Totale Elettrodomestici Sommabili: ${totalSummedKwh.toFixed(1)} kWh`;
+        if (totalAllKwh > totalSummedKwh) {
+            txt += ` (Totale misurato: ${totalAllKwh.toFixed(1)} kWh)`;
+        }
+        txtTotalKwh.innerText = txt;
+    }
+    if (txtSharePct) txtSharePct.innerText = `${totalSharePct}% del fabbisogno casa (${homeTotalElec > 0 ? homeTotalElec.toFixed(1) : 0} kWh)`;
+
+    if (barBreakdown) {
+        barBreakdown.innerHTML = '';
+        const colorPalette = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
+        cardDataList.forEach((item, idx) => {
+            if (item.kwh > 0 && homeTotalElec > 0 && item.isSummed) {
+                const wPct = (item.kwh / homeTotalElec) * 100;
+                const seg = document.createElement('div');
+                seg.style.width = `${wPct}%`;
+                seg.style.backgroundColor = colorPalette[idx % colorPalette.length];
+                seg.title = `${item.app.name} (Sommato): ${item.kwh.toFixed(1)} kWh (${item.sharePct}%)`;
+                barBreakdown.appendChild(seg);
+            }
+        });
+        const remainingKwh = Math.max(0, homeTotalElec - totalSummedKwh);
+        if (remainingKwh > 0 && homeTotalElec > 0) {
+            const remPct = (remainingKwh / homeTotalElec) * 100;
+            const remSeg = document.createElement('div');
+            remSeg.style.width = `${remPct}%`;
+            remSeg.style.backgroundColor = '#cbd5e1';
+            remSeg.title = `Altri consumi casa: ${remainingKwh.toFixed(1)} kWh (${remPct.toFixed(1)}%)`;
+            barBreakdown.appendChild(remSeg);
+        }
+    }
+
+    // Renderizza le card
+    container.innerHTML = '';
+    cardDataList.forEach(item => {
+        const card = document.createElement('div');
+        card.style.background = '#ffffff';
+        card.style.border = '1px solid #e2e8f0';
+        card.style.borderRadius = '10px';
+        card.style.padding = '16px';
+        card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.justifyContent = 'space-between';
+
+        card.innerHTML = `
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.6em;">${item.app.icon || '🔌'}</span>
+                        <div>
+                            <div style="font-weight: bold; color: #1e293b; font-size: 0.95em;">${item.app.name}</div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                <span style="font-size: 0.75em; color: #64748b; text-transform: capitalize;">${item.app.category || 'Dispositivo'}</span>
+                                <span style="font-size: 0.7em; background: ${item.isSummed ? '#dcfce7' : '#f1f5f9'}; color: ${item.isSummed ? '#15803d' : '#64748b'}; padding: 1px 5px; border-radius: 10px; font-weight: 600;">
+                                    ${item.isSummed ? '✓ Sommato' : '⚪ Escluso'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button onclick="apriModalAppliance(${item.app.id})" style="background: none; border: none; cursor: pointer; font-size: 0.85em; padding: 2px 4px; color: #64748b;" title="Modifica">✏️</button>
+                        <button onclick="eliminaAppliance(${item.app.id})" style="background: none; border: none; cursor: pointer; font-size: 0.85em; padding: 2px 4px; color: #ef4444;" title="Elimina">🗑️</button>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span style="font-size: 0.8em; color: #64748b;">${consumoLabel}</span>
+                        <span style="font-size: 1.15em; font-weight: bold; color: #0f172a;">${item.kwh.toFixed(1)} kWh</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: #64748b; margin-top: 4px;">
+                        <span>Quota fabbisogno:</span>
+                        <strong style="color: #0284c7;">${item.sharePct}%</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: #64748b; margin-top: 2px;">
+                        <span>Costo stimato:</span>
+                        <strong style="color: #059669;">${formatEuro(item.estCost)}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// --- APPLIANCE DEFINITION MODAL (CRUD) ---
+function apriModalAppliance(id = null, fromBillModal = false) {
+    _applianceOpenedFromBillModal = fromBillModal;
+    const form = document.getElementById('form-appliance');
+    if (form) form.reset();
+
+    const titleEl = document.getElementById('modal-appliance-title');
+    const idInput = document.getElementById('appliance-id');
+    const nameInput = document.getElementById('appliance-name');
+    const catSelect = document.getElementById('appliance-category-select');
+    const sumCheckbox = document.getElementById('appliance-sum-to-total');
+
+    if (id) {
+        const app = bolletteAppliancesGlobal.find(a => a.id === id);
+        if (app) {
+            if (titleEl) titleEl.innerText = "Modifica Elettrodomestico";
+            if (idInput) idInput.value = app.id;
+            if (nameInput) nameInput.value = app.name;
+            if (sumCheckbox) sumCheckbox.checked = Boolean(app.sum_to_total);
+            if (catSelect) {
+                const optVal = `${app.category || 'other'}|${app.icon || '🔌'}`;
+                let found = false;
+                for (let opt of catSelect.options) {
+                    if (opt.value === optVal || opt.value.startsWith(`${app.category}|`)) {
+                        opt.selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) catSelect.value = "other|🔌";
+            }
+        }
+    } else {
+        if (titleEl) titleEl.innerText = "Aggiungi Elettrodomestico";
+        if (idInput) idInput.value = '';
+        if (sumCheckbox) sumCheckbox.checked = false; // default a false
+        if (catSelect) catSelect.value = "other|🔌";
+    }
+
+    const modal = document.getElementById('modal-appliance');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalAppliance() {
+    const modal = document.getElementById('modal-appliance');
+    if (modal) modal.style.display = 'none';
+}
+
+function aggiornaIconaApplianceDaSelect() {
+    // Helper per select
+}
+
+async function salvaAppliance(event) {
+    event.preventDefault();
+    if (!activeBillsId) return;
+
+    const id = document.getElementById('appliance-id').value;
+    const name = document.getElementById('appliance-name').value;
+    const catVal = document.getElementById('appliance-category-select').value;
+    const sumCheckbox = document.getElementById('appliance-sum-to-total');
+    const sumToTotal = sumCheckbox && sumCheckbox.checked ? 1 : 0;
+    const [category, icon] = catVal.split('|');
+
+    const payload = {
+        bills_id: parseInt(activeBillsId),
+        name: name.trim(),
+        category: category,
+        icon: icon || '🔌',
+        sum_to_total: sumToTotal
+    };
+
+    try {
+        let url = '/api/bills/appliances';
+        let method = 'POST';
+        if (id) {
+            url += `/${id}`;
+            method = 'PUT';
+        }
+
+        let res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            chiudiModalAppliance();
+            let resApps = await fetch(`/api/bills/appliances?bills_id=${activeBillsId}`);
+            if (resApps.ok) bolletteAppliancesGlobal = await resApps.json();
+
+            if (_applianceOpenedFromBillModal) {
+                aggiornaCampiApplianceModalBolletta();
+            }
+            popolaSezioneElettrodomestici();
+            disegnaGraficoBollette();
+        } else {
+            let err = await res.json();
+            alert(err.errore || "Errore nel salvataggio dell'elettrodomestico.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore di connessione.");
+    }
+}
+
+async function eliminaAppliance(id) {
+    const app = bolletteAppliancesGlobal.find(a => a.id === id);
+    const appName = app ? app.name : 'questo dispositivo';
+    if (!confirm(`Sei sicuro di voler eliminare ${appName} e tutti i suoi consumi registrati?`)) return;
+
+    try {
+        let res = await fetch(`/api/bills/appliances/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            await caricaDatiBollette();
+        } else {
+            let err = await res.json();
+            alert(err.errore || "Errore durante l'eliminazione.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore di connessione.");
+    }
+}
+
+// --- QUICK MONTHLY APPLIANCES CONSUMPTIONS MODAL ---
+function apriModalConsumiElettrodomestici(year = null, month = null) {
+    inizializzaAnniQuickAppliances();
+
+    const yrSel = document.getElementById('quick-app-year');
+    const moSel = document.getElementById('quick-app-month');
+
+    if (year && month) {
+        if (yrSel) yrSel.value = year;
+        if (moSel) moSel.value = month;
+    } else if (activeBolletteAppliancePeriodKey) {
+        const parts = activeBolletteAppliancePeriodKey.split('_');
+        if (yrSel) yrSel.value = parts[0];
+        if (moSel) moSel.value = parts[1];
+    } else {
+        const now = new Date();
+        if (yrSel) yrSel.value = now.getFullYear();
+        if (moSel) moSel.value = now.getMonth() + 1;
+    }
+
+    caricaConsumiPerModalRapido();
+    const modal = document.getElementById('modal-appliance-consumptions');
+    if (modal) modal.style.display = 'flex';
+}
+
+function chiudiModalConsumiElettrodomestici() {
+    const modal = document.getElementById('modal-appliance-consumptions');
+    if (modal) modal.style.display = 'none';
+}
+
+function inizializzaAnniQuickAppliances() {
+    const sel = document.getElementById('quick-app-year');
+    if (!sel || sel.children.length > 0) return;
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.innerText = y;
+        if (y === currentYear) opt.selected = true;
+        sel.appendChild(opt);
+    }
+}
+
+function caricaConsumiPerModalRapido() {
+    const container = document.getElementById('quick-app-inputs-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const yr = parseInt(document.getElementById('quick-app-year').value);
+    const mo = parseInt(document.getElementById('quick-app-month').value);
+
+    const bill = (bolletteGlobal || []).find(b => b.year === yr && b.month === mo);
+    const consumptions = bill ? (bill.appliances || []) : [];
+
+    if (!bolletteAppliancesGlobal || bolletteAppliancesGlobal.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 15px;">
+                Nessun elettrodomestico registrato.
+                <div style="margin-top: 8px;">
+                    <button type="button" onclick="chiudiModalConsumiElettrodomestici(); apriModalAppliance();" class="btn-filter" style="background-color: #0284c7; color: white;">
+                        + Aggiungi Elettrodomestico
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    bolletteAppliancesGlobal.forEach(app => {
+        const match = consumptions.find(a => a.appliance_id === app.id);
+        const val = match ? match.consumption : '';
+
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+        row.style.gap = '10px';
+        row.style.background = '#f8fafc';
+        row.style.padding = '8px 12px';
+        row.style.borderRadius = '6px';
+        row.style.border = '1px solid #e2e8f0';
+
+        row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9em; font-weight: 600; color: #334155;">
+                <span>${app.icon || '🔌'}</span>
+                <span>${app.name}</span>
+                ${app.sum_to_total ? '<span title="Sommato nel consumo totale" style="font-size: 0.75em; color: #16a34a; background: #dcfce7; padding: 1px 4px; border-radius: 4px;">Σ</span>' : ''}
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <input type="number" step="0.01" min="0" data-appliance-id="${app.id}" class="input-form quick-app-input" value="${val}" style="width: 90px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; text-align: right;" placeholder="0.00">
+                <span style="font-size: 0.8em; color: #64748b;">kWh</span>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+async function salvaConsumiElettrodomestici(event) {
+    event.preventDefault();
+    if (!activeBillsId) return;
+
+    const yr = parseInt(document.getElementById('quick-app-year').value);
+    const mo = parseInt(document.getElementById('quick-app-month').value);
+
+    const inputs = document.querySelectorAll('.quick-app-input');
+    const consumptions = [];
+    inputs.forEach(inp => {
+        const appId = parseInt(inp.getAttribute('data-appliance-id'));
+        const val = parseFloat(inp.value || 0);
+        consumptions.push({ appliance_id: appId, consumption: val });
+    });
+
+    const payload = {
+        bills_id: parseInt(activeBillsId),
+        year: yr,
+        month: mo,
+        consumptions: consumptions
+    };
+
+    try {
+        let res = await fetch('/api/bills/appliance_consumptions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            chiudiModalConsumiElettrodomestici();
+            await caricaDatiBollette();
+        } else {
+            let err = await res.json();
+            alert(err.errore || "Errore durante il salvataggio dei consumi.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Errore di connessione.");
+    }
+}
+
+// --- ADD / EDIT BILL MODAL ---
 function inizializzaAnniBollette() {
     const selectAnno = document.getElementById('bolletta-year');
     if (!selectAnno || selectAnno.children.length > 0) return;
@@ -4576,15 +5512,110 @@ function inizializzaAnniBollette() {
     }
 }
 
+function ricalcolaAnteprimaEnergiaModal() {
+    const elElec = document.getElementById('bolletta-electricity-consumption');
+    const elFv = document.getElementById('bolletta-solar-production');
+    const elImm = document.getElementById('bolletta-grid-feed-in');
+
+    const gridWithdraw = parseFloat(elElec ? elElec.value : 0) || 0;
+    const fvProd = parseFloat(elFv ? elFv.value : 0) || 0;
+    const gridFeed = parseFloat(elImm ? elImm.value : 0) || 0;
+
+    const selfCons = Math.max(0, fvProd - gridFeed);
+
+    let summedAppliances = 0;
+    const appInputs = document.querySelectorAll('.modal-bill-app-input');
+    appInputs.forEach(inp => {
+        const appId = parseInt(inp.getAttribute('data-modal-app-id'));
+        const app = (bolletteAppliancesGlobal || []).find(a => a.id === appId);
+        if (app && app.sum_to_total) {
+            summedAppliances += (parseFloat(inp.value || 0) || 0);
+        }
+    });
+
+    const totHome = gridWithdraw + selfCons + summedAppliances;
+
+    const prevAuto = document.getElementById('modal-preview-autoconsumo');
+    const prevTot = document.getElementById('modal-preview-tot-casa');
+
+    if (prevAuto) prevAuto.innerText = `Autoconsumo stimato: ${selfCons.toFixed(1)} kWh`;
+    if (prevTot) {
+        let txt = `Consumo Totale Casa: ${totHome.toFixed(1)} kWh`;
+        if (summedAppliances > 0) {
+            txt += ` (incluso ${summedAppliances.toFixed(1)} kWh elettrodomestici)`;
+        }
+        prevTot.innerText = txt;
+    }
+}
+
+function aggiornaCampiApplianceModalBolletta(existingAppliances = null) {
+    const container = document.getElementById('modal-bolletta-appliances-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const yr = parseInt(document.getElementById('bolletta-year').value);
+    const mo = parseInt(document.getElementById('bolletta-month').value);
+
+    let appMap = {};
+    if (existingAppliances && Array.isArray(existingAppliances)) {
+        existingAppliances.forEach(a => { appMap[a.appliance_id] = a.consumption; });
+    } else {
+        const matchBill = (bolletteGlobal || []).find(b => b.year === yr && b.month === mo);
+        if (matchBill && matchBill.appliances) {
+            matchBill.appliances.forEach(a => { appMap[a.appliance_id] = a.consumption; });
+        }
+    }
+
+    if (!bolletteAppliancesGlobal || bolletteAppliancesGlobal.length === 0) {
+        container.innerHTML = `
+            <div style="font-size: 0.82em; color: #64748b; font-style: italic;">
+                Nessun elettrodomestico registrato. Clicca su "+ Aggiungi nuovo elettrodomestico" per iniziare a tracciarli.
+            </div>
+        `;
+        return;
+    }
+
+    bolletteAppliancesGlobal.forEach(app => {
+        const val = appMap[app.id] !== undefined ? appMap[app.id] : '';
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+        row.style.gap = '10px';
+        row.style.background = '#f8fafc';
+        row.style.padding = '6px 10px';
+        row.style.borderRadius = '6px';
+        row.style.border = '1px solid #e2e8f0';
+
+        row.innerHTML = `
+            <span style="font-size: 0.85em; font-weight: 600; color: #334155;">
+                ${app.icon || '🔌'} ${app.name} ${app.sum_to_total ? '<span title="Sommato nel consumo totale" style="font-size: 0.75em; color: #16a34a; background: #dcfce7; padding: 1px 4px; border-radius: 4px; margin-left: 4px;">Σ</span>' : ''}
+            </span>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" step="0.01" min="0" data-modal-app-id="${app.id}" oninput="ricalcolaAnteprimaEnergiaModal()" class="input-form modal-bill-app-input" value="${val}" style="width: 80px; padding: 4px 6px; font-size: 0.85em; border: 1px solid #cbd5e1; border-radius: 4px; text-align: right;" placeholder="0.00">
+                <span style="font-size: 0.75em; color: #64748b;">kWh</span>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
 function apriModalBolletta() {
     document.getElementById('bolletta-id').value = '';
     document.getElementById('form-bolletta').reset();
-    document.getElementById('modal-bolletta-title').innerText = "Aggiungi Bolletta";
+    document.getElementById('modal-bolletta-title').innerText = "Aggiungi Bolletta / Dati Energia";
     
     // Seleziona anno e mese corrente come default
     inizializzaAnniBollette();
     document.getElementById('bolletta-year').value = new Date().getFullYear();
     document.getElementById('bolletta-month').value = new Date().getMonth() + 1;
+    
+    document.getElementById('bolletta-solar-production').value = '';
+    document.getElementById('bolletta-grid-feed-in').value = '';
+    document.getElementById('bolletta-waste-price').value = '';
+
+    aggiornaCampiApplianceModalBolletta();
+    ricalcolaAnteprimaEnergiaModal();
     
     document.getElementById('modal-bolletta').style.display = 'flex';
 }
@@ -4610,8 +5641,16 @@ function modificaBolletta(id) {
     
     document.getElementById('bolletta-gas-price').value = b.gas_price;
     document.getElementById('bolletta-gas-consumption').value = b.gas_consumption;
+
+    document.getElementById('bolletta-waste-price').value = b.waste_price || '';
+
+    document.getElementById('bolletta-solar-production').value = b.solar_production || '';
+    document.getElementById('bolletta-grid-feed-in').value = b.grid_feed_in || '';
     
-    document.getElementById('modal-bolletta-title').innerText = "Modifica Bolletta";
+    aggiornaCampiApplianceModalBolletta(b.appliances || []);
+    ricalcolaAnteprimaEnergiaModal();
+
+    document.getElementById('modal-bolletta-title').innerText = "Modifica Bolletta / Dati Energia";
     document.getElementById('modal-bolletta').style.display = 'flex';
 }
 
@@ -4623,6 +5662,14 @@ async function salvaBolletta(event) {
     const year = parseInt(document.getElementById('bolletta-year').value);
     const month = parseInt(document.getElementById('bolletta-month').value);
     
+    const applianceInputs = document.querySelectorAll('.modal-bill-app-input');
+    const appliancesPayload = [];
+    applianceInputs.forEach(inp => {
+        const appId = parseInt(inp.getAttribute('data-modal-app-id'));
+        const val = parseFloat(inp.value || 0);
+        appliancesPayload.push({ appliance_id: appId, consumption: val });
+    });
+
     const payload = {
         bills_id: parseInt(activeBillsId),
         year: year,
@@ -4632,7 +5679,11 @@ async function salvaBolletta(event) {
         electricity_price: parseFloat(document.getElementById('bolletta-electricity-price').value || 0),
         electricity_consumption: parseFloat(document.getElementById('bolletta-electricity-consumption').value || 0),
         gas_price: parseFloat(document.getElementById('bolletta-gas-price').value || 0),
-        gas_consumption: parseFloat(document.getElementById('bolletta-gas-consumption').value || 0)
+        gas_consumption: parseFloat(document.getElementById('bolletta-gas-consumption').value || 0),
+        waste_price: parseFloat(document.getElementById('bolletta-waste-price').value || 0),
+        solar_production: parseFloat(document.getElementById('bolletta-solar-production').value || 0),
+        grid_feed_in: parseFloat(document.getElementById('bolletta-grid-feed-in').value || 0),
+        appliances: appliancesPayload
     };
     
     try {
@@ -4656,7 +5707,7 @@ async function salvaBolletta(event) {
 }
 
 async function eliminaBolletta(id) {
-    if (!confirm("Sei sicuro di voler eliminare questa bolletta?")) return;
+    if (!confirm(window.Translations?.deleteBillConfirm || "Sei sicuro di voler eliminare questa bolletta?")) return;
     
     try {
         let res = await fetch(`/api/bills/${id}`, {

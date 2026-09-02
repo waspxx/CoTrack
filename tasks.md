@@ -10,6 +10,9 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tab Bollette: Gestione spazzatura (TARI) come solo costo con card KPI dedicata, inserimento/modifica nella modale bolletta, colonna nello storico, integrazione nel grafico costi e importazione dei dati storici TARI
+- [x] **Feature** Tab Bollette: Selettore del periodo (Mese corrente, Mese precedente, Ultimo mese, Ultimi 3 mesi, Ultimi 6 mesi, Ultimo anno, Tutto il periodo, Personalizza) con aggiornamento dinamico coordinato di KPI, bilancio energetico, grafici, storico e ripartizione elettrodomestici
+- [x] **Feature** Tab Bollette: Tracciamento fotovoltaico ed energia di casa (produzione FV, immissione, prelievo rete, autoconsumo, autosufficienza energetica) e gestione e monitoraggio dei singoli elettrodomestici con sezione dedicata, modali di inserimento e grafici
 - [x] **Feature** Tab Veicoli: Controllo periodico mensile automatico e manuale delle campagne di richiamo (Škoda/VAG) tramite VIN con notifica email in caso di richiamo attivo (VinFound), badge di stato nelle schede garage e nel certificato meccanico
 - [x] **Feature** Tab Veicoli: Aggiunti all'anagrafica veicolo i campi Numero di Telaio (VIN), Cilindrata, Potenza (kW), Cavalli (CV), HP Fiscali e Classe Euro, con autocalcolo kW/CV e integrazione sia nelle schede garage che nel Certificato Meccanico
 - [x] **Feature** Tab Veicoli: Aggiunto tasto per generare un certificato meccanico navigabile e stampabile/esportabile in PDF contenente dati tecnici del veicolo, storico delle manutenzioni registrate (data, argomento e chilometri) e riepilogo dei prossimi interventi da fare (tagliando, revisione ministeriale e revisione bombole metano)
