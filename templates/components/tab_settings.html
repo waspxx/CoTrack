@@ -101,5 +101,181 @@
                 <small id="settings-bb-token-info" style="font-size: 0.8em; color: var(--text-muted); margin-top: 4px;"></small>
             </div>
         </div>
+
+        <!-- Card 4: Wallet Automated Triggers -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('Wallet Automated Triggers') }}</h3>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" id="btn-apply-triggers" onclick="window.applicaTuttiTriggersWallet()" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85em; font-weight: 600; display: flex; align-items: center; gap: 6px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); cursor: pointer; background: var(--bg-app); color: var(--text-primary);">
+                        🔄 {{ _('Apply to Existing') }}
+                    </button>
+                    <button type="button" id="btn-new-trigger" onclick="window.apriModalNuovoTrigger()" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.85em; font-weight: 600; display: flex; align-items: center; gap: 6px; border-radius: var(--border-radius-sm); background: var(--primary-color, #0d6efd); color: white; border: none; cursor: pointer;">
+                        + {{ _('New Trigger Rule') }}
+                    </button>
+                </div>
+            </div>
+
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">
+                {{ _('Automatically route and record transactions into other tabs (Salaries, Loans, Bills, Vehicles, Pension Funds) when an incoming Wallet transaction matches specific conditions.') }}
+            </p>
+
+            <!-- Trigger Rules List Container -->
+            <div id="wallet-triggers-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="text-align: center; color: var(--text-muted); padding: 16px; font-size: 0.9em;">{{ _('Loading trigger rules...') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Wallet Trigger Rule -->
+    <div id="modal-wallet-trigger" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.65); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px);" onclick="if(event.target === this) window.chiudiModalWalletTrigger();">
+        <div class="modal-card" style="background: var(--bg-card); color: var(--text-primary); border-radius: 12px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); border: 1px solid var(--border-color); position: relative; z-index: 100000;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 id="modal-wallet-trigger-title" style="margin: 0; font-size: 1.2em; color: var(--text-primary); font-weight: 700;">{{ _('New Trigger Rule') }}</h3>
+                <button type="button" onclick="window.chiudiModalWalletTrigger()" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-muted); line-height: 1;">×</button>
+            </div>
+
+            <form id="form-wallet-trigger" onsubmit="window.salvaWalletTrigger(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                <input type="hidden" id="trigger-id" value="">
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="trigger-name" style="font-size: 0.85em; font-weight: 600; color: var(--text-secondary);">{{ _('Rule Name *') }}</label>
+                    <input type="text" id="trigger-name" placeholder="{{ _('e.g., Assegno Unico INPS') }}" required style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-app); color: var(--text-primary); outline: none;">
+                </div>
+
+                <!-- Match Condition Group -->
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-size: 0.82em; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">🔍 {{ _('Trigger Condition (Wallet)') }}</span>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-source-field" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Field to Check') }}</label>
+                            <select id="trigger-source-field" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                                <option value="any">{{ _('Any Field (Note/Category/Account)') }}</option>
+                                <option value="note">{{ _('Description / Note') }}</option>
+                                <option value="category">{{ _('Category') }}</option>
+                                <option value="account">{{ _('Account') }}</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-match-operator" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Condition') }}</label>
+                            <select id="trigger-match-operator" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                                <option value="contains">{{ _('Contains (case-insensitive)') }}</option>
+                                <option value="exact">{{ _('Equals exactly') }}</option>
+                                <option value="starts_with">{{ _('Starts with') }}</option>
+                                <option value="regex">{{ _('Regular Expression (Regex)') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                        <label for="trigger-match-value" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Match Text / Keyword *') }}</label>
+                        <input type="text" id="trigger-match-value" placeholder="{{ _('e.g., ASSEGNO UNICO') }}" required style="padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                    </div>
+                </div>
+
+                <!-- Destination Action Group -->
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-size: 0.82em; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">🎯 {{ _('Target Action') }}</span>
+
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                        <label for="trigger-target-tab" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Destination Tab *') }}</label>
+                        <select id="trigger-target-tab" onchange="onTriggerTargetTabChange()" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none; font-weight: 600;">
+                            <option value="stipendi">💼 {{ _('Salaries (Stipendi)') }}</option>
+                            <option value="prestiti">🏦 {{ _('Loans (Prestiti)') }}</option>
+                            <option value="bollette">💡 {{ _('Bills (Bollette)') }}</option>
+                            <option value="veicoli">🚗 {{ _('Vehicles (Veicoli)') }}</option>
+                            <option value="fondopensione">🛡️ {{ _('Pension Funds (Fondo Pensione)') }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Target Config for Stipendi -->
+                    <div id="target-fields-stipendi" class="target-tab-fields" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-stip-person" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Person Profile / Recipient *') }}</label>
+                            <input type="text" id="trigger-stip-person" placeholder="{{ _('e.g., Assegno Unico') }}" value="Assegno Unico" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                        </div>
+                    </div>
+
+                    <!-- Target Config for Prestiti -->
+                    <div id="target-fields-prestiti" class="target-tab-fields" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-loan-id" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Select Loan') }}</label>
+                            <select id="trigger-loan-id" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;"></select>
+                        </div>
+                    </div>
+
+                    <!-- Target Config for Bollette -->
+                    <div id="target-fields-bollette" class="target-tab-fields" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-bills-profile" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Bill Profile') }}</label>
+                            <select id="trigger-bills-profile" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;"></select>
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-bills-category" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Utility / Category') }}</label>
+                            <select id="trigger-bills-category" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                                <option value="electricity">⚡ {{ _('Electricity (Luce)') }}</option>
+                                <option value="gas">🔥 {{ _('Gas') }}</option>
+                                <option value="water">💧 {{ _('Water (Acqua)') }}</option>
+                                <option value="waste">🗑️ {{ _('Waste (TARI)') }}</option>
+                                <option value="ssp">☀️ {{ _('Solar GSE - SSP') }}</option>
+                                <option value="conto_energia">⚡ {{ _('Solar GSE - Conto Energia') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Target Config for Veicoli -->
+                    <div id="target-fields-veicoli" class="target-tab-fields" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-vehicle-id" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Select Vehicle') }}</label>
+                            <select id="trigger-vehicle-id" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;"></select>
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-vehicle-type" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Activity Type') }}</label>
+                            <select id="trigger-vehicle-type" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                                <option value="expense">💳 {{ _('Expense') }}</option>
+                                <option value="refuel">⛽ {{ _('Refueling') }}</option>
+                                <option value="service">🔧 {{ _('Maintenance') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Target Config for Fondo Pensione -->
+                    <div id="target-fields-fondopensione" class="target-tab-fields" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-fund-id" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Select Pension Fund') }}</label>
+                            <select id="trigger-fund-id" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;"></select>
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                            <label for="trigger-fund-contrib-type" style="font-size: 0.8em; font-weight: 600; color: var(--text-secondary);">{{ _('Contribution Type') }}</label>
+                            <select id="trigger-fund-contrib-type" style="padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); outline: none;">
+                                <option value="worker_contrib">{{ _('Worker Contribution (Aderente)') }}</option>
+                                <option value="employer_contrib">{{ _('Employer Contribution (Azienda)') }}</option>
+                                <option value="tfr">{{ _('TFR') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; font-weight: 600;">
+                        <input type="checkbox" id="trigger-enabled" checked style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        {{ _('Rule Enabled') }}
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 4px;">
+                    <button type="button" onclick="chiudiModalWalletTrigger()" class="btn btn-secondary" style="padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-app); color: var(--text-primary); cursor: pointer;">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 20px; background: var(--primary-color, #0d6efd); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">{{ _('Save Rule') }}</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+

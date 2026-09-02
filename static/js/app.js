@@ -6126,6 +6126,7 @@ window.caricaDatiSettings = function() {
     }
 
     caricaStatoBudgetBakers();
+    caricaWalletTriggers();
 };
 
 // ==========================================
@@ -6353,3 +6354,422 @@ async function eseguiSyncBudgetBakersCustom() {
         }
     }
 }
+
+// ==========================================
+// TRIGGER AUTOMATICI WALLET -> ALTRI TAB
+// ==========================================
+
+let walletTriggersGlobal = [];
+let walletTriggersMeta = {};
+
+function apriModalWalletTriggerElement() {
+    const modal = document.getElementById('modal-wallet-trigger');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        modal.style.pointerEvents = 'auto';
+    }
+}
+
+function chiudiModalWalletTrigger() {
+    const modal = document.getElementById('modal-wallet-trigger');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+        modal.style.pointerEvents = 'none';
+    }
+}
+
+function onTriggerTargetTabChange() {
+    const tabEl = document.getElementById('trigger-target-tab');
+    if (!tabEl) return;
+    const tab = tabEl.value;
+    document.querySelectorAll('.target-tab-fields').forEach(el => el.style.display = 'none');
+    const activeEl = document.getElementById(`target-fields-${tab}`);
+    if (activeEl) activeEl.style.display = 'flex';
+}
+
+function popolaDropdownsMetadataTrigger() {
+    const isIt = document.documentElement.lang === 'it';
+
+    // 1. Loans
+    const loanSel = document.getElementById('trigger-loan-id');
+    if (loanSel) {
+        loanSel.innerHTML = (walletTriggersMeta.loans && walletTriggersMeta.loans.length > 0)
+            ? walletTriggersMeta.loans.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('')
+            : `<option value="">${isIt ? 'Nessun prestito configurato' : 'No loans configured'}</option>`;
+    }
+
+    // 2. Bills profiles
+    const billSel = document.getElementById('trigger-bills-profile');
+    if (billSel) {
+        billSel.innerHTML = (walletTriggersMeta.bills_profiles && walletTriggersMeta.bills_profiles.length > 0)
+            ? walletTriggersMeta.bills_profiles.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('')
+            : `<option value="">${isIt ? 'Profilo predefinito' : 'Default profile'}</option>`;
+    }
+
+    // 3. Vehicles
+    const vehSel = document.getElementById('trigger-vehicle-id');
+    if (vehSel) {
+        vehSel.innerHTML = (walletTriggersMeta.vehicles && walletTriggersMeta.vehicles.length > 0)
+            ? walletTriggersMeta.vehicles.map(v => `<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('')
+            : `<option value="">${isIt ? 'Nessun veicolo configurato' : 'No vehicles configured'}</option>`;
+    }
+
+    // 4. Pension funds
+    const fundSel = document.getElementById('trigger-fund-id');
+    if (fundSel) {
+        fundSel.innerHTML = (walletTriggersMeta.pension_funds && walletTriggersMeta.pension_funds.length > 0)
+            ? walletTriggersMeta.pension_funds.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('')
+            : `<option value="">${isIt ? 'Nessun fondo configurato' : 'No funds configured'}</option>`;
+    }
+}
+
+async function caricaWalletTriggers() {
+    const listContainer = document.getElementById('wallet-triggers-list');
+    if (!listContainer) return;
+
+    const isIt = document.documentElement.lang === 'it';
+
+    try {
+        const res = await fetch('/api/wallet/triggers');
+        if (!res.ok) {
+            listContainer.innerHTML = `<div style="color: #dc3545; padding: 12px; font-size: 0.9em;">${isIt ? 'Errore nel caricamento dei trigger.' : 'Error loading triggers.'}</div>`;
+            return;
+        }
+
+        const data = await res.json();
+        walletTriggersGlobal = data.triggers || [];
+        walletTriggersMeta = data.meta || {};
+
+        if (walletTriggersGlobal.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 24px 16px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                    <div style="font-size: 1.5em; margin-bottom: 6px;">⚡</div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">${isIt ? 'Nessuna regola di trigger configurata' : 'No trigger rules configured'}</div>
+                    <div style="font-size: 0.85em;">${isIt ? 'Clicca su "+ Nuova Regola Trigger" per automatizzare le transazioni da Wallet ad altri tab.' : 'Click "+ New Trigger Rule" to automate transactions from Wallet to other tabs.'}</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        walletTriggersGlobal.forEach(trg => {
+            const enabled = trg.enabled !== 0 && trg.enabled !== false;
+            
+            // Tab icon and title
+            let tabBadge = '';
+            let targetDetail = '';
+            const cfg = trg.target_config || {};
+
+            if (trg.target_tab === 'stipendi') {
+                tabBadge = `<span style="background: rgba(13, 110, 253, 0.1); color: #0d6efd; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700;">💼 ${isIt ? 'Stipendi' : 'Salaries'}</span>`;
+                targetDetail = `${isIt ? 'Persona' : 'Person'}: <strong>${escapeHtml(cfg.person_name || 'Assegno Unico')}</strong>`;
+            } else if (trg.target_tab === 'prestiti') {
+                tabBadge = `<span style="background: rgba(25, 135, 84, 0.1); color: #198754; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700;">🏦 ${isIt ? 'Prestiti' : 'Loans'}</span>`;
+                const loan = (walletTriggersMeta.loans || []).find(l => String(l.id) === String(cfg.loan_id));
+                targetDetail = `${isIt ? 'Prestito' : 'Loan'}: <strong>${escapeHtml(loan ? loan.name : (cfg.loan_id || (isIt ? 'Tutti/Predefinito' : 'Default')))}</strong>`;
+            } else if (trg.target_tab === 'bollette') {
+                tabBadge = `<span style="background: rgba(255, 193, 7, 0.15); color: #b78103; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700;">💡 ${isIt ? 'Bollette' : 'Bills'}</span>`;
+                const catLabels = {
+                    electricity: isIt ? 'Luce' : 'Electricity',
+                    gas: 'Gas',
+                    water: isIt ? 'Acqua' : 'Water',
+                    waste: isIt ? 'Spazzatura (TARI)' : 'Waste',
+                    ssp: 'GSE SSP',
+                    conto_energia: 'GSE Conto Energia'
+                };
+                targetDetail = `${isIt ? 'Categoria' : 'Category'}: <strong>${catLabels[cfg.category] || cfg.category || (isIt ? 'Luce' : 'Electricity')}</strong>`;
+            } else if (trg.target_tab === 'veicoli') {
+                tabBadge = `<span style="background: rgba(220, 53, 69, 0.1); color: #dc3545; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700;">🚗 ${isIt ? 'Veicoli' : 'Vehicles'}</span>`;
+                const vehicle = (walletTriggersMeta.vehicles || []).find(v => String(v.id) === String(cfg.vehicle_id));
+                const actLabels = {
+                    expense: isIt ? 'Spesa' : 'Expense',
+                    refuel: isIt ? 'Rifornimento' : 'Refuel',
+                    service: isIt ? 'Manutenzione' : 'Maintenance'
+                };
+                targetDetail = `${isIt ? 'Veicolo' : 'Vehicle'}: <strong>${escapeHtml(vehicle ? vehicle.name : (isIt ? 'Predefinito' : 'Default'))}</strong> (${actLabels[cfg.activity_type] || (isIt ? 'Spesa' : 'Expense')})`;
+            } else if (trg.target_tab === 'fondopensione') {
+                tabBadge = `<span style="background: rgba(111, 66, 193, 0.1); color: #6f42c1; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700;">🛡️ ${isIt ? 'Fondo Pensione' : 'Pension Fund'}</span>`;
+                const fund = (walletTriggersMeta.pension_funds || []).find(f => String(f.id) === String(cfg.fund_id));
+                targetDetail = `${isIt ? 'Fondo' : 'Fund'}: <strong>${escapeHtml(fund ? fund.name : (isIt ? 'Predefinito' : 'Default'))}</strong>`;
+            }
+
+            // Field and condition labels
+            const fieldLabels = {
+                any: isIt ? 'Qualsiasi campo' : 'Any field',
+                note: isIt ? 'Causale / Nota' : 'Description / Note',
+                category: isIt ? 'Categoria' : 'Category',
+                account: isIt ? 'Conto' : 'Account'
+            };
+            const opLabels = {
+                contains: isIt ? 'contiene' : 'contains',
+                exact: isIt ? 'è uguale a' : 'equals',
+                starts_with: isIt ? 'inizia con' : 'starts with',
+                regex: 'regex'
+            };
+
+            const fieldName = fieldLabels[trg.source_field] || trg.source_field;
+            const opName = opLabels[trg.match_operator] || trg.match_operator;
+
+            html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; gap: 12px; flex-wrap: wrap; opacity: ${enabled ? '1' : '0.6'};">
+                    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 260px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95em;">${escapeHtml(trg.name)}</span>
+                            ${tabBadge}
+                        </div>
+                        <div style="font-size: 0.82em; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span>🔍 ${isIt ? 'Se' : 'If'} <strong>${fieldName}</strong> ${opName} <code style="background: var(--bg-card); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); font-weight: 600; color: var(--primary-color);">${escapeHtml(trg.match_value)}</code></span>
+                            <span>➔</span>
+                            <span>🎯 ${targetDetail}</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;" title="${isIt ? (enabled ? 'Disabilita regola' : 'Abilita regola') : (enabled ? 'Disable rule' : 'Enable rule')}">
+                            <input type="checkbox" ${enabled ? 'checked' : ''} onchange="window.toggleWalletTrigger(${trg.id}, this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color);">
+                        </label>
+                        <button type="button" onclick="window.apriModalModificaTrigger(${trg.id})" style="background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 9px; cursor: pointer; color: var(--text-primary); font-size: 0.85em;" title="${isIt ? 'Modifica' : 'Edit'}">✏️</button>
+                        <button type="button" onclick="window.eliminaWalletTrigger(${trg.id})" style="background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 9px; cursor: pointer; color: #dc3545; font-size: 0.85em;" title="${isIt ? 'Elimina' : 'Delete'}">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+    } catch (e) {
+        console.error("Errore caricamento trigger wallet:", e);
+        listContainer.innerHTML = `<div style="color: #dc3545; padding: 12px; font-size: 0.9em;">${isIt ? 'Errore di connessione.' : 'Connection error.'}</div>`;
+    }
+}
+
+async function apriModalNuovoTrigger() {
+    const isIt = document.documentElement.lang === 'it';
+    const titleEl = document.getElementById('modal-wallet-trigger-title');
+    if (titleEl) titleEl.innerText = isIt ? 'Nuova Regola Trigger Wallet' : 'New Wallet Trigger Rule';
+    
+    document.getElementById('trigger-id').value = '';
+    document.getElementById('trigger-name').value = '';
+    document.getElementById('trigger-source-field').value = 'any';
+    document.getElementById('trigger-match-operator').value = 'contains';
+    document.getElementById('trigger-match-value').value = '';
+    document.getElementById('trigger-target-tab').value = 'stipendi';
+    const stipPerson = document.getElementById('trigger-stip-person');
+    if (stipPerson) stipPerson.value = 'Assegno Unico';
+    const trigEnabled = document.getElementById('trigger-enabled');
+    if (trigEnabled) trigEnabled.checked = true;
+
+    if (!walletTriggersMeta || Object.keys(walletTriggersMeta).length === 0) {
+        await caricaWalletTriggers();
+    }
+
+    popolaDropdownsMetadataTrigger();
+    onTriggerTargetTabChange();
+    apriModalWalletTriggerElement();
+}
+
+async function apriModalModificaTrigger(id) {
+    if (!walletTriggersGlobal || walletTriggersGlobal.length === 0) {
+        await caricaWalletTriggers();
+    }
+    const trg = walletTriggersGlobal.find(t => String(t.id) === String(id));
+    if (!trg) {
+        console.error("Trigger non trovato per modifica ID:", id);
+        return;
+    }
+
+    const isIt = document.documentElement.lang === 'it';
+    const titleEl = document.getElementById('modal-wallet-trigger-title');
+    if (titleEl) titleEl.innerText = isIt ? 'Modifica Regola Trigger' : 'Edit Trigger Rule';
+
+    document.getElementById('trigger-id').value = trg.id;
+    document.getElementById('trigger-name').value = trg.name || '';
+    document.getElementById('trigger-source-field').value = trg.source_field || 'any';
+    document.getElementById('trigger-match-operator').value = trg.match_operator || 'contains';
+    document.getElementById('trigger-match-value').value = trg.match_value || '';
+    document.getElementById('trigger-target-tab').value = trg.target_tab || 'stipendi';
+    const trigEnabled = document.getElementById('trigger-enabled');
+    if (trigEnabled) trigEnabled.checked = trg.enabled !== 0 && trg.enabled !== false;
+
+    popolaDropdownsMetadataTrigger();
+
+    const cfg = trg.target_config || {};
+    if (trg.target_tab === 'stipendi') {
+        const stipP = document.getElementById('trigger-stip-person');
+        if (stipP) stipP.value = cfg.person_name || 'Assegno Unico';
+    } else if (trg.target_tab === 'prestiti') {
+        const loanEl = document.getElementById('trigger-loan-id');
+        if (loanEl && cfg.loan_id) loanEl.value = cfg.loan_id;
+    } else if (trg.target_tab === 'bollette') {
+        const bpEl = document.getElementById('trigger-bills-profile');
+        if (bpEl && cfg.bills_id) bpEl.value = cfg.bills_id;
+        const bcEl = document.getElementById('trigger-bills-category');
+        if (bcEl && cfg.category) bcEl.value = cfg.category;
+    } else if (trg.target_tab === 'veicoli') {
+        const vehEl = document.getElementById('trigger-vehicle-id');
+        if (vehEl && cfg.vehicle_id) vehEl.value = cfg.vehicle_id;
+        const vtEl = document.getElementById('trigger-vehicle-type');
+        if (vtEl && cfg.activity_type) vtEl.value = cfg.activity_type;
+    } else if (trg.target_tab === 'fondopensione') {
+        const fundEl = document.getElementById('trigger-fund-id');
+        if (fundEl && cfg.fund_id) fundEl.value = cfg.fund_id;
+        const fctEl = document.getElementById('trigger-fund-contrib-type');
+        if (fctEl && cfg.contrib_type) fctEl.value = cfg.contrib_type;
+    }
+
+    onTriggerTargetTabChange();
+    apriModalWalletTriggerElement();
+}
+
+async function salvaWalletTrigger(event) {
+    if (event) event.preventDefault();
+    const isIt = document.documentElement.lang === 'it';
+
+    const triggerId = document.getElementById('trigger-id').value;
+    const name = document.getElementById('trigger-name').value.trim();
+    const sourceField = document.getElementById('trigger-source-field').value;
+    const matchOperator = document.getElementById('trigger-match-operator').value;
+    const matchValue = document.getElementById('trigger-match-value').value.trim();
+    const targetTab = document.getElementById('trigger-target-tab').value;
+    const enabled = document.getElementById('trigger-enabled').checked;
+
+    if (!name || !matchValue || !targetTab) {
+        alert(isIt ? 'Compila tutti i campi obbligatori.' : 'Please fill all required fields.');
+        return;
+    }
+
+    const targetConfig = {};
+    if (targetTab === 'stipendi') {
+        targetConfig.person_name = document.getElementById('trigger-stip-person').value.trim() || 'Assegno Unico';
+    } else if (targetTab === 'prestiti') {
+        targetConfig.loan_id = document.getElementById('trigger-loan-id').value;
+        targetConfig.payment_type = 'Rata';
+    } else if (targetTab === 'bollette') {
+        targetConfig.bills_id = document.getElementById('trigger-bills-profile').value;
+        targetConfig.category = document.getElementById('trigger-bills-category').value;
+    } else if (targetTab === 'veicoli') {
+        targetConfig.vehicle_id = document.getElementById('trigger-vehicle-id').value;
+        targetConfig.activity_type = document.getElementById('trigger-vehicle-type').value;
+    } else if (targetTab === 'fondopensione') {
+        targetConfig.fund_id = document.getElementById('trigger-fund-id').value;
+        targetConfig.contrib_type = document.getElementById('trigger-fund-contrib-type').value;
+    }
+
+    const payload = {
+        name: name,
+        source_field: sourceField,
+        match_operator: matchOperator,
+        match_value: matchValue,
+        target_tab: targetTab,
+        target_config: targetConfig,
+        enabled: enabled
+    };
+
+    try {
+        const url = triggerId ? `/api/wallet/triggers/${triggerId}` : '/api/wallet/triggers';
+        const method = triggerId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            chiudiModalWalletTrigger();
+            await caricaWalletTriggers();
+        } else {
+            alert(data.errore || (isIt ? 'Errore durante il salvataggio della regola.' : 'Error saving trigger rule.'));
+        }
+    } catch (e) {
+        console.error("Errore salvataggio trigger wallet:", e);
+        alert(isIt ? 'Errore di connessione durante il salvataggio.' : 'Connection error while saving.');
+    }
+}
+
+async function toggleWalletTrigger(id, enabled) {
+    const isIt = document.documentElement.lang === 'it';
+    try {
+        const res = await fetch(`/api/wallet/triggers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: enabled })
+        });
+        if (res.ok) {
+            await caricaWalletTriggers();
+        } else {
+            alert(isIt ? 'Errore durante l\'aggiornamento dello stato.' : 'Error updating status.');
+            await caricaWalletTriggers();
+        }
+    } catch (e) {
+        console.error("Errore toggle trigger:", e);
+    }
+}
+
+async function eliminaWalletTrigger(id) {
+    const isIt = document.documentElement.lang === 'it';
+    if (!confirm(isIt ? 'Sei sicuro di voler eliminare questa regola di trigger?' : 'Are you sure you want to delete this trigger rule?')) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/wallet/triggers/${id}`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            await caricaWalletTriggers();
+        } else {
+            const data = await res.json();
+            alert(data.errore || (isIt ? 'Errore durante l\'eliminazione.' : 'Error during deletion.'));
+        }
+    } catch (e) {
+        console.error("Errore eliminazione trigger:", e);
+        alert(isIt ? 'Errore di connessione durante l\'eliminazione.' : 'Connection error during deletion.');
+    }
+}
+
+async function applicaTuttiTriggersWallet() {
+    const isIt = document.documentElement.lang === 'it';
+    const btn = document.getElementById('btn-apply-triggers');
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ ${isIt ? 'Applicazione in corso...' : 'Applying...'}`;
+    }
+
+    try {
+        const res = await fetch('/api/wallet/triggers/apply', {
+            method: 'POST'
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.messaggio || (isIt ? `Triggers applicati: ${data.applied} azioni elaborate!` : `Triggers applied: ${data.applied} actions processed!`));
+        } else {
+            alert(data.errore || (isIt ? 'Errore durante l\'applicazione dei trigger.' : 'Error applying triggers.'));
+        }
+    } catch (e) {
+        console.error("Errore applicazione triggers wallet:", e);
+        alert(isIt ? 'Errore di connessione.' : 'Connection error.');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
+        }
+    }
+}
+
+// Global window bindings
+window.caricaWalletTriggers = caricaWalletTriggers;
+window.apriModalNuovoTrigger = apriModalNuovoTrigger;
+window.apriModalModificaTrigger = apriModalModificaTrigger;
+window.chiudiModalWalletTrigger = chiudiModalWalletTrigger;
+window.salvaWalletTrigger = salvaWalletTrigger;
+window.eliminaWalletTrigger = eliminaWalletTrigger;
+window.toggleWalletTrigger = toggleWalletTrigger;
+window.applicaTuttiTriggersWallet = applicaTuttiTriggersWallet;
+window.onTriggerTargetTabChange = onTriggerTargetTabChange;
+

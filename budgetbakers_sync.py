@@ -363,6 +363,7 @@ class BudgetBakersSyncService:
                 INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', nuove_transazioni)
+            execute_wallet_triggers(conn, user_id, nuove_transazioni)
             conn.commit()
 
         return {
@@ -374,6 +375,315 @@ class BudgetBakersSyncService:
             "end_date": end_date,
             "mapped_categories": cat_cache
         }
+
+
+def execute_wallet_triggers(conn, user_id, records):
+    """
+    Esegue tutte le regole di trigger Wallet attive dell'utente sui record forniti.
+    Può inserire/aggiornare transazioni nei tab: stipendi, prestiti, bollette, veicoli, fondopensione.
+    """
+    if not records or not user_id:
+        return 0
+
+    import re
+    import time
+    from datetime import datetime
+
+    # Recupera i trigger configurati per l'utente
+    triggers = conn.execute(
+        "SELECT * FROM wallet_triggers WHERE user_id = ? AND enabled = 1",
+        (user_id,)
+    ).fetchall()
+
+    # Se l'utente non ha alcun trigger nel DB (nemmeno disabilitato), creiamo quello predefinito per Assegno Unico
+    all_user_triggers = conn.execute(
+        "SELECT id FROM wallet_triggers WHERE user_id = ?",
+        (user_id,)
+    ).fetchall()
+
+    if not all_user_triggers:
+        default_cfg = json.dumps({"person_name": "Assegno Unico"})
+        try:
+            conn.execute(
+                """INSERT INTO wallet_triggers 
+                   (user_id, name, source_field, match_operator, match_value, target_tab, target_config, enabled)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 1)""",
+                (user_id, "Accredito Assegno Unico", "any", "contains", "ASSEGNO UNICO", "stipendi", default_cfg)
+            )
+            conn.commit()
+            triggers = conn.execute(
+                "SELECT * FROM wallet_triggers WHERE user_id = ? AND enabled = 1",
+                (user_id,)
+            ).fetchall()
+        except Exception as e:
+            logger.error(f"Errore seeding default trigger: {e}")
+
+    if not triggers:
+        return 0
+
+    total_actions = 0
+
+    for r in records:
+        if isinstance(r, dict):
+            date_val = r.get('date') or r.get('data_operazione') or ''
+            amount = r.get('amount', 0)
+            note = r.get('note') or r.get('notes') or ''
+            category = r.get('category') or ''
+            account = r.get('account') or ''
+            tx_type = r.get('type') or ''
+        elif isinstance(r, (list, tuple)):
+            if len(r) == 8:
+                _, account, category, _, amount, date_val, note, tx_type = r
+            elif len(r) == 7:
+                account, category, _, amount, date_val, note, tx_type = r
+            else:
+                continue
+        else:
+            continue
+
+        try:
+            amount_val = abs(float(amount))
+        except (ValueError, TypeError):
+            continue
+
+        if not date_val:
+            continue
+
+        date_str = str(date_val).strip().replace('T', ' ').split(' ')[0]
+        parsed_dt = None
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%m/%d/%Y'):
+            try:
+                parsed_dt = datetime.strptime(date_str, fmt)
+                break
+            except ValueError:
+                pass
+
+        if not parsed_dt:
+            try:
+                parsed_dt = datetime.fromisoformat(date_str)
+            except Exception:
+                continue
+
+        iso_date = parsed_dt.strftime('%Y-%m-%d')
+        month_str = parsed_dt.strftime('%Y-%m')
+        year_int = parsed_dt.year
+        month_int = parsed_dt.month
+
+        note_str = str(note or '').strip()
+        cat_str = str(category or '').strip()
+        acc_str = str(account or '').strip()
+
+        for trg in triggers:
+            src_field = trg['source_field'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[3]
+            m_op = trg['match_operator'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[4]
+            m_val = trg['match_value'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[5]
+            t_tab = trg['target_tab'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[6]
+            raw_cfg = trg['target_config'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[7]
+            trg_name = trg['name'] if isinstance(trg, dict) or hasattr(trg, '__getitem__') else trg[2]
+
+            try:
+                t_cfg = json.loads(raw_cfg) if isinstance(raw_cfg, str) else (raw_cfg or {})
+            except Exception:
+                t_cfg = {}
+
+            if src_field == 'note':
+                field_text = note_str
+            elif src_field == 'category':
+                field_text = cat_str
+            elif src_field == 'account':
+                field_text = acc_str
+            else:
+                field_text = f"{note_str} {cat_str} {acc_str}"
+
+            matched = False
+            m_val_clean = str(m_val).strip()
+
+            if m_op == 'exact':
+                matched = (field_text.lower() == m_val_clean.lower())
+            elif m_op == 'starts_with':
+                matched = field_text.lower().startswith(m_val_clean.lower())
+            elif m_op == 'regex':
+                try:
+                    matched = bool(re.search(m_val_clean, field_text, re.IGNORECASE))
+                except Exception:
+                    matched = False
+            else:
+                matched = (m_val_clean.lower() in field_text.lower())
+
+            if not matched:
+                continue
+
+            # 1. TAB STIPENDI
+            if t_tab == 'stipendi':
+                person_name = (t_cfg.get('person_name') or 'Assegno Unico').strip()
+                target_group_id = t_cfg.get('salary_group_id')
+                if not target_group_id:
+                    sg_row = conn.execute(
+                        "SELECT id FROM salary_groups WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+                        (user_id,)
+                    ).fetchone()
+                    if not sg_row:
+                        cur = conn.execute("INSERT INTO salary_groups (name, user_id) VALUES ('Famiglia', ?)", (user_id,))
+                        target_group_id = cur.lastrowid
+                    else:
+                        target_group_id = sg_row['id'] if isinstance(sg_row, dict) or hasattr(sg_row, '__getitem__') else sg_row[0]
+
+                existing = conn.execute(
+                    "SELECT id FROM salaries WHERE salary_group_id = ? AND person_name = ? AND month = ?",
+                    (target_group_id, person_name, month_str)
+                ).fetchone()
+
+                sal_notes = f"{trg_name} ({note_str})" if note_str else trg_name
+                if existing:
+                    sal_id = existing['id'] if isinstance(existing, dict) or hasattr(existing, '__getitem__') else existing[0]
+                    conn.execute(
+                        "UPDATE salaries SET gross = ?, net = ?, notes = ? WHERE id = ?",
+                        (amount_val, amount_val, sal_notes, sal_id)
+                    )
+                else:
+                    sid = f"sal-{int(time.time()*1000)}-{month_str}"
+                    conn.execute(
+                        """INSERT INTO salaries 
+                           (id, salary_group_id, person_name, month, gross, net, notes,
+                            rimborso_spese, conguaglio_fiscale, premio_produzione_lordo,
+                            premio_produzione_netto, tfr_liquidato, tredicesima)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, 0.0, 0.0, 0.0, 0.0, 0.0, 0)""",
+                        (sid, target_group_id, person_name, month_str, amount_val, amount_val, sal_notes)
+                    )
+                total_actions += 1
+
+            # 2. TAB PRESTITI
+            elif t_tab == 'prestiti':
+                loan_id = t_cfg.get('loan_id')
+                if not loan_id:
+                    loan_row = conn.execute("SELECT id FROM loans WHERE user_id = ? LIMIT 1", (user_id,)).fetchone()
+                    if loan_row:
+                        loan_id = loan_row['id'] if isinstance(loan_row, dict) or hasattr(loan_row, '__getitem__') else loan_row[0]
+
+                if loan_id:
+                    exist_pmt = conn.execute(
+                        "SELECT id FROM loan_payments WHERE loan_id = ? AND date = ? AND amount = ?",
+                        (loan_id, iso_date, amount_val)
+                    ).fetchone()
+                    if not exist_pmt:
+                        pmt_id = f"lp-{int(time.time()*1000)}"
+                        pmt_type = t_cfg.get('payment_type', 'Rata')
+                        conn.execute(
+                            "INSERT INTO loan_payments (id, loan_id, date, amount, type, notes) VALUES (?, ?, ?, ?, ?, ?)",
+                            (pmt_id, loan_id, iso_date, amount_val, pmt_type, note_str or trg_name)
+                        )
+                        total_actions += 1
+
+            # 3. TAB BOLLETTE
+            elif t_tab == 'bollette':
+                bills_id = t_cfg.get('bills_id')
+                if not bills_id:
+                    b_row = conn.execute("SELECT id FROM bills_profiles WHERE user_id = ? LIMIT 1", (user_id,)).fetchone()
+                    if b_row:
+                        bills_id = b_row['id'] if isinstance(b_row, dict) or hasattr(b_row, '__getitem__') else b_row[0]
+
+                if bills_id:
+                    cat = t_cfg.get('category', 'electricity')
+                    if cat in ['ssp', 'conto_energia']:
+                        exist_inc = conn.execute(
+                            "SELECT id FROM bills_solar_incentives WHERE bills_id = ? AND payment_date = ? AND amount = ?",
+                            (bills_id, iso_date, amount_val)
+                        ).fetchone()
+                        if not exist_inc:
+                            inc_type = 'SSP' if cat == 'ssp' else 'Conto Energia'
+                            conn.execute(
+                                """INSERT INTO bills_solar_incentives (bills_id, type, description, amount, payment_date, notes)
+                                   VALUES (?, ?, ?, ?, ?, ?)""",
+                                (bills_id, inc_type, note_str or trg_name, amount_val, iso_date, trg_name)
+                            )
+                            total_actions += 1
+                    else:
+                        col_map = {
+                            'electricity': 'electricity_price',
+                            'gas': 'gas_price',
+                            'water': 'water_price',
+                            'waste': 'waste_price'
+                        }
+                        col_name = col_map.get(cat, 'electricity_price')
+                        exist_bill = conn.execute(
+                            "SELECT id FROM bills WHERE bills_id = ? AND year = ? AND month = ?",
+                            (bills_id, year_int, month_int)
+                        ).fetchone()
+                        if exist_bill:
+                            conn.execute(
+                                f"UPDATE bills SET {col_name} = ? WHERE bills_id = ? AND year = ? AND month = ?",
+                                (amount_val, bills_id, year_int, month_int)
+                            )
+                        else:
+                            conn.execute(
+                                f"INSERT INTO bills (bills_id, year, month, {col_name}) VALUES (?, ?, ?, ?)",
+                                (bills_id, year_int, month_int, amount_val)
+                            )
+                        total_actions += 1
+
+            # 4. TAB VEICOLI
+            elif t_tab == 'veicoli':
+                vehicle_id = t_cfg.get('vehicle_id')
+                if not vehicle_id:
+                    v_row = conn.execute(
+                        "SELECT v.id FROM vehicles v JOIN garages g ON v.garage_id = g.id WHERE g.user_id = ? AND v.archived = 0 LIMIT 1",
+                        (user_id,)
+                    ).fetchone()
+                    if v_row:
+                        vehicle_id = v_row['id'] if isinstance(v_row, dict) or hasattr(v_row, '__getitem__') else v_row[0]
+
+                if vehicle_id:
+                    exist_act = conn.execute(
+                        "SELECT id FROM vehicle_activities WHERE vehicleId = ? AND date = ? AND totalCost = ?",
+                        (vehicle_id, iso_date, amount_val)
+                    ).fetchone()
+                    if not exist_act:
+                        act_id = f"act-{int(time.time()*1000)}"
+                        act_type = t_cfg.get('activity_type', 'expense')
+                        conn.execute(
+                            "INSERT INTO vehicle_activities (id, vehicleId, type, date, totalCost, notes) VALUES (?, ?, ?, ?, ?, ?)",
+                            (act_id, vehicle_id, act_type, iso_date, amount_val, note_str or trg_name)
+                        )
+                        total_actions += 1
+
+            # 5. TAB FONDO PENSIONE
+            elif t_tab == 'fondopensione':
+                fund_id = t_cfg.get('fund_id')
+                if not fund_id:
+                    f_row = conn.execute(
+                        "SELECT pf.id FROM pension_funds pf JOIN pension_fund_groups pfg ON pf.pension_fund_group_id = pfg.id WHERE pfg.user_id = ? LIMIT 1",
+                        (user_id,)
+                    ).fetchone()
+                    if f_row:
+                        fund_id = f_row['id'] if isinstance(f_row, dict) or hasattr(f_row, '__getitem__') else f_row[0]
+
+                if fund_id:
+                    contrib_type = t_cfg.get('contrib_type', 'worker_contrib')
+                    exist_contrib = conn.execute(
+                        "SELECT id, worker_contrib, employer_contrib, tfr, total_value FROM pension_contributions WHERE fund_id = ? AND month = ?",
+                        (fund_id, month_str)
+                    ).fetchone()
+                    if exist_contrib:
+                        cid = exist_contrib['id'] if isinstance(exist_contrib, dict) or hasattr(exist_contrib, '__getitem__') else exist_contrib[0]
+                        if contrib_type == 'employer_contrib':
+                            conn.execute("UPDATE pension_contributions SET employer_contrib = ?, total_value = worker_contrib + ? + tfr WHERE id = ?", (amount_val, amount_val, cid))
+                        elif contrib_type == 'tfr':
+                            conn.execute("UPDATE pension_contributions SET tfr = ?, total_value = worker_contrib + employer_contrib + ? WHERE id = ?", (amount_val, amount_val, cid))
+                        else:
+                            conn.execute("UPDATE pension_contributions SET worker_contrib = ?, total_value = ? + employer_contrib + tfr WHERE id = ?", (amount_val, amount_val, cid))
+                    else:
+                        cid = f"pc-{int(time.time()*1000)}"
+                        w_amt = amount_val if contrib_type == 'worker_contrib' else 0.0
+                        e_amt = amount_val if contrib_type == 'employer_contrib' else 0.0
+                        tfr_amt = amount_val if contrib_type == 'tfr' else 0.0
+                        conn.execute(
+                            """INSERT INTO pension_contributions (id, fund_id, month, worker_contrib, employer_contrib, tfr, total_value, notes)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (cid, fund_id, month_str, w_amt, e_amt, tfr_amt, amount_val, note_str or trg_name)
+                        )
+                    total_actions += 1
+
+    return total_actions
 
 
 budgetbakers_service = BudgetBakersSyncService()

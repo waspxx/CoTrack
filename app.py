@@ -42,7 +42,7 @@ except ImportError:
     justetf_scraping = None
 
 from drivvo_sync import drivvo_service
-from budgetbakers_sync import budgetbakers_service
+from budgetbakers_sync import budgetbakers_service, execute_wallet_triggers
 from scraping.scrape_engine import check_vin_recall
 
 app = Flask(__name__)
@@ -428,6 +428,21 @@ def init_db():
             excluded INTEGER DEFAULT 0,
             PRIMARY KEY (wallet_id, account),
             FOREIGN KEY (wallet_id) REFERENCES wallets (id)
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_triggers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            source_field TEXT NOT NULL DEFAULT 'any',
+            match_operator TEXT NOT NULL DEFAULT 'contains',
+            match_value TEXT NOT NULL,
+            target_tab TEXT NOT NULL,
+            target_config TEXT NOT NULL DEFAULT '{}',
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
     conn.execute('''
@@ -4167,6 +4182,9 @@ def manage_single_wallet_transaction(transaction_id):
                 SET date = ?, account = ?, category = ?, currency = ?, amount = ?, note = ?, type = ?
                 WHERE id = ?
             ''', (date, account, category, currency, amount, note, tx_type, transaction_id))
+            execute_wallet_triggers(conn, session['user_id'], [{
+                'date': date, 'amount': amount, 'note': note, 'category': category, 'account': account, 'type': tx_type
+            }])
             conn.commit()
             return jsonify({"messaggio": _("Transaction updated successfully")}), 200
     except Exception as e:
@@ -4442,6 +4460,7 @@ def import_wallet_csv():
                     INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', records)
+                execute_wallet_triggers(conn, session['user_id'], records)
                 conn.commit()
                 
             if parsed_rows < total_rows:
@@ -4574,6 +4593,7 @@ def import_custom_wallet_csv():
         
         if records:
             conn.executemany('INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', records)
+            execute_wallet_triggers(conn, session['user_id'], records)
             conn.commit()
             
         if parsed_rows < total_rows:
@@ -4675,6 +4695,149 @@ def sync_budgetbakers_wallet():
     except Exception as e:
         conn.close()
         return jsonify({"errore": f"Errore durante la sincronizzazione: {str(e)}"}), 500
+
+# --- 5.4. GESTIONE TRIGGER WALLET AUTOMATICI ---
+@app.route('/api/wallet/triggers', methods=['GET', 'POST'])
+def manage_wallet_triggers():
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    if request.method == 'POST':
+        data = request.json or {}
+        name = (data.get('name') or '').strip()
+        source_field = data.get('source_field', 'any')
+        match_operator = data.get('match_operator', 'contains')
+        match_value = (data.get('match_value') or '').strip()
+        target_tab = data.get('target_tab', 'stipendi')
+        target_config = data.get('target_config', {})
+        enabled = 1 if data.get('enabled', True) else 0
+
+        if not name or not match_value or not target_tab:
+            conn.close()
+            return jsonify({"errore": _("Name, match value and target tab are required")}), 400
+
+        target_config_str = json.dumps(target_config) if isinstance(target_config, dict) else str(target_config)
+        cur = conn.execute(
+            """INSERT INTO wallet_triggers (user_id, name, source_field, match_operator, match_value, target_tab, target_config, enabled)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, name, source_field, match_operator, match_value, target_tab, target_config_str, enabled)
+        )
+        conn.commit()
+        trigger_id = cur.lastrowid
+        row = conn.execute("SELECT * FROM wallet_triggers WHERE id = ?", (trigger_id,)).fetchone()
+        conn.close()
+        res_dict = dict(row)
+        try: res_dict['target_config'] = json.loads(res_dict['target_config'])
+        except Exception: res_dict['target_config'] = {}
+        return jsonify(res_dict), 201
+
+    # GET: return list of triggers + metadata for dropdowns
+    exist = conn.execute("SELECT count(*) FROM wallet_triggers WHERE user_id = ?", (user_id,)).fetchone()[0]
+    if exist == 0:
+        default_cfg = json.dumps({"person_name": "Assegno Unico"})
+        conn.execute(
+            """INSERT INTO wallet_triggers (user_id, name, source_field, match_operator, match_value, target_tab, target_config, enabled)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1)""",
+            (user_id, "Accredito Assegno Unico", "any", "contains", "ASSEGNO UNICO", "stipendi", default_cfg)
+        )
+        conn.commit()
+
+    rows = conn.execute("SELECT * FROM wallet_triggers WHERE user_id = ? ORDER BY id ASC", (user_id,)).fetchall()
+    triggers_list = []
+    for r in rows:
+        d = dict(r)
+        try: d['target_config'] = json.loads(d['target_config'])
+        except Exception: d['target_config'] = {}
+        triggers_list.append(d)
+
+    # Collect metadata for target entities:
+    salary_groups = [dict(sg) for sg in conn.execute("SELECT id, name FROM salary_groups WHERE user_id = ?", (user_id,)).fetchall()]
+    salary_persons = [r[0] for r in conn.execute("SELECT DISTINCT person_name FROM salaries s JOIN salary_groups g ON s.salary_group_id = g.id WHERE g.user_id = ?", (user_id,)).fetchall()]
+    loans = [dict(l) for l in conn.execute("SELECT id, name FROM loans WHERE user_id = ?", (user_id,)).fetchall()]
+    bills_profiles = [dict(bp) for bp in conn.execute("SELECT id, name FROM bills_profiles WHERE user_id = ?", (user_id,)).fetchall()]
+    vehicles = [dict(v) for v in conn.execute("SELECT v.id, v.brand || ' ' || v.model AS name FROM vehicles v JOIN garages g ON v.garage_id = g.id WHERE g.user_id = ? AND v.archived = 0", (user_id,)).fetchall()]
+    pension_funds = [dict(pf) for pf in conn.execute("SELECT pf.id, pf.name FROM pension_funds pf JOIN pension_fund_groups pfg ON pf.pension_fund_group_id = pfg.id WHERE pfg.user_id = ?", (user_id,)).fetchall()]
+
+    conn.close()
+    return jsonify({
+        "triggers": triggers_list,
+        "meta": {
+            "salary_groups": salary_groups,
+            "salary_persons": salary_persons,
+            "loans": loans,
+            "bills_profiles": bills_profiles,
+            "vehicles": vehicles,
+            "pension_funds": pension_funds
+        }
+    })
+
+@app.route('/api/wallet/triggers/<int:trigger_id>', methods=['PUT', 'DELETE'])
+def detail_wallet_trigger(trigger_id):
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    trg = conn.execute("SELECT * FROM wallet_triggers WHERE id = ? AND user_id = ?", (trigger_id, user_id)).fetchone()
+    if not trg:
+        conn.close()
+        return jsonify({"errore": _("Trigger rule not found")}), 404
+
+    if request.method == 'DELETE':
+        conn.execute("DELETE FROM wallet_triggers WHERE id = ?", (trigger_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"messaggio": _("Trigger rule deleted successfully")}), 200
+
+    data = request.json or {}
+    name = (data.get('name') or trg['name']).strip()
+    source_field = data.get('source_field', trg['source_field'])
+    match_operator = data.get('match_operator', trg['match_operator'])
+    match_value = (data.get('match_value') or trg['match_value']).strip()
+    target_tab = data.get('target_tab', trg['target_tab'])
+    target_config = data.get('target_config')
+    if target_config is None:
+        target_config_str = trg['target_config']
+    else:
+        target_config_str = json.dumps(target_config) if isinstance(target_config, dict) else str(target_config)
+    enabled = 1 if data.get('enabled', bool(trg['enabled'])) else 0
+
+    conn.execute(
+        """UPDATE wallet_triggers 
+           SET name = ?, source_field = ?, match_operator = ?, match_value = ?, target_tab = ?, target_config = ?, enabled = ?
+           WHERE id = ?""",
+        (name, source_field, match_operator, match_value, target_tab, target_config_str, enabled, trigger_id)
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM wallet_triggers WHERE id = ?", (trigger_id,)).fetchone()
+    conn.close()
+    res_dict = dict(row)
+    try: res_dict['target_config'] = json.loads(res_dict['target_config'])
+    except Exception: res_dict['target_config'] = {}
+    return jsonify(res_dict), 200
+
+@app.route('/api/wallet/triggers/apply', methods=['POST'])
+def apply_wallet_triggers():
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT wt.account, wt.category, wt.currency, wt.amount, wt.date, wt.note, wt.type
+        FROM wallet_transactions wt
+        JOIN wallets w ON wt.wallet_id = w.id
+        WHERE w.user_id = ?
+    """, (user_id,)).fetchall()
+
+    applied_count = execute_wallet_triggers(conn, user_id, rows)
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "applied": applied_count,
+        "messaggio": _("Applied triggers: %(count)s transaction actions processed.", count=applied_count)
+    }), 200
 
 # --- 6. GESTIONE BOLLETTE ---
 @app.route('/api/bills', methods=['GET', 'POST'])
