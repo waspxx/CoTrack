@@ -63,7 +63,7 @@ Categorie da Mappare:
 
     models_to_try = [
         os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
-        os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash'),
+        os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
         'gemini-2.5-flash'
     ]
 

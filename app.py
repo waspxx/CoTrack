@@ -49,7 +49,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') # Obbligatoria per i form con Flask-WTF
 # Configurazione del database SQLite
 app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY')
-app.config['GEMINI_MODEL_PRIMARY'] = os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
+app.config['GEMINI_MODEL_PRIMARY'] = os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
 app.config['GEMINI_MODEL_FALLBACK'] = os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'it']
@@ -1202,7 +1202,7 @@ Portfolio Data:
         client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
         try:
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash'),
+                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
                 contents=prompt
             )
         except Exception as primary_e:
@@ -1639,7 +1639,7 @@ Financial Overview:
         client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
         try:
             response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash'),
+                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
                 contents=prompt
             )
         except Exception as primary_e:
@@ -3767,7 +3767,7 @@ Portfolio Data:
     try:
         client = genai.Client(api_key=api_key)
         try:
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
+            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt
@@ -6802,7 +6802,7 @@ def parse_statement_pdf():
             return jsonify({"transactions": transactions, "method": "regex_fallback"})
 
         client = genai.Client(api_key=api_key)
-        model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
+        model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
         
         prompt = (
             "Sei un assistente contabile esperto. Analizza il seguente testo estratto da un "
@@ -7917,7 +7917,7 @@ def parse_pension_pdf():
 
         try:
             client = genai.Client(api_key=api_key)
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.7-flash')
+            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
             prompt = (
                 "Sei un esperto contabile italiano. Analizza il testo estratto da un documento che può essere una busta paga italiana o un estratto conto di un fondo pensione (es. Cometa, Fonchim, Fonte, Secondapensione, ecc.).\n"
                 "Estrai tutti i contributi versati al fondo pensione (TFR, quota lavoratore/aderente, quota azienda/datore).\n"

@@ -128,7 +128,7 @@ Make sure you have Python 3.11+ and `git` installed on your machine.
 | Variable | Description | Default |
 | :--- | :--- | :--- |
 | `GEMINI_API_KEY` | Your Google AI Studio API key (Required for AI analysis) | None |
-| `GEMINI_MODEL_PRIMARY` | Primary model for portfolio diagnostics | `gemini-3.7-flash` |
+| `GEMINI_MODEL_PRIMARY` | Primary model for portfolio diagnostics | `gemini-3.8-flash` |
 | `GEMINI_MODEL_FALLBACK` | Fallback model if primary encounters errors | `gemini-3.5-flash-lite` |
 | `SECRET_KEY` | Flask session secret key | (Generate a random hex) |
 | `SMTP_SERVER` | SMTP host to send email reports | `smtp.gmail.com` |
