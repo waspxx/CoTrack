@@ -75,7 +75,82 @@
             </div>
         </div>
 
-        <!-- Card 3: Integrations (BudgetBakers) -->
+        <!-- Card 3: Email Notifications & Schedules -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('Email Notifications & Schedules') }}</h3>
+                </div>
+                <span style="font-size: 0.75em; padding: 3px 8px; border-radius: 4px; background: #e0e7ff; color: #3730a3; font-weight: 600;">{{ _('Automated Tasks') }}</span>
+            </div>
+
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 18px;">
+                {{ _('Choose recipient email addresses for automatic notifications and scheduled reports. If left blank, notifications are sent to your account email.') }}
+            </p>
+
+            <form id="form-notification-settings" onsubmit="window.salvaImpostazioniNotificheEmail(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- 1. Annual Report -->
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                        <label for="settings-email-annual-report" style="font-weight: 700; color: var(--text-primary); font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
+                            📊 {{ _('Annual Financial Report') }}
+                        </label>
+                        <span style="font-size: 0.75em; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600; border: 1px solid var(--border-color);">
+                            📅 {{ _('Every 31 Dec at 21:00') }}
+                        </span>
+                    </div>
+                    <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 8px;">
+                        {{ _('Consolidated financial report calculated from all active tabs without AI.') }}
+                    </p>
+                    <input type="email" id="settings-email-annual-report" placeholder="{{ _('Default: your account email') }}" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; font-size: 0.9em;">
+                </div>
+
+                <!-- 2. Vehicle Reminders -->
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                        <label for="settings-email-vehicle-reminders" style="font-weight: 700; color: var(--text-primary); font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
+                            🚗 {{ _('Vehicle Reminders') }}
+                        </label>
+                        <span style="font-size: 0.75em; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600; border: 1px solid var(--border-color);">
+                            ⏰ {{ _('Daily at 08:00') }}
+                        </span>
+                    </div>
+                    <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 8px;">
+                        {{ _('Alerts for maintenance deadlines, inspections, revisions, or mileage thresholds.') }}
+                    </p>
+                    <input type="email" id="settings-email-vehicle-reminders" placeholder="{{ _('Default: your account email') }}" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; font-size: 0.9em;">
+                </div>
+
+                <!-- 3. Vehicle Recall Alerts -->
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                        <label for="settings-email-vehicle-recalls" style="font-weight: 700; color: var(--text-primary); font-size: 0.9em; display: flex; align-items: center; gap: 6px;">
+                            ⚠️ {{ _('Vehicle Recall Alerts') }}
+                        </label>
+                        <span style="font-size: 0.75em; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600; border: 1px solid var(--border-color);">
+                            🛡️ {{ _('Monthly on 1st at 04:00') }}
+                        </span>
+                    </div>
+                    <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 8px;">
+                        {{ _('Automated check of VIN safety recall campaigns (e.g. Škoda / VAG).') }}
+                    </p>
+                    <input type="email" id="settings-email-vehicle-recalls" placeholder="{{ _('Default: your account email') }}" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; font-size: 0.9em;">
+                </div>
+
+                <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
+                    <button type="submit" id="btn-save-notifications" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 6px; border-radius: var(--border-radius-sm); background: var(--primary-color, #0d6efd); color: white; border: none; cursor: pointer;">
+                        💾 {{ _('Save Notification Emails') }}
+                    </button>
+                    <span id="settings-notifications-status" style="font-size: 0.85em; font-weight: 600; display: none;"></span>
+                </div>
+            </form>
+        </div>
+
+        <!-- Card 4: Integrations (BudgetBakers) -->
         <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
             <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -128,6 +203,50 @@
             <!-- Trigger Rules List Container -->
             <div id="wallet-triggers-list" style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="text-align: center; color: var(--text-muted); padding: 16px; font-size: 0.9em;">{{ _('Loading trigger rules...') }}</div>
+            </div>
+        </div>
+
+        <!-- Card 5: Annual Financial Report (Test & Preview) -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('Annual Financial Report') }}</h3>
+                </div>
+                <span style="font-size: 0.75em; padding: 3px 8px; border-radius: 4px; background: #e0f2fe; color: #0369a1; font-weight: 600;">{{ _('Deterministic / No AI') }}</span>
+            </div>
+
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">
+                {{ _('Generate a consolidated, easy-to-read annual report containing all numerical metrics from your active tabs (Salaries, Wallet, Bills, Vehicles, Loans, Pension Funds, Investments) without AI. Test email delivery or preview it directly in your browser.') }}
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 16px;">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="settings-report-year" style="font-weight: 600; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">{{ _('Reference Year') }}</label>
+                    <select id="settings-report-year" style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-app); color: var(--text-primary); outline: none; font-size: 0.95em;">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="settings-report-email" style="font-weight: 600; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">{{ _('Recipient Email') }}</label>
+                    <input type="email" id="settings-report-email" placeholder="nome@esempio.com" style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-app); color: var(--text-primary); outline: none; font-size: 0.95em;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" onclick="window.anteprimaResocontoAnnuale()" class="btn btn-secondary" style="padding: 9px 16px; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 6px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); cursor: pointer;">
+                    👁️ {{ _('Preview in Browser') }}
+                </button>
+                <button type="button" id="btn-send-annual-report" onclick="window.inviaTestResocontoAnnuale()" class="btn btn-primary" style="padding: 9px 18px; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 6px; border-radius: var(--border-radius-sm); background: var(--primary-color, #0d6efd); color: white; border: none; cursor: pointer;">
+                    ✉️ {{ _('Send Test Email') }}
+                </button>
+                <span id="settings-report-status" style="font-size: 0.85em; font-weight: 600; display: none;"></span>
             </div>
         </div>
     </div>

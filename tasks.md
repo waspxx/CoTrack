@@ -10,6 +10,10 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Schedulazione del report annuale consolidato CoTrack per il 31 dicembre alle 21:00 con APScheduler e gestione personalizzata delle email dei destinatari nelle Impostazioni per report annuale, promemoria veicoli (giornalieri 08:00) e allerte richiami veicoli (mensili 1° del mese 04:00).
+- [x] **Feature** Disattivata l'analisi/report settimanale AI programmata di default nello scheduler, con flag di configurazione opzionale `WEEKLY_AI_REPORT_ENABLED` in `.env` e `docker-compose.yml`
+- [x] **Feature** Tab Bollette: Endpoint Webhook HTTP per Home Assistant/Shelly (`/api/webhooks/bills/energy`) con autenticazione via token segreto in `.env`, calcolo automatico del mese corrente a fine mese (o periodo personalizzato), salvataggio consumi luce/solare/immissione e mappatura o autocreazione dei singoli elettrodomestici.
+- [x] **Feature** Generazione del resoconto annuale senza AI (solo valori deterministici e formule) con aggregazione da tutte le tabelle del database (Stipendi, Wallet, Bollette/Energia, Veicoli, Prestiti/Mutui, Fondi Pensione, Investimenti/Saldi), diff comparativi completi con l'anno precedente per ciascuna voce e tabella, template email HTML chiaro e comprensibile per non esperti, anteprima a schermo intero nel browser e test di invio email dalle Impostazioni.
 - [x] **Feature** Tab Bollette: Sezione Conto Energia e Scambio sul Posto (GSE) con KPI di riepilogo (totali Conto Energia, SSP e complessivo incassato), tabella filtrabile con badge, modale CRUD e importazione dei 25 dati storici dei pagamenti ricevuti dal file Excel
 - [x] **Feature** Tab Bollette: Esportazione e importazione CSV completa e retrocompatibile con supporto a produzione solare (`solar_production`), immissione in rete (`grid_feed_in`), spazzatura TARI (`waste_price`) e consumi dinamici dei singoli elettrodomestici (`appliance:<nome>`)
 - [x] **Feature** Tab Bollette: Gestione spazzatura (TARI) come solo costo con card KPI dedicata, inserimento/modifica nella modale bolletta, colonna nello storico, integrazione nel grafico costi e importazione dei dati storici TARI

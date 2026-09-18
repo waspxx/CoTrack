@@ -222,10 +222,15 @@ async function checkAuth() {
             let user = await res.json();
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('user-display').innerText = user.username;
+            const reportEmailInput = document.getElementById('settings-report-email');
+            if (reportEmailInput && !reportEmailInput.value) {
+                reportEmailInput.value = user.username;
+            }
             
             await Promise.all([
                 caricaImpostazioniExchange(),
                 caricaImpostazioniTab(),
+                window.caricaImpostazioniNotificheEmail ? window.caricaImpostazioniNotificheEmail() : Promise.resolve(),
                 caricaPortafogli(),
                 caricaWallets(),
                 caricaBills(),
@@ -6127,6 +6132,9 @@ window.caricaDatiSettings = function() {
 
     caricaStatoBudgetBakers();
     caricaWalletTriggers();
+    if (typeof window.caricaImpostazioniNotificheEmail === 'function') {
+        window.caricaImpostazioniNotificheEmail();
+    }
 };
 
 // ==========================================
@@ -6772,4 +6780,164 @@ window.eliminaWalletTrigger = eliminaWalletTrigger;
 window.toggleWalletTrigger = toggleWalletTrigger;
 window.applicaTuttiTriggersWallet = applicaTuttiTriggersWallet;
 window.onTriggerTargetTabChange = onTriggerTargetTabChange;
+
+// --- RESOCONTO FINANZIARIO ANNUALE ---
+window.anteprimaResocontoAnnuale = function() {
+    const yearSelect = document.getElementById('settings-report-year');
+    const year = yearSelect ? yearSelect.value : new Date().getFullYear();
+    window.open(`/api/reports/annual/preview?year=${year}`, '_blank');
+};
+
+window.inviaTestResocontoAnnuale = async function() {
+    const isIt = document.documentElement.lang === 'it';
+    const yearSelect = document.getElementById('settings-report-year');
+    const emailInput = document.getElementById('settings-report-email');
+    const statusSpan = document.getElementById('settings-report-status');
+    const btn = document.getElementById('btn-send-annual-report');
+
+    const year = yearSelect ? yearSelect.value : new Date().getFullYear();
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ ${isIt ? 'Invio in corso...' : 'Sending...'}`;
+    }
+    if (statusSpan) {
+        statusSpan.style.display = 'inline';
+        statusSpan.style.color = '#64748b';
+        statusSpan.textContent = isIt ? 'Invio email in corso...' : 'Sending email...';
+    }
+
+    try {
+        const res = await fetch('/api/reports/annual/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ year: parseInt(year), email: email })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (statusSpan) {
+                statusSpan.style.color = '#10b981';
+                statusSpan.textContent = `✓ ${data.message || (isIt ? 'Email inviata con successo!' : 'Email sent successfully!')}`;
+            }
+        } else {
+            if (statusSpan) {
+                statusSpan.style.color = '#ef4444';
+                statusSpan.textContent = `✗ ${data.errore || (isIt ? 'Errore durante l\'invio' : 'Error sending email')}`;
+            }
+        }
+    } catch (e) {
+        console.error("Errore invio resoconto annuale:", e);
+        if (statusSpan) {
+            statusSpan.style.color = '#ef4444';
+            statusSpan.textContent = `✗ ${isIt ? 'Errore di connessione' : 'Connection error'}`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldText || `✉️ ${isIt ? 'Invia Email di Test' : 'Send Test Email'}`;
+        }
+    }
+};
+
+// --- IMPOSTAZIONI NOTIFICHE EMAIL & SCHEDULAZIONI ---
+window.caricaImpostazioniNotificheEmail = async function() {
+    try {
+        const res = await fetch('/api/settings/notifications');
+        if (res.ok) {
+            const data = await res.json();
+            const defEmail = data.default_email || '';
+
+            const annualInput = document.getElementById('settings-email-annual-report');
+            if (annualInput) {
+                annualInput.value = data.annual_report_email || '';
+                if (defEmail) annualInput.placeholder = defEmail;
+            }
+
+            const vehicleRemindersInput = document.getElementById('settings-email-vehicle-reminders');
+            if (vehicleRemindersInput) {
+                vehicleRemindersInput.value = data.vehicle_reminders_email || '';
+                if (defEmail) vehicleRemindersInput.placeholder = defEmail;
+            }
+
+            const vehicleRecallsInput = document.getElementById('settings-email-vehicle-recalls');
+            if (vehicleRecallsInput) {
+                vehicleRecallsInput.value = data.vehicle_recalls_email || '';
+                if (defEmail) vehicleRecallsInput.placeholder = defEmail;
+            }
+
+            // Sincronizza anche l'input di test del Resoconto Annuale nella Card 5
+            const reportEmailInput = document.getElementById('settings-report-email');
+            if (reportEmailInput) {
+                reportEmailInput.value = data.annual_report_email || defEmail;
+            }
+        }
+    } catch (e) {
+        console.warn("Impossibile caricare impostazioni notifiche email:", e);
+    }
+};
+
+window.salvaImpostazioniNotificheEmail = async function(event) {
+    if (event) event.preventDefault();
+    const isIt = document.documentElement.lang === 'it';
+    const statusSpan = document.getElementById('settings-notifications-status');
+    const btn = document.getElementById('btn-save-notifications');
+
+    const annualEmail = (document.getElementById('settings-email-annual-report')?.value || '').trim();
+    const remindersEmail = (document.getElementById('settings-email-vehicle-reminders')?.value || '').trim();
+    const recallsEmail = (document.getElementById('settings-email-vehicle-recalls')?.value || '').trim();
+
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ ${isIt ? 'Salvataggio...' : 'Saving...'}`;
+    }
+    if (statusSpan) {
+        statusSpan.style.display = 'inline';
+        statusSpan.style.color = '#64748b';
+        statusSpan.textContent = isIt ? 'Salvataggio in corso...' : 'Saving...';
+    }
+
+    try {
+        const res = await fetch('/api/settings/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                annual_report_email: annualEmail,
+                vehicle_reminders_email: remindersEmail,
+                vehicle_recalls_email: recallsEmail
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (statusSpan) {
+                statusSpan.style.color = '#10b981';
+                statusSpan.textContent = `✓ ${data.messaggio || (isIt ? 'Impostazioni email salvate!' : 'Email settings saved!')}`;
+                setTimeout(() => { if (statusSpan) statusSpan.style.display = 'none'; }, 4000);
+            }
+            // Aggiorna anche l'input nella Card 5 del Resoconto Annuale
+            const reportEmailInput = document.getElementById('settings-report-email');
+            if (reportEmailInput && annualEmail) {
+                reportEmailInput.value = annualEmail;
+            }
+        } else {
+            if (statusSpan) {
+                statusSpan.style.color = '#ef4444';
+                statusSpan.textContent = `✗ ${data.errore || (isIt ? 'Errore durante il salvataggio' : 'Error saving')}`;
+            }
+        }
+    } catch (e) {
+        console.error("Errore salvataggio notifiche:", e);
+        if (statusSpan) {
+            statusSpan.style.color = '#ef4444';
+            statusSpan.textContent = `✗ ${isIt ? 'Errore di connessione' : 'Connection error'}`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = oldText || `💾 ${isIt ? 'Salva Preferenze Email' : 'Save Notification Emails'}`;
+        }
+    }
+};
 

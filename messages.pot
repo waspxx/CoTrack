@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-02 17:05+0200\n"
+"POT-Creation-Date: 2026-09-18 14:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,483 +17,491 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: app.py:103
+#: app.py:107
 msgid "Too many requests. Please try again later."
 msgstr ""
 
-#: app.py:2774
+#: app.py:2822
 msgid "Login successful"
 msgstr ""
 
-#: app.py:2775
+#: app.py:2823
 msgid "Invalid credentials"
 msgstr ""
 
-#: app.py:2813
+#: app.py:2861
 msgid "Username must be a valid email address"
 msgstr ""
 
-#: app.py:2815 app.py:2889 app.py:3259 app.py:3327 app.py:4158
+#: app.py:2863 app.py:2937 app.py:3396 app.py:3464 app.py:4295
 msgid "Missing data"
 msgstr ""
 
-#: app.py:2825 app.py:2828
+#: app.py:2873 app.py:2876
 msgid "Registration completed"
 msgstr ""
 
-#: app.py:2835
+#: app.py:2883
 msgid "Logout successful"
 msgstr ""
 
-#: app.py:2869
+#: app.py:2917
 msgid "Valid email required"
 msgstr ""
 
-#: app.py:2882
+#: app.py:2930
 msgid "If the email exists, a reset link has been sent."
 msgstr ""
 
-#: app.py:2894
+#: app.py:2942
 msgid "Invalid or expired token"
 msgstr ""
 
-#: app.py:2899
+#: app.py:2947
 msgid "Password updated successfully"
 msgstr ""
 
-#: app.py:2905 app.py:2920 app.py:2931 app.py:2954 app.py:2987 app.py:2996
-#: app.py:3013 app.py:3035 app.py:3053 app.py:3068 app.py:3086 app.py:3102
-#: app.py:3117 app.py:3135 app.py:3153 app.py:3168 app.py:3186 app.py:3203
-#: app.py:3247 app.py:3309 app.py:3319 app.py:3339 app.py:3372 app.py:3384
-#: app.py:3442 app.py:3484 app.py:3600 app.py:3677 app.py:3703 app.py:3833
-#: app.py:4106 app.py:4115 app.py:4136 app.py:4198 app.py:4223 app.py:4233
-#: app.py:4257 app.py:4286 app.py:4481 app.py:4613 app.py:4633 app.py:4659
-#: app.py:4702 app.py:4777 app.py:4821 app.py:4846 app.py:4977 app.py:5006
-#: app.py:5069 app.py:5122 app.py:5197 app.py:5263 app.py:5356 app.py:5416
-#: app.py:5479 app.py:5806 app.py:5867 app.py:5929 app.py:5988 app.py:6080
-#: app.py:6133 app.py:6203 app.py:6232 app.py:6303 app.py:6332 app.py:6383
-#: app.py:6398 app.py:6416 app.py:6434 app.py:6488 app.py:6533 app.py:6585
-#: app.py:6625 app.py:6754 app.py:7979 app.py:7999 app.py:8093 app.py:8216
-#: app.py:8230 app.py:8244 app.py:8258
+#: app.py:2953 app.py:2968 app.py:2979 app.py:3002 app.py:3034 app.py:3069
+#: app.py:3080 app.py:3101 app.py:3133 app.py:3150 app.py:3172 app.py:3190
+#: app.py:3205 app.py:3223 app.py:3239 app.py:3254 app.py:3272 app.py:3290
+#: app.py:3305 app.py:3323 app.py:3340 app.py:3384 app.py:3446 app.py:3456
+#: app.py:3476 app.py:3509 app.py:3521 app.py:3579 app.py:3621 app.py:3737
+#: app.py:3814 app.py:3840 app.py:3970 app.py:4243 app.py:4252 app.py:4273
+#: app.py:4335 app.py:4360 app.py:4370 app.py:4394 app.py:4423 app.py:4618
+#: app.py:4750 app.py:4770 app.py:4796 app.py:4839 app.py:4914 app.py:4958
+#: app.py:4983 app.py:5114 app.py:5143 app.py:5206 app.py:5259 app.py:5334
+#: app.py:5400 app.py:5493 app.py:5553 app.py:5616 app.py:6184 app.py:6245
+#: app.py:6307 app.py:6371 app.py:6463 app.py:6516 app.py:6586 app.py:6615
+#: app.py:6686 app.py:6715 app.py:6766 app.py:6781 app.py:6799 app.py:6817
+#: app.py:6871 app.py:6916 app.py:6968 app.py:7008 app.py:7137 app.py:8362
+#: app.py:8382 app.py:8476 app.py:8599 app.py:8613 app.py:8627 app.py:8641
 msgid "Not authenticated"
 msgstr ""
 
-#: app.py:2972
+#: app.py:3020
 msgid "Settings updated successfully"
 msgstr ""
 
-#: app.py:3000 templates/components/tab_investimenti.html:7
+#: app.py:3045
+msgid "Invalid email address format"
+msgstr ""
+
+#: app.py:3052
+msgid "Email notification settings updated successfully"
+msgstr ""
+
+#: app.py:3137 templates/components/tab_investimenti.html:7
 msgid "New Portfolio"
 msgstr ""
 
-#: app.py:3005
+#: app.py:3142
 msgid "Portfolio created"
 msgstr ""
 
-#: app.py:3017 app.py:3071 app.py:3120 app.py:3171 app.py:5091
+#: app.py:3154 app.py:3208 app.py:3257 app.py:3308 app.py:5228
 msgid "Name cannot be empty"
 msgstr ""
 
-#: app.py:3028 app.py:3041
+#: app.py:3165 app.py:3178
 msgid "Portfolio not found or unauthorized"
 msgstr ""
 
-#: app.py:3031
+#: app.py:3168
 msgid "Portfolio renamed successfully"
 msgstr ""
 
-#: app.py:3048
+#: app.py:3185
 msgid "Portfolio deleted successfully"
 msgstr ""
 
-#: app.py:3056 templates/components/tab_wallet.html:7
+#: app.py:3193 templates/components/tab_wallet.html:7
 msgid "New Wallet"
 msgstr ""
 
-#: app.py:3061
+#: app.py:3198
 msgid "Wallet created"
 msgstr ""
 
-#: app.py:3080 app.py:3091 app.py:4671
+#: app.py:3217 app.py:3228 app.py:4808
 msgid "Wallet not found or unauthorized"
 msgstr ""
 
-#: app.py:3082
+#: app.py:3219
 msgid "Wallet renamed successfully"
 msgstr ""
 
-#: app.py:3097
+#: app.py:3234
 msgid "Wallet deleted successfully"
 msgstr ""
 
-#: app.py:3105 templates/components/tab_bollette.html:8
+#: app.py:3242 templates/components/tab_bollette.html:8
 msgid "New Bills Group"
 msgstr ""
 
-#: app.py:3110
+#: app.py:3247
 msgid "Bills group created"
 msgstr ""
 
-#: app.py:3129 app.py:3140 app.py:4864 app.py:4936 app.py:5024 app.py:5059
-#: app.py:5139 app.py:5172 app.py:5215 app.py:5243 app.py:5288 app.py:5313
-#: app.py:5423 app.py:5489
+#: app.py:3266 app.py:3277 app.py:5001 app.py:5073 app.py:5161 app.py:5196
+#: app.py:5276 app.py:5309 app.py:5352 app.py:5380 app.py:5425 app.py:5450
+#: app.py:5560 app.py:5626
 msgid "Bills group not found or unauthorized"
 msgstr ""
 
-#: app.py:3131
+#: app.py:3268
 msgid "Bills group renamed successfully"
 msgstr ""
 
-#: app.py:3148
+#: app.py:3285
 msgid "Bills group deleted successfully"
 msgstr ""
 
-#: app.py:3156 templates/components/tab_veicoli.html:6
+#: app.py:3293 templates/components/tab_veicoli.html:6
 msgid "New Garage"
 msgstr ""
 
-#: app.py:3161
+#: app.py:3298
 msgid "Garage created"
 msgstr ""
 
-#: app.py:3180 app.py:3191 app.py:5816 app.py:5998 app.py:6143 app.py:6313
-#: app.py:6345
+#: app.py:3317 app.py:3328 app.py:6194 app.py:6381 app.py:6526 app.py:6696
+#: app.py:6728
 msgid "Garage not found or unauthorized"
 msgstr ""
 
-#: app.py:3182
+#: app.py:3319
 msgid "Garage renamed successfully"
 msgstr ""
 
-#: app.py:3199
+#: app.py:3336
 msgid "Garage deleted successfully"
 msgstr ""
 
-#: app.py:3237
+#: app.py:3374
 msgid "Transaction saved successfully!"
 msgstr ""
 
-#: app.py:3253
+#: app.py:3390
 msgid "Transaction deleted!"
 msgstr ""
 
-#: app.py:3264
+#: app.py:3401
 msgid "Instrument (ISIN) is required"
 msgstr ""
 
-#: app.py:3280
+#: app.py:3417
 msgid "Invalid numeric values"
 msgstr ""
 
-#: app.py:3296 app.py:4148
+#: app.py:3433 app.py:4285
 msgid "Transaction not found or unauthorized"
 msgstr ""
 
-#: app.py:3305
+#: app.py:3442
 msgid "Transaction updated successfully!"
 msgstr ""
 
-#: app.py:3315
+#: app.py:3452
 msgid "All transactions deleted!"
 msgstr ""
 
-#: app.py:3334
+#: app.py:3471
 msgid "Asset type updated successfully!"
 msgstr ""
 
-#: app.py:3375
+#: app.py:3512
 msgid "Database not found"
 msgstr ""
 
-#: app.py:3388 app.py:3445 app.py:3488 app.py:3604 app.py:3680 app.py:4288
-#: app.py:4485 app.py:5481 app.py:6635 app.py:7981 app.py:8006 app.py:8099
+#: app.py:3525 app.py:3582 app.py:3625 app.py:3741 app.py:3817 app.py:4425
+#: app.py:4622 app.py:5618 app.py:7018 app.py:8364 app.py:8389 app.py:8482
 msgid "No file uploaded"
 msgstr ""
 
-#: app.py:3394 app.py:3449 app.py:3610 app.py:3684 app.py:4291 app.py:5483
+#: app.py:3531 app.py:3586 app.py:3747 app.py:3821 app.py:4428 app.py:5620
 msgid "No file selected"
 msgstr ""
 
-#: app.py:3433
+#: app.py:3570
 #, python-format
 msgid "CSV format error: %(err)s"
 msgstr ""
 
-#: app.py:3436
+#: app.py:3573
 msgid "Import completed successfully!"
 msgstr ""
 
-#: app.py:3438 app.py:3479 app.py:4477
+#: app.py:3575 app.py:3616 app.py:4614
 msgid "Invalid file format. Expected CSV."
 msgstr ""
 
-#: app.py:3461 app.py:3505 app.py:4299 app.py:4502 app.py:5499 app.py:6658
-#: app.py:8023 app.py:8116
+#: app.py:3598 app.py:3642 app.py:4436 app.py:4639 app.py:5636 app.py:7041
+#: app.py:8406 app.py:8499
 msgid "The uploaded file is empty."
 msgstr ""
 
-#: app.py:3473 app.py:8129
+#: app.py:3610 app.py:8512
 msgid "CSV format error."
 msgstr ""
 
-#: app.py:3493 app.py:4490 app.py:6641 app.py:8011 app.py:8104
+#: app.py:3630 app.py:4627 app.py:7024 app.py:8394 app.py:8487
 msgid "Missing column mapping"
 msgstr ""
 
-#: app.py:3498 app.py:4495 app.py:6647 app.py:8016 app.py:8109
+#: app.py:3635 app.py:4632 app.py:7030 app.py:8399 app.py:8492
 msgid "Invalid mapping format"
 msgstr ""
 
-#: app.py:3593
+#: app.py:3730
 #, python-format
 msgid "Import error: %(err)s"
 msgstr ""
 
-#: app.py:3595
+#: app.py:3732
 msgid "Custom import completed successfully!"
 msgstr ""
 
-#: app.py:3614
+#: app.py:3751
 msgid ""
 "PyPDF2 library not installed. Add it to the server with 'pip install "
 "PyPDF2'."
 msgstr ""
 
-#: app.py:3633
+#: app.py:3770
 msgid "ISIN code not found in PDF"
 msgstr ""
 
-#: app.py:3652
+#: app.py:3789
 msgid "Execution data (quantity, price, total) not found in PDF"
 msgstr ""
 
-#: app.py:3666
+#: app.py:3803
 #, python-format
 msgid "Transaction for %(name)s imported successfully!"
 msgstr ""
 
-#: app.py:3668
+#: app.py:3805
 msgid "This transaction has already been imported into the portfolio."
 msgstr ""
 
-#: app.py:3671 app.py:3697
+#: app.py:3808 app.py:3834
 #, python-format
 msgid "Error reading PDF: %(err)s"
 msgstr ""
 
-#: app.py:3673 app.py:3699
+#: app.py:3810 app.py:3836
 msgid "Invalid file format. Expected PDF."
 msgstr ""
 
-#: app.py:3688
+#: app.py:3825
 msgid "PyPDF2 library not installed."
 msgstr ""
 
-#: app.py:3706
+#: app.py:3843
 msgid "Google Generative AI SDK not installed. Run 'pip install google-genai'."
 msgstr ""
 
-#: app.py:3710
+#: app.py:3847
 msgid ""
 "Gemini API key not configured. Please set GEMINI_API_KEY environment "
 "variable."
 msgstr ""
 
-#: app.py:4121
+#: app.py:4258
 msgid "Missing category"
 msgstr ""
 
-#: app.py:4127
+#: app.py:4264
 msgid "Category updated successfully"
 msgstr ""
 
-#: app.py:4153
+#: app.py:4290
 msgid "Transaction deleted successfully"
 msgstr ""
 
-#: app.py:4170 app.py:5283 app.py:5397
+#: app.py:4307 app.py:5420 app.py:5534
 msgid "Invalid amount"
 msgstr ""
 
-#: app.py:4173
+#: app.py:4310
 msgid "Date, account and category are required"
 msgstr ""
 
-#: app.py:4189
+#: app.py:4326
 msgid "Transaction updated successfully"
 msgstr ""
 
-#: app.py:4214
+#: app.py:4351
 msgid "Configuration saved!"
 msgstr ""
 
-#: app.py:4229
+#: app.py:4366
 msgid "All Wallet transactions deleted!"
 msgstr ""
 
-#: app.py:4240
+#: app.py:4377
 msgid "No transactions selected"
 msgstr ""
 
-#: app.py:4248
+#: app.py:4385
 msgid "Selected transactions deleted!"
 msgstr ""
 
-#: app.py:4468 app.py:4600
+#: app.py:4605 app.py:4737
 #, python-format
 msgid ""
 "Imported %(count)s new transactions. (Ignored %(ignored)s already "
 "present). WARNING: %(errors)s rows were not read correctly."
 msgstr ""
 
-#: app.py:4470 app.py:4602
+#: app.py:4607 app.py:4739
 #, python-format
 msgid ""
 "Imported %(count)s new transactions successfully! (Ignored %(ignored)s "
 "already present)."
 msgstr ""
 
-#: app.py:4646
+#: app.py:4783
 msgid "BudgetBakers token saved successfully!"
 msgstr ""
 
-#: app.py:4676
+#: app.py:4813
 msgid "No wallet found for this user"
 msgstr ""
 
-#: app.py:4683
+#: app.py:4820
 msgid "Sync failed"
 msgstr ""
 
-#: app.py:4691
+#: app.py:4828
 #, python-format
 msgid ""
 "Sync completed! %(imported)s new transactions imported, %(ignored)s "
 "already present (total fetched: %(total)s from %(start)s to %(end)s)."
 msgstr ""
 
-#: app.py:4718
+#: app.py:4855
 msgid "Name, match value and target tab are required"
 msgstr ""
 
-#: app.py:4784
+#: app.py:4921
 msgid "Trigger rule not found"
 msgstr ""
 
-#: app.py:4790
+#: app.py:4927
 msgid "Trigger rule deleted successfully"
 msgstr ""
 
-#: app.py:4839
+#: app.py:4976
 #, python-format
 msgid "Applied triggers: %(count)s transaction actions processed."
 msgstr ""
 
-#: app.py:4858 app.py:5134 app.py:5277 app.py:5391
+#: app.py:4995 app.py:5271 app.py:5414 app.py:5528
 msgid "Missing required fields"
 msgstr ""
 
-#: app.py:4920
+#: app.py:5057
 msgid "Bill saved successfully"
 msgstr ""
 
-#: app.py:4931 app.py:5054 app.py:5167 app.py:5210 app.py:5238 app.py:5308
+#: app.py:5068 app.py:5191 app.py:5304 app.py:5347 app.py:5375 app.py:5445
 msgid "Missing bills_id"
 msgstr ""
 
-#: app.py:4989
+#: app.py:5126
 msgid "Bill not found or unauthorized"
 msgstr ""
 
-#: app.py:4995
+#: app.py:5132
 msgid "Bill deleted successfully"
 msgstr ""
 
-#: app.py:5019
+#: app.py:5156
 msgid "Name and bills group are required"
 msgstr ""
 
-#: app.py:5034
+#: app.py:5171
 msgid "Appliance added successfully"
 msgstr ""
 
-#: app.py:5080
+#: app.py:5217
 msgid "Appliance not found or unauthorized"
 msgstr ""
 
-#: app.py:5099
+#: app.py:5236
 msgid "Appliance updated successfully"
 msgstr ""
 
-#: app.py:5111
+#: app.py:5248
 msgid "Appliance deleted successfully"
 msgstr ""
 
-#: app.py:5153
+#: app.py:5290
 msgid "Appliance consumptions saved successfully"
 msgstr ""
 
-#: app.py:5227
+#: app.py:5364
 msgid "Config saved successfully"
 msgstr ""
 
-#: app.py:5298
+#: app.py:5435
 msgid "Payment saved successfully"
 msgstr ""
 
-#: app.py:5368
+#: app.py:5505
 msgid "Record not found or unauthorized"
 msgstr ""
 
-#: app.py:5375
+#: app.py:5512
 msgid "Payment deleted successfully"
 msgstr ""
 
-#: app.py:5407
+#: app.py:5544
 msgid "Payment updated successfully"
 msgstr ""
 
-#: app.py:5601
+#: app.py:5738
 #, python-format
 msgid "Imported %(count)s bills successfully!"
 msgstr ""
 
-#: app.py:5609
+#: app.py:5746
 msgid "Invalid file type"
 msgstr ""
 
-#: app.py:5810 app.py:5992 app.py:6137 app.py:6307 app.py:6339
+#: app.py:6188 app.py:6375 app.py:6520 app.py:6690 app.py:6722
 msgid "Missing garage_id"
 msgstr ""
 
-#: app.py:5877 app.py:5942 app.py:8221
+#: app.py:6255 app.py:6320 app.py:8604
 msgid "Vehicle not found or unauthorized"
 msgstr ""
 
-#: app.py:5948
+#: app.py:6326
 msgid "Vehicle has no chassis number (VIN) registered"
 msgstr ""
 
-#: app.py:6091
+#: app.py:6474
 msgid "Activity not found or unauthorized"
 msgstr ""
 
-#: app.py:6494 app.py:6540 app.py:6631 app.py:8235
+#: app.py:6877 app.py:6923 app.py:7014 app.py:8618
 msgid "Loan not found or unauthorized"
 msgstr ""
 
-#: app.py:6597
+#: app.py:6980
 msgid "Payment not found or unauthorized"
 msgstr ""
 
-#: app.py:6744
+#: app.py:7127
 #, python-format
 msgid ""
 "Import completed: %(imported)d payments imported, %(skipped)d skipped as "
 "duplicates."
 msgstr ""
 
-#: app.py:7984
+#: app.py:8367
 msgid "The file must be a PDF"
 msgstr ""
 
@@ -604,7 +612,7 @@ msgstr ""
 #: templates/components/tab_bollette.html:66
 #: templates/components/tab_bollette.html:293
 #: templates/components/tab_bollette.html:384
-#: templates/components/tab_settings.html:224 templates/index.html:64
+#: templates/components/tab_settings.html:343 templates/index.html:64
 msgid "Gas"
 msgstr ""
 
@@ -831,7 +839,7 @@ msgstr ""
 #: templates/components/tab_prestiti.html:629
 #: templates/components/tab_prestiti.html:703
 #: templates/components/tab_prestiti.html:718
-#: templates/components/tab_settings.html:274
+#: templates/components/tab_settings.html:393
 #: templates/components/tab_stipendi.html:343
 #: templates/components/tab_stipendi.html:426
 #: templates/components/tab_stipendi.html:486
@@ -1365,7 +1373,7 @@ msgstr ""
 #: templates/components/tab_bollette.html:573
 #: templates/components/tab_bollette.html:618
 #: templates/components/tab_fondopensione.html:376
-#: templates/components/tab_settings.html:99
+#: templates/components/tab_settings.html:174
 #: templates/components/tab_stipendi.html:344
 #: templates/components/tab_stipendi.html:427
 #: templates/components/tab_veicoli.html:869
@@ -1593,7 +1601,7 @@ msgstr ""
 #: templates/components/tab_fondopensione.html:294
 #: templates/components/tab_fondopensione.html:396
 #: templates/components/tab_fondopensione.html:475
-#: templates/components/tab_settings.html:260
+#: templates/components/tab_settings.html:379
 msgid "TFR"
 msgstr ""
 
@@ -3167,235 +3175,327 @@ msgid "Choose which tab is displayed by default when you open CoTrack."
 msgstr ""
 
 #: templates/components/tab_settings.html:86
-msgid "BudgetBakers Integration"
+msgid "Email Notifications & Schedules"
 msgstr ""
 
 #: templates/components/tab_settings.html:88
+msgid "Automated Tasks"
+msgstr ""
+
+#: templates/components/tab_settings.html:92
+msgid ""
+"Choose recipient email addresses for automatic notifications and "
+"scheduled reports. If left blank, notifications are sent to your account "
+"email."
+msgstr ""
+
+#: templates/components/tab_settings.html:100
+#: templates/components/tab_settings.html:217
+msgid "Annual Financial Report"
+msgstr ""
+
+#: templates/components/tab_settings.html:103
+msgid "Every 31 Dec at 21:00"
+msgstr ""
+
+#: templates/components/tab_settings.html:107
+msgid "Consolidated financial report calculated from all active tabs without AI."
+msgstr ""
+
+#: templates/components/tab_settings.html:109
+#: templates/components/tab_settings.html:125
+#: templates/components/tab_settings.html:141
+msgid "Default: your account email"
+msgstr ""
+
+#: templates/components/tab_settings.html:116
+msgid "Vehicle Reminders"
+msgstr ""
+
+#: templates/components/tab_settings.html:119
+msgid "Daily at 08:00"
+msgstr ""
+
+#: templates/components/tab_settings.html:123
+msgid ""
+"Alerts for maintenance deadlines, inspections, revisions, or mileage "
+"thresholds."
+msgstr ""
+
+#: templates/components/tab_settings.html:132
+msgid "Vehicle Recall Alerts"
+msgstr ""
+
+#: templates/components/tab_settings.html:135
+msgid "Monthly on 1st at 04:00"
+msgstr ""
+
+#: templates/components/tab_settings.html:139
+msgid "Automated check of VIN safety recall campaigns (e.g. Škoda / VAG)."
+msgstr ""
+
+#: templates/components/tab_settings.html:146
+msgid "Save Notification Emails"
+msgstr ""
+
+#: templates/components/tab_settings.html:161
+msgid "BudgetBakers Integration"
+msgstr ""
+
+#: templates/components/tab_settings.html:163
 #: templates/components/tab_wallet.html:226
 msgid "Checking..."
 msgstr ""
 
-#: templates/components/tab_settings.html:92
+#: templates/components/tab_settings.html:167
 msgid ""
 "Configure BudgetBakers API Token to automatically sync previous month "
 "transactions on the 20th of every month."
 msgstr ""
 
-#: templates/components/tab_settings.html:96
+#: templates/components/tab_settings.html:171
 msgid "API Token / Bearer Token"
 msgstr ""
 
-#: templates/components/tab_settings.html:98
+#: templates/components/tab_settings.html:173
 msgid "Paste BudgetBakers token here..."
 msgstr ""
 
-#: templates/components/tab_settings.html:112
+#: templates/components/tab_settings.html:187
 msgid "Wallet Automated Triggers"
 msgstr ""
 
-#: templates/components/tab_settings.html:116
+#: templates/components/tab_settings.html:191
 msgid "Apply to Existing"
 msgstr ""
 
-#: templates/components/tab_settings.html:119
-#: templates/components/tab_settings.html:139
+#: templates/components/tab_settings.html:194
+#: templates/components/tab_settings.html:258
 msgid "New Trigger Rule"
 msgstr ""
 
-#: templates/components/tab_settings.html:125
+#: templates/components/tab_settings.html:200
 msgid ""
 "Automatically route and record transactions into other tabs (Salaries, "
 "Loans, Bills, Vehicles, Pension Funds) when an incoming Wallet "
 "transaction matches specific conditions."
 msgstr ""
 
-#: templates/components/tab_settings.html:130
+#: templates/components/tab_settings.html:205
 msgid "Loading trigger rules..."
 msgstr ""
 
-#: templates/components/tab_settings.html:147
+#: templates/components/tab_settings.html:219
+msgid "Deterministic / No AI"
+msgstr ""
+
+#: templates/components/tab_settings.html:223
+msgid ""
+"Generate a consolidated, easy-to-read annual report containing all "
+"numerical metrics from your active tabs (Salaries, Wallet, Bills, "
+"Vehicles, Loans, Pension Funds, Investments) without AI. Test email "
+"delivery or preview it directly in your browser."
+msgstr ""
+
+#: templates/components/tab_settings.html:228
+msgid "Reference Year"
+msgstr ""
+
+#: templates/components/tab_settings.html:237
+msgid "Recipient Email"
+msgstr ""
+
+#: templates/components/tab_settings.html:244
+msgid "Preview in Browser"
+msgstr ""
+
+#: templates/components/tab_settings.html:247
+msgid "Send Test Email"
+msgstr ""
+
+#: templates/components/tab_settings.html:266
 msgid "Rule Name *"
 msgstr ""
 
-#: templates/components/tab_settings.html:148
+#: templates/components/tab_settings.html:267
 msgid "e.g., Assegno Unico INPS"
 msgstr ""
 
-#: templates/components/tab_settings.html:153
+#: templates/components/tab_settings.html:272
 msgid "Trigger Condition (Wallet)"
 msgstr ""
 
-#: templates/components/tab_settings.html:157
+#: templates/components/tab_settings.html:276
 msgid "Field to Check"
 msgstr ""
 
-#: templates/components/tab_settings.html:159
+#: templates/components/tab_settings.html:278
 msgid "Any Field (Note/Category/Account)"
 msgstr ""
 
-#: templates/components/tab_settings.html:160
+#: templates/components/tab_settings.html:279
 msgid "Description / Note"
 msgstr ""
 
-#: templates/components/tab_settings.html:161
+#: templates/components/tab_settings.html:280
 #: templates/components/tab_veicoli.html:342
 #: templates/components/tab_veicoli.html:368
 #: templates/components/tab_wallet.html:320
 msgid "Category"
 msgstr ""
 
-#: templates/components/tab_settings.html:162
+#: templates/components/tab_settings.html:281
 #: templates/components/tab_wallet.html:195
 #: templates/components/tab_wallet.html:320
 msgid "Account"
 msgstr ""
 
-#: templates/components/tab_settings.html:167
+#: templates/components/tab_settings.html:286
 msgid "Condition"
 msgstr ""
 
-#: templates/components/tab_settings.html:169
+#: templates/components/tab_settings.html:288
 msgid "Contains (case-insensitive)"
 msgstr ""
 
-#: templates/components/tab_settings.html:170
+#: templates/components/tab_settings.html:289
 msgid "Equals exactly"
 msgstr ""
 
-#: templates/components/tab_settings.html:171
+#: templates/components/tab_settings.html:290
 msgid "Starts with"
 msgstr ""
 
-#: templates/components/tab_settings.html:172
+#: templates/components/tab_settings.html:291
 msgid "Regular Expression (Regex)"
 msgstr ""
 
-#: templates/components/tab_settings.html:178
+#: templates/components/tab_settings.html:297
 msgid "Match Text / Keyword *"
 msgstr ""
 
-#: templates/components/tab_settings.html:179
+#: templates/components/tab_settings.html:298
 msgid "e.g., ASSEGNO UNICO"
 msgstr ""
 
-#: templates/components/tab_settings.html:185
+#: templates/components/tab_settings.html:304
 msgid "Target Action"
 msgstr ""
 
-#: templates/components/tab_settings.html:188
+#: templates/components/tab_settings.html:307
 msgid "Destination Tab *"
 msgstr ""
 
-#: templates/components/tab_settings.html:190
+#: templates/components/tab_settings.html:309
 msgid "Salaries (Stipendi)"
 msgstr ""
 
-#: templates/components/tab_settings.html:191
+#: templates/components/tab_settings.html:310
 msgid "Loans (Prestiti)"
 msgstr ""
 
-#: templates/components/tab_settings.html:192
+#: templates/components/tab_settings.html:311
 msgid "Bills (Bollette)"
 msgstr ""
 
-#: templates/components/tab_settings.html:193
+#: templates/components/tab_settings.html:312
 msgid "Vehicles (Veicoli)"
 msgstr ""
 
-#: templates/components/tab_settings.html:194
+#: templates/components/tab_settings.html:313
 msgid "Pension Funds (Fondo Pensione)"
 msgstr ""
 
-#: templates/components/tab_settings.html:201
+#: templates/components/tab_settings.html:320
 msgid "Person Profile / Recipient *"
 msgstr ""
 
-#: templates/components/tab_settings.html:202
+#: templates/components/tab_settings.html:321
 msgid "e.g., Assegno Unico"
 msgstr ""
 
-#: templates/components/tab_settings.html:209
+#: templates/components/tab_settings.html:328
 msgid "Select Loan"
 msgstr ""
 
-#: templates/components/tab_settings.html:217
+#: templates/components/tab_settings.html:336
 msgid "Bill Profile"
 msgstr ""
 
-#: templates/components/tab_settings.html:221
+#: templates/components/tab_settings.html:340
 msgid "Utility / Category"
 msgstr ""
 
-#: templates/components/tab_settings.html:223
+#: templates/components/tab_settings.html:342
 msgid "Electricity (Luce)"
 msgstr ""
 
-#: templates/components/tab_settings.html:225
+#: templates/components/tab_settings.html:344
 msgid "Water (Acqua)"
 msgstr ""
 
-#: templates/components/tab_settings.html:226
+#: templates/components/tab_settings.html:345
 msgid "Waste (TARI)"
 msgstr ""
 
-#: templates/components/tab_settings.html:227
+#: templates/components/tab_settings.html:346
 msgid "Solar GSE - SSP"
 msgstr ""
 
-#: templates/components/tab_settings.html:228
+#: templates/components/tab_settings.html:347
 msgid "Solar GSE - Conto Energia"
 msgstr ""
 
-#: templates/components/tab_settings.html:236
+#: templates/components/tab_settings.html:355
 msgid "Select Vehicle"
 msgstr ""
 
-#: templates/components/tab_settings.html:240
+#: templates/components/tab_settings.html:359
 #: templates/components/tab_veicoli.html:575
 msgid "Activity Type"
 msgstr ""
 
-#: templates/components/tab_settings.html:242
+#: templates/components/tab_settings.html:361
 #: templates/components/tab_veicoli.html:260
 #: templates/components/tab_veicoli.html:578
 #: templates/components/tab_wallet.html:356
 msgid "Expense"
 msgstr ""
 
-#: templates/components/tab_settings.html:243
+#: templates/components/tab_settings.html:362
 #: templates/components/tab_veicoli.html:256
 #: templates/components/tab_veicoli.html:577
 msgid "Refueling"
 msgstr ""
 
-#: templates/components/tab_settings.html:244
+#: templates/components/tab_settings.html:363
 #: templates/components/tab_veicoli.html:264
 #: templates/components/tab_veicoli.html:395
 #: templates/components/tab_veicoli.html:579
 msgid "Maintenance"
 msgstr ""
 
-#: templates/components/tab_settings.html:252
+#: templates/components/tab_settings.html:371
 msgid "Select Pension Fund"
 msgstr ""
 
-#: templates/components/tab_settings.html:256
+#: templates/components/tab_settings.html:375
 msgid "Contribution Type"
 msgstr ""
 
-#: templates/components/tab_settings.html:258
+#: templates/components/tab_settings.html:377
 msgid "Worker Contribution (Aderente)"
 msgstr ""
 
-#: templates/components/tab_settings.html:259
+#: templates/components/tab_settings.html:378
 msgid "Employer Contribution (Azienda)"
 msgstr ""
 
-#: templates/components/tab_settings.html:269
+#: templates/components/tab_settings.html:388
 msgid "Rule Enabled"
 msgstr ""
 
-#: templates/components/tab_settings.html:275
+#: templates/components/tab_settings.html:394
 msgid "Save Rule"
 msgstr ""
 

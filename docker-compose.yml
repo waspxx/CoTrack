@@ -19,6 +19,8 @@ services:
       - DRIVVO_ENABLED=${DRIVVO_ENABLED:-true}
       - DRIVVO_EMAIL=${DRIVVO_EMAIL}
       - DRIVVO_PASSWORD=${DRIVVO_PASSWORD}
+      - HASS_WEBHOOK_TOKEN=${HASS_WEBHOOK_TOKEN}
+      - WEEKLY_AI_REPORT_ENABLED=${WEEKLY_AI_REPORT_ENABLED:-false}
     volumes:
       # Mappa la sottocartella 'data' dal tuo NAS (che verrà creata automaticamente)
       # alla cartella '/app/data' nel container. In questo modo il database

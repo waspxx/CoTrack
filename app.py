@@ -25,6 +25,7 @@ import secrets
 from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+import hmac
 
 try:
     from google import genai
@@ -44,6 +45,7 @@ except ImportError:
 from drivvo_sync import drivvo_service
 from budgetbakers_sync import budgetbakers_service, execute_wallet_triggers
 from scraping.scrape_engine import check_vin_recall
+from annual_report import get_annual_report_data, render_annual_report_html, send_annual_report_email
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') # Obbligatoria per i form con Flask-WTF
@@ -58,6 +60,8 @@ app.config['SMTP_PORT'] = int(os.environ.get('SMTP_PORT', 587))
 app.config['SMTP_USERNAME'] = os.environ.get('SMTP_USERNAME')
 app.config['SMTP_PASSWORD'] = os.environ.get('SMTP_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+app.config['HASS_WEBHOOK_TOKEN'] = os.environ.get('HASS_WEBHOOK_TOKEN')
+app.config['WEEKLY_AI_REPORT_ENABLED'] = os.environ.get('WEEKLY_AI_REPORT_ENABLED', 'false').lower() in ('true', '1', 'yes')
 
 def get_locale():
     if 'language' in session:
@@ -1655,6 +1659,9 @@ Financial Overview:
         return f"<p>Errore durante l'analisi: {str(e)}</p>"
 
 def send_weekly_report():
+    if not app.config.get('WEEKLY_AI_REPORT_ENABLED', False):
+        print("[SCHEDULER] Weekly AI report is disabled (WEEKLY_AI_REPORT_ENABLED=false). Skipping.")
+        return
     with app.app_context():
         conn = get_db_connection()
         users = conn.execute("SELECT * FROM users").fetchall()
@@ -2117,6 +2124,32 @@ def send_weekly_report():
                     
         conn.close()
 
+def send_annual_report_job(year=None):
+    """Job programmabile per inviare il resoconto annuale consolidato via email (31 Dicembre alle 21:00)."""
+    with app.app_context():
+        conn = get_db_connection()
+        try:
+            users = conn.execute("SELECT * FROM users").fetchall()
+            target_year = year or datetime.now().year
+            for user in users:
+                user_id = user['id']
+                # Verifica se l'utente ha impostato una mail personalizzata per il report annuale
+                row_email = conn.execute(
+                    "SELECT value FROM configurations WHERE key = ?",
+                    (f"user_config:{user_id}:annual_report_email",)
+                ).fetchone()
+                custom_email = (row_email['value'] or '').strip() if row_email else ''
+                email_dest = custom_email or user['username']
+                if not email_dest or '@' not in email_dest:
+                    continue
+                try:
+                    send_annual_report_email(conn, app.config, user_id, target_year, email_dest)
+                    print(f"[ANNUAL REPORT] Resoconto {target_year} inviato a {email_dest}")
+                except Exception as e:
+                    print(f"[ANNUAL REPORT JOB] Errore per {email_dest}: {e}")
+        finally:
+            conn.close()
+
 def send_daily_reminders():
     with app.app_context():
         smtp_server = app.config.get('SMTP_SERVER')
@@ -2216,7 +2249,13 @@ def send_daily_reminders():
                         reasons.append(f"in scadenza a {int(target_odometer):_} km (tra {int(km_left):_} km)".replace('_', '.'))
             
             if status:
-                email = r['username']
+                user_id = r['user_id']
+                row_email = conn.execute(
+                    "SELECT value FROM configurations WHERE key = ?",
+                    (f"user_config:{user_id}:vehicle_reminders_email",)
+                ).fetchone()
+                custom_email = (row_email['value'] or '').strip() if row_email else ''
+                email = custom_email or r['username']
                 if not email or '@' not in email:
                     continue
                     
@@ -2732,7 +2771,13 @@ def check_vehicle_recalls_monthly_job():
                     
                     # If recall found, send alert email
                     if res.get('has_recall') or status == 'found':
-                        user_email = v['user_email']
+                        user_id = v['user_id']
+                        row_email = conn.execute(
+                            "SELECT value FROM configurations WHERE key = ?",
+                            (f"user_config:{user_id}:vehicle_recalls_email",)
+                        ).fetchone()
+                        custom_email = (row_email['value'] or '').strip() if row_email else ''
+                        user_email = custom_email or v['user_email']
                         if user_email and '@' in user_email:
                             send_recall_alert_email(user_email, dict(v), details)
                             
@@ -2744,11 +2789,14 @@ def check_vehicle_recalls_monthly_job():
             conn.close()
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
+# Report settimanale AI disattivato di default (abilitabile con WEEKLY_AI_REPORT_ENABLED=true nel .env)
+if app.config.get('WEEKLY_AI_REPORT_ENABLED', False):
+    scheduler.add_job(func=send_weekly_report, trigger="cron", day_of_week='mon', hour=9, minute=0)
 scheduler.add_job(func=send_daily_reminders, trigger="cron", hour=8, minute=0)
 scheduler.add_job(func=update_pension_fund_prices_job, trigger="cron", day=10, hour=2, minute=0)
 scheduler.add_job(func=sync_budgetbakers_monthly_job, trigger="cron", day=20, hour=6, minute=0)
 scheduler.add_job(func=check_vehicle_recalls_monthly_job, trigger="cron", day=1, hour=4, minute=0)
+scheduler.add_job(func=send_annual_report_job, trigger="cron", month=12, day=31, hour=21, minute=0, id='job_annual_report')
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
@@ -2981,6 +3029,40 @@ def settings_tabs():
         conn.close()
         return jsonify(res)
 
+@app.route('/api/settings/notifications', methods=['GET', 'POST'])
+def settings_notifications():
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+    keys = ['annual_report_email', 'vehicle_reminders_email', 'vehicle_recalls_email']
+    if request.method == 'POST':
+        data = request.json or {}
+        for key in keys:
+            if key in data:
+                val = (data[key] or '').strip().lower()
+                if val and ('@' not in val or '.' not in val):
+                    conn.close()
+                    return jsonify({"errore": _("Invalid email address format")}), 400
+                conn.execute(
+                    "INSERT OR REPLACE INTO configurations (key, value) VALUES (?, ?)",
+                    (f"user_config:{user_id}:{key}", val)
+                )
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "messaggio": _("Email notification settings updated successfully")})
+    else:
+        user = conn.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
+        default_email = user['username'] if user else ''
+        res = {'default_email': default_email}
+        for key in keys:
+            row = conn.execute(
+                "SELECT value FROM configurations WHERE key = ?", 
+                (f"user_config:{user_id}:{key}",)
+            ).fetchone()
+            res[key] = row['value'] if row and row['value'] else ''
+        conn.close()
+        return jsonify(res)
+
 @app.route('/api/drivvo/status', methods=['GET'])
 def drivvo_status():
     if 'user_id' not in session:
@@ -2989,6 +3071,61 @@ def drivvo_status():
         "configured": drivvo_service.is_configured(),
         "email": drivvo_service.email if drivvo_service.is_configured() else None
     })
+
+# --- ROTTE RESOCONTO ANNUALE ---
+@app.route('/api/reports/annual/preview', methods=['GET'])
+def annual_report_preview():
+    """Genera e visualizza l'anteprima HTML del resoconto annuale."""
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    user_id = session['user_id']
+    year_arg = request.args.get('year')
+    try:
+        year = int(year_arg) if year_arg else datetime.now().year
+    except ValueError:
+        year = datetime.now().year
+
+    conn = get_db_connection()
+    try:
+        report_data = get_annual_report_data(conn, user_id, year)
+        html_content = render_annual_report_html(report_data)
+        return html_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+    finally:
+        conn.close()
+
+@app.route('/api/reports/annual/test', methods=['POST'])
+def annual_report_test_send():
+    """Invia un'email di test del resoconto annuale."""
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+        
+    user_id = session['user_id']
+    data = request.json or {}
+    year_val = data.get('year')
+    try:
+        year = int(year_val) if year_val else datetime.now().year
+    except ValueError:
+        year = datetime.now().year
+        
+    target_email = (data.get('email') or '').strip()
+    conn = get_db_connection()
+    try:
+        if not target_email:
+            row_email = conn.execute(
+                "SELECT value FROM configurations WHERE key = ?",
+                (f"user_config:{user_id}:annual_report_email",)
+            ).fetchone()
+            target_email = (row_email['value'] or '').strip() if row_email else ''
+        if not target_email:
+            target_email = session.get('username')
+            
+        res = send_annual_report_email(conn, app.config, user_id, year, target_email)
+        return jsonify(res), 200
+    except Exception as e:
+        return jsonify({"success": False, "errore": str(e)}), 500
+    finally:
+        conn.close()
 
 
 @app.route('/api/portfolios', methods=['GET', 'POST'])
@@ -5608,6 +5745,247 @@ def import_bills_csv():
         conn.close()
         return jsonify({"errore": _("Invalid file type")}), 400
 
+# =============================================================
+# --- HOME ASSISTANT WEBHOOK (BOLLETTE / ENERGIA) ---
+# =============================================================
+
+@app.route('/api/webhooks/bills/energy', methods=['POST'])
+@app.route('/api/webhooks/bills/energy/<path:token>', methods=['POST'])
+def webhook_bills_energy(token=None):
+    """
+    Riceve i consumi energetici (luce da rete, produzione solare, immissione, elettrodomestici)
+    inviati da un'automazione di Home Assistant (es. rilevati da Shelly) e li memorizza nella
+    sezione Bollette di CoTrack.
+    """
+    expected_token = app.config.get('HASS_WEBHOOK_TOKEN') or os.environ.get('HASS_WEBHOOK_TOKEN')
+    if not expected_token or not expected_token.strip():
+        return jsonify({
+            "success": False,
+            "error": "HASS_WEBHOOK_TOKEN non configurato sul server nel file .env."
+        }), 503
+
+    # Verifica token di autenticazione da path, query param o header
+    provided_token = token or request.args.get('token') or request.headers.get('X-Webhook-Token')
+    if not provided_token:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            provided_token = auth_header[7:].strip()
+
+    if not provided_token or not hmac.compare_digest(str(provided_token).strip(), str(expected_token).strip()):
+        return jsonify({
+            "success": False,
+            "error": "Token di autenticazione non valido o assente."
+        }), 401
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = request.form.to_dict()
+    if not payload or not isinstance(payload, dict):
+        return jsonify({
+            "success": False,
+            "error": "Payload JSON vuoto o formato non valido."
+        }), 400
+
+    # Risoluzione periodo (anno e mese)
+    # Se omessi, di default attribuisce i dati al mese corrente (eseguito a fine mese)
+    now = datetime.now()
+    target_year = None
+    target_month = None
+
+    if 'year' in payload and payload['year']:
+        try:
+            target_year = int(payload['year'])
+        except (ValueError, TypeError):
+            pass
+
+    if 'month' in payload and payload['month']:
+        try:
+            target_month = int(payload['month'])
+        except (ValueError, TypeError):
+            pass
+
+    target_year = target_year or now.year
+    target_month = target_month or now.month
+
+    if not (1 <= target_month <= 12):
+        return jsonify({
+            "success": False,
+            "error": f"Mese specificato non valido: {target_month} (deve essere compreso tra 1 e 12)."
+        }), 400
+
+    conn = get_db_connection()
+    try:
+        # Risoluzione profilo bollette
+        bills_id_req = payload.get('bills_id')
+        if bills_id_req:
+            p_row = conn.execute('SELECT id, user_id, name FROM bills_profiles WHERE id = ?', (bills_id_req,)).fetchone()
+        else:
+            p_row = conn.execute('SELECT id, user_id, name FROM bills_profiles ORDER BY id ASC LIMIT 1').fetchone()
+
+        if not p_row:
+            return jsonify({
+                "success": False,
+                "error": "Nessun profilo bollette trovato nel database."
+            }), 404
+
+        actual_bills_id = p_row['id']
+        profile_name = p_row['name']
+
+        # Estrazione valori energetici generali (supporta alias comuni)
+        def extract_float(keys):
+            for k in keys:
+                if k in payload and payload[k] is not None and str(payload[k]).strip() != '':
+                    try:
+                        return float(payload[k])
+                    except (ValueError, TypeError):
+                        pass
+            return None
+
+        elec_cons = extract_float(['electricity_consumption', 'electricity', 'consumo_elettrico', 'consumo_luce', 'grid_consumption'])
+        solar_prod = extract_float(['solar_production', 'solar', 'produzione_solare', 'fotovoltaico'])
+        grid_feed = extract_float(['grid_feed_in', 'feed_in', 'immissione_rete', 'immissione'])
+        water_cons = extract_float(['water_consumption', 'water', 'consumo_acqua', 'acqua'])
+
+        # Controllo esistenza bolletta per (bills_id, year, month)
+        existing_bill = conn.execute('''
+            SELECT * FROM bills WHERE bills_id = ? AND year = ? AND month = ?
+        ''', (actual_bills_id, target_year, target_month)).fetchone()
+
+        if not existing_bill:
+            conn.execute('''
+                INSERT INTO bills (
+                    bills_id, year, month,
+                    electricity_consumption, solar_production, grid_feed_in,
+                    water_consumption, gas_consumption,
+                    electricity_price, water_price, gas_price, waste_price
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0)
+            ''', (
+                actual_bills_id, target_year, target_month,
+                elec_cons or 0.0, solar_prod or 0.0, grid_feed or 0.0,
+                water_cons or 0.0
+            ))
+        else:
+            updates = []
+            params = []
+            if elec_cons is not None:
+                updates.append("electricity_consumption = ?")
+                params.append(elec_cons)
+            if solar_prod is not None:
+                updates.append("solar_production = ?")
+                params.append(solar_prod)
+            if grid_feed is not None:
+                updates.append("grid_feed_in = ?")
+                params.append(grid_feed)
+            if water_cons is not None:
+                updates.append("water_consumption = ?")
+                params.append(water_cons)
+
+            if updates:
+                params.extend([actual_bills_id, target_year, target_month])
+                conn.execute(f'''
+                    UPDATE bills SET {", ".join(updates)}
+                    WHERE bills_id = ? AND year = ? AND month = ?
+                ''', params)
+
+        # Gestione consumi singoli elettrodomestici
+        appliances_data = payload.get('appliances') or payload.get('elettrodomestici') or {}
+        appliances_updated = []
+
+        if isinstance(appliances_data, dict):
+            items_to_process = list(appliances_data.items())
+        elif isinstance(appliances_data, list):
+            items_to_process = []
+            for item in appliances_data:
+                if isinstance(item, dict) and 'name' in item:
+                    val = item.get('consumption') or item.get('kwh') or item.get('value') or 0.0
+                    items_to_process.append((item['name'], val))
+        else:
+            items_to_process = []
+
+        if items_to_process:
+            existing_apps = conn.execute('SELECT id, name FROM bills_appliances WHERE bills_id = ?', (actual_bills_id,)).fetchall()
+            app_name_to_id = {a['name'].strip().lower(): (a['id'], a['name']) for a in existing_apps}
+
+            alias_map = {
+                'boiler': 'acqua calda',
+                'scaldabagno': 'acqua calda',
+                'riscaldamento': 'pompa di calore',
+                'pompa calore': 'pompa di calore'
+            }
+
+            for raw_name, raw_val in items_to_process:
+                if not raw_name or str(raw_name).strip() == '':
+                    continue
+                try:
+                    val_kwh = float(raw_val or 0.0)
+                except (ValueError, TypeError):
+                    val_kwh = 0.0
+
+                name_clean = str(raw_name).strip()
+                key = name_clean.lower()
+                target_key = alias_map.get(key, key)
+
+                created_new = False
+                if target_key in app_name_to_id:
+                    app_id, canonical_name = app_name_to_id[target_key]
+                elif key in app_name_to_id:
+                    app_id, canonical_name = app_name_to_id[key]
+                else:
+                    # Creazione automatica nuovo elettrodomestico
+                    cur_app = conn.execute('''
+                        INSERT INTO bills_appliances (bills_id, name, category, icon, sum_to_total)
+                        VALUES (?, ?, 'other', '🔌', 0)
+                    ''', (actual_bills_id, name_clean))
+                    app_id = cur_app.lastrowid
+                    canonical_name = name_clean
+                    app_name_to_id[key] = (app_id, canonical_name)
+                    created_new = True
+
+                conn.execute('''
+                    INSERT INTO bills_appliance_consumptions (bills_id, appliance_id, year, month, consumption)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(bills_id, appliance_id, year, month) DO UPDATE SET
+                        consumption = excluded.consumption
+                ''', (actual_bills_id, app_id, target_year, target_month, val_kwh))
+
+                appliances_updated.append({
+                    "appliance_id": app_id,
+                    "name": canonical_name,
+                    "consumption_kwh": val_kwh,
+                    "auto_created": created_new
+                })
+
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"Dati energetici salvati con successo per {target_month:02d}/{target_year}",
+            "profile": {
+                "id": actual_bills_id,
+                "name": profile_name
+            },
+            "period": {
+                "year": target_year,
+                "month": target_month
+            },
+            "energy_totals": {
+                "electricity_consumption": elec_cons,
+                "solar_production": solar_prod,
+                "grid_feed_in": grid_feed,
+                "water_consumption": water_cons
+            },
+            "appliances_updated": appliances_updated
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "success": False,
+            "error": f"Errore durante l'elaborazione del webhook: {str(e)}"
+        }), 500
+    finally:
+        conn.close()
+
 # ==========================================
 # --- VEHICLE MANAGEMENT (FLASK) ---
 # ==========================================
@@ -5962,7 +6340,12 @@ def check_vehicle_recall_route(vehicle_id):
         
         email_sent = False
         if res.get('has_recall') or status == 'found':
-            user_email = v['user_email']
+            row_email = conn.execute(
+                "SELECT value FROM configurations WHERE key = ?",
+                (f"user_config:{session['user_id']}:vehicle_recalls_email",)
+            ).fetchone()
+            custom_email = (row_email['value'] or '').strip() if row_email else ''
+            user_email = custom_email or v['user_email']
             if user_email and '@' in user_email:
                 email_sent = send_recall_alert_email(user_email, dict(v), details)
                 
