@@ -5290,3 +5290,6 @@ msgstr "Avvia Sincronizzazione"
 #~ msgid "Add Bill"
 #~ msgstr "Aggiungi Bolletta"
 
+msgid "Media ultimi 12 mesi"
+msgstr "Media ultimi 12 mesi"
+

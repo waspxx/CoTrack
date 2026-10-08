@@ -10,6 +10,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Tab Veicoli: Aggiunta linea della media mobile degli ultimi 12 mesi al grafico Spese Mensili per Categoria con calcolo dinamico sulle categorie attive.
 - [x] **Feature** Schedulazione del report annuale consolidato CoTrack per il 31 dicembre alle 21:00 con APScheduler e gestione personalizzata delle email dei destinatari nelle Impostazioni per report annuale, promemoria veicoli (giornalieri 08:00) e allerte richiami veicoli (mensili 1° del mese 04:00).
 - [x] **Feature** Disattivata l'analisi/report settimanale AI programmata di default nello scheduler, con flag di configurazione opzionale `WEEKLY_AI_REPORT_ENABLED` in `.env` e `docker-compose.yml`
 - [x] **Feature** Tab Bollette: Endpoint Webhook HTTP per Home Assistant/Shelly (`/api/webhooks/bills/energy`) con autenticazione via token segreto in `.env`, calcolo automatico del mese corrente a fine mese (o periodo personalizzato), salvataggio consumi luce/solare/immissione e mappatura o autocreazione dei singoli elettrodomestici.

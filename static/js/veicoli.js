@@ -2725,9 +2725,102 @@ function _renderCategoryStackedChart(vEntries, EXPENSE_CATEGORY_COLORS, textThem
             borderColor: color,
             borderWidth: 1,
             borderRadius: 3,
-            stack: 'expenses'
+            stack: 'expenses',
+            order: 2
         };
     });
+
+    const datasets = [...catDatasets];
+
+    if (!isAnnual && activeCategories.length > 0) {
+        const vId = state.activeVehicleId;
+        const allVehicleEntries = (state.entries || []).filter(e => e.vehicleId === vId);
+        const allMonthlyMap = {};
+        let earliestMonth = null;
+
+        allVehicleEntries.forEach(e => {
+            const pKey = (e.date || '').substring(0, 7);
+            if (!pKey || !/^\d{4}-\d{2}$/.test(pKey)) return;
+            if (!earliestMonth || pKey < earliestMonth) {
+                earliestMonth = pKey;
+            }
+            if (!allMonthlyMap[pKey]) allMonthlyMap[pKey] = {};
+
+            let cat = null;
+            let cost = 0;
+            if (e.type === 'refuel') { cat = 'Carburante'; cost = parseFloat(e.totalCost) || 0; }
+            else if (e.type === 'expense') { cat = e.category || 'Altro'; cost = parseFloat(e.cost) || 0; }
+            else if (e.type === 'service') { cat = 'Manutenzione'; cost = parseFloat(e.cost) || 0; }
+            else if (e.type === 'income') { cat = 'Entrata'; cost = parseFloat(e.cost) || 0; }
+
+            if (cat && cost > 0) {
+                allMonthlyMap[pKey][cat] = (allMonthlyMap[pKey][cat] || 0) + cost;
+            }
+        });
+
+        if (!earliestMonth && sortedPeriods.length > 0) {
+            earliestMonth = sortedPeriods[0];
+        }
+
+        const get12MonthsEndingAt = (periodStr) => {
+            const [yStr, mStr] = periodStr.split('-');
+            const y = parseInt(yStr, 10);
+            const m = parseInt(mStr, 10);
+            const list = [];
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(y, m - 1 - i, 1);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                list.push(`${yyyy}-${mm}`);
+            }
+            return list;
+        };
+
+        const movingAvgData = sortedPeriods.map(p => {
+            const windowMonths = get12MonthsEndingAt(p);
+            let total = 0;
+            windowMonths.forEach(m => {
+                const catCosts = allMonthlyMap[m];
+                if (catCosts) {
+                    activeCategories.forEach(cat => {
+                        total += (catCosts[cat] || 0);
+                    });
+                }
+            });
+
+            let divisor = 12;
+            if (earliestMonth) {
+                const [ey, em] = earliestMonth.split('-').map(Number);
+                const [py, pm] = p.split('-').map(Number);
+                const elapsed = (py - ey) * 12 + (pm - em) + 1;
+                if (elapsed < 12) {
+                    divisor = Math.max(1, elapsed);
+                }
+            }
+            return parseFloat((total / divisor).toFixed(2));
+        });
+
+        const isDark = document.body.classList.contains('dark-theme');
+        const avgColor = isDark ? '#38BDF8' : '#2563EB';
+
+        datasets.push({
+            type: 'line',
+            label: (window.Translations && window.Translations.avg12Months) || 'Media ultimi 12 mesi',
+            data: movingAvgData,
+            borderColor: avgColor,
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            borderDash: [5, 4],
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: avgColor,
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 1.5,
+            tension: 0.25,
+            fill: false,
+            order: 1
+        });
+    }
 
     chartMonthlyByCategory = new Chart(canvas5, {
         type: 'bar',
@@ -2737,7 +2830,7 @@ function _renderCategoryStackedChart(vEntries, EXPENSE_CATEGORY_COLORS, textThem
                 const names = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
                 return `${names[parseInt(mm)-1]} ${y.substring(2)}`;
             }),
-            datasets: catDatasets
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -2748,7 +2841,7 @@ function _renderCategoryStackedChart(vEntries, EXPENSE_CATEGORY_COLORS, textThem
             },
             scales: {
                 x: { stacked: true, grid: { color: gridThemeColor }, ticks: { color: textThemeColor } },
-                y: { stacked: true, grid: { color: gridThemeColor }, ticks: { color: textThemeColor, callback: v => `€ ${v}` } }
+                y: { grid: { color: gridThemeColor }, ticks: { color: textThemeColor, callback: v => `€ ${v}` } }
             }
         }
     });
