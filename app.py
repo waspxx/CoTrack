@@ -117,17 +117,59 @@ def get_tv_hist_cached(ticker):
     global tv_instance
     now = time.time()
     if ticker in tv_cache and (now - tv_cache[ticker][1]) < CACHE_TTL:
-        return tv_cache[ticker][0]
+        cached_val = tv_cache[ticker][0]
+        if cached_val is not None and not cached_val.empty:
+            return cached_val
         
-    if tv_instance is None:
-        from tvDatafeed import TvDatafeed
-        tv_instance = TvDatafeed()
-        
-    from tvDatafeed import Interval
-    # Scarichiamo 5000 barre, usate poi sia per il prezzo attuale che per lo storico
-    data = tv_instance.get_hist(symbol=ticker, exchange='OTCB', interval=Interval.in_daily, n_bars=5000)
-    tv_cache[ticker] = (data, now)
-    return data
+    data = None
+    for attempt in range(2):
+        try:
+            if tv_instance is None:
+                from tvDatafeed import TvDatafeed
+                tv_instance = TvDatafeed()
+                
+            from tvDatafeed import Interval
+            # Scarichiamo 5000 barre, usate poi sia per il prezzo attuale che per lo storico
+            data = tv_instance.get_hist(symbol=ticker, exchange='OTCB', interval=Interval.in_daily, n_bars=5000)
+            if data is not None and not data.empty and 'close' in data.columns:
+                tv_cache[ticker] = (data, now)
+                return data
+            else:
+                tv_instance = None
+        except Exception as e:
+            print(f"Errore tvdatafeed tentativo {attempt + 1} per {ticker}: {e}")
+            tv_instance = None
+            
+    return None
+
+def get_borsa_italiana_bond_price(isin: str):
+    """Recupera la quotazione ufficiale più recente per un BTP o obbligazione da Borsa Italiana."""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    urls = [
+        f'https://www.borsaitaliana.it/borsa/obbligazioni/mot/btp/scheda/{isin}.html?lang=it',
+        f'https://www.borsaitaliana.it/borsa/obbligazioni/mot/bot/scheda/{isin}.html?lang=it',
+        f'https://www.borsaitaliana.it/borsa/obbligazioni/mot/cct/scheda/{isin}.html?lang=it',
+        f'https://www.borsaitaliana.it/borsa/obbligazioni/eurotlx/scheda/{isin}.html?lang=it',
+    ]
+    for url in urls:
+        try:
+            r = requests.get(url, headers=headers, timeout=5)
+            if r.status_code == 200 and 'scheda' in r.url:
+                soup = BeautifulSoup(r.text, 'html.parser')
+                el = soup.select_one('span.-formatPrice')
+                if el:
+                    val_str = el.get_text(strip=True).replace('.', '').replace(',', '.')
+                    price = float(val_str)
+                    date_match = re.search(r'(\d{2}/\d{2}/\d{2})', r.text)
+                    if date_match:
+                        d, m, y = date_match.group(1).split('/')
+                        date_str = f'20{y}-{m}-{d}'
+                    else:
+                        date_str = datetime.today().strftime('%Y-%m-%d')
+                    return price, date_str
+        except Exception:
+            continue
+    return None, None
 
 # --- CACHE PER JUSTETF SCRAPING ---
 etf_overview_cache = None
@@ -990,6 +1032,10 @@ def generate_snapshot_for_portfolio(portfolio_id):
              data_btp = get_tv_hist_cached(fetch_ticker)
              if data_btp is not None and not data_btp.empty and 'close' in data_btp.columns:
                  prezzo_reale = float(data_btp['close'].iloc[-1])
+             elif fetch_ticker.startswith('IT'):
+                 p_bi, _ = get_borsa_italiana_bond_price(fetch_ticker)
+                 if p_bi is not None:
+                     prezzo_reale = float(p_bi)
         else:
              try:
                  url_yahoo = f"https://query1.finance.yahoo.com/v8/finance/chart/{fetch_ticker}"
@@ -998,6 +1044,16 @@ def generate_snapshot_for_portfolio(portfolio_id):
                      prezzo_reale = risposta.json()['chart']['result'][0]['meta']['regularMarketPrice']
              except Exception:
                  pass
+
+        if prezzo_reale is None:
+            conn_fallback = get_db_connection()
+            row = conn_fallback.execute(
+                'SELECT price FROM price_history WHERE ticker = ? ORDER BY date DESC LIMIT 1',
+                (fetch_ticker,)
+            ).fetchone()
+            conn_fallback.close()
+            if row and row['price'] is not None:
+                prezzo_reale = float(row['price'])
         
         position_value = prezzo_reale * pos['shares'] if prezzo_reale is not None else pos['cost']
         current_value += position_value
@@ -1078,6 +1134,10 @@ def get_portfolio_snapshot_at_date(portfolio_id, target_date=None):
                  data_btp = get_tv_hist_cached(fetch_ticker)
                  if data_btp is not None and not data_btp.empty and 'close' in data_btp.columns:
                      prezzo_reale = float(data_btp['close'].iloc[-1])
+                 elif fetch_ticker.startswith('IT'):
+                     p_bi, _ = get_borsa_italiana_bond_price(fetch_ticker)
+                     if p_bi is not None:
+                         prezzo_reale = float(p_bi)
             else:
                  try:
                      url_yahoo = f"https://query1.finance.yahoo.com/v8/finance/chart/{fetch_ticker}"
@@ -1087,6 +1147,14 @@ def get_portfolio_snapshot_at_date(portfolio_id, target_date=None):
                  except Exception:
                      pass
         
+        if prezzo_reale is None:
+            row = conn.execute(
+                'SELECT price FROM price_history WHERE ticker = ? ORDER BY date DESC LIMIT 1',
+                (fetch_ticker,)
+            ).fetchone()
+            if row and row['price'] is not None:
+                prezzo_reale = float(row['price'])
+
         if prezzo_reale is None:
             prezzo_reale = pos['cost'] / pos['shares'] if pos['shares'] > 0 else 0.0
             
@@ -3927,39 +3995,91 @@ def ottieni_prezzo(ticker):
     ticker = ticker.strip().upper()
     headers = {'User-Agent': 'Mozilla/5.0'}
 
-    # Controllo ISIN per BTP ed altre obbligazioni
+    # 1. Controllo ISIN per BTP ed altre obbligazioni
     if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker):
+        fetch_symbol = ticker
         if not ticker.startswith('IT'):
-            ticker = resolve_ticker_from_isin(ticker)
+            fetch_symbol = resolve_ticker_from_isin(ticker)
             
-        if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker):
+        if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', fetch_symbol):
             try:
                 # Recupera i dati storici completi dalla cache (o li scarica se non presenti/scaduti)
-                data_btp = get_tv_hist_cached(ticker)
+                data_btp = get_tv_hist_cached(fetch_symbol)
                 if data_btp is not None and not data_btp.empty and 'close' in data_btp.columns:
                     prezzo = data_btp['close'].iloc[-1]
                     data_ultima = data_btp.index[-1].strftime('%Y-%m-%d')
                     return jsonify({"prezzo": float(prezzo), "data": data_ultima})
             except Exception as e:
-                print(f"Errore tvdatafeed (live) per {ticker}: {e}")
+                print(f"Errore tvdatafeed (live) per {fetch_symbol}: {e}")
+
+            # Fallback 1b: Scraping da Borsa Italiana per BTP / obbligazioni italiane
+            if ticker.startswith('IT'):
+                try:
+                    prezzo_bi, data_bi = get_borsa_italiana_bond_price(ticker)
+                    if prezzo_bi is not None:
+                        try:
+                            conn = get_db_connection()
+                            conn.execute(
+                                'INSERT OR REPLACE INTO price_history (date, ticker, price) VALUES (?, ?, ?)',
+                                (data_bi, ticker, float(prezzo_bi))
+                            )
+                            conn.commit()
+                            conn.close()
+                        except Exception:
+                            pass
+                        return jsonify({"prezzo": float(prezzo_bi), "data": data_bi})
+                except Exception as e:
+                    print(f"Errore scraping Borsa Italiana per {ticker}: {e}")
             
-    # Fallback su Yahoo Finance
+    # 2. Fallback su Yahoo Finance (per ticker azioni/ETF o ISIN risolti)
+    yahoo_ticker = ticker
+    if re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker) and not ticker.startswith('IT'):
+        yahoo_ticker = resolve_ticker_from_isin(ticker)
+    elif ticker.startswith('IT') and re.match(r'^[A-Z]{2}[A-Z0-9]{10}$', ticker):
+        resolved = resolve_ticker_from_isin(ticker)
+        if resolved != ticker:
+            yahoo_ticker = resolved
+
     try:
-        url_yahoo = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
-        risposta = requests.get(url_yahoo, headers=headers)
+        url_yahoo = f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_ticker}"
+        risposta = requests.get(url_yahoo, headers=headers, timeout=5)
         if risposta.status_code == 200:
             dati = risposta.json()
             if dati.get('chart') and dati['chart'].get('result'):
                 meta = dati['chart']['result'][0]['meta']
-                prezzo = meta['regularMarketPrice']
-                timestamp = meta.get('regularMarketTime')
-                if timestamp:
-                    data_ultima = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
-                else:
-                    data_ultima = datetime.today().strftime('%Y-%m-%d')
-                return jsonify({"prezzo": prezzo, "data": data_ultima})
+                prezzo = meta.get('regularMarketPrice')
+                if prezzo is not None:
+                    timestamp = meta.get('regularMarketTime')
+                    if timestamp:
+                        data_ultima = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+                    else:
+                        data_ultima = datetime.today().strftime('%Y-%m-%d')
+                    try:
+                        conn = get_db_connection()
+                        conn.execute(
+                            'INSERT OR REPLACE INTO price_history (date, ticker, price) VALUES (?, ?, ?)',
+                            (data_ultima, ticker, float(prezzo))
+                        )
+                        conn.commit()
+                        conn.close()
+                    except Exception:
+                        pass
+                    return jsonify({"prezzo": float(prezzo), "data": data_ultima})
     except Exception as e:
-         print(f"Errore Yahoo Finance: {e}")
+        print(f"Errore Yahoo Finance: {e}")
+
+    # 3. Fallback su storico locale (price_history) per evitare 404 in caso di indisponibilità provider
+    try:
+        conn = get_db_connection()
+        row = conn.execute(
+            'SELECT price, date FROM price_history WHERE ticker = ? OR ticker = ? ORDER BY date DESC LIMIT 1',
+            (ticker, yahoo_ticker)
+        ).fetchone()
+        conn.close()
+        if row and row['price'] is not None:
+            return jsonify({"prezzo": float(row['price']), "data": row['date'], "cached": True}), 200
+    except Exception as e:
+        print(f"Errore fallback price_history per {ticker}: {e}")
 
     return jsonify({"prezzo": None, "data": None}), 404
 
@@ -4096,10 +4216,32 @@ def historical_performance():
                             new_data_frames.append(btp_series)
                         print(f"Dati storici per BTP {ticker} scaricati con successo.")
                     else:
-                        api_errors.append(f"tvdatafeed ({ticker})")
+                        downloaded = False
+                        if ticker.startswith('IT'):
+                            p_bi, d_bi = get_borsa_italiana_bond_price(ticker)
+                            if p_bi is not None:
+                                bi_series = pd.Series([float(p_bi)], index=[pd.to_datetime(d_bi)], name=ticker)
+                                bi_series = bi_series[bi_series.index >= start_fetch]
+                                if not bi_series.empty:
+                                    new_data_frames.append(bi_series)
+                                downloaded = True
+                                print(f"Prezzo odierno per BTP {ticker} scaricato da Borsa Italiana.")
+                        if not downloaded:
+                            api_errors.append(f"tvdatafeed ({ticker})")
                 except Exception as e:
-                    print(f"Errore tvdatafeed per {ticker}: {e}. Verrà usato il valore di carico.")
-                    api_errors.append(f"tvdatafeed ({ticker})")
+                    print(f"Errore tvdatafeed per {ticker}: {e}. Tentativo con Borsa Italiana...")
+                    downloaded = False
+                    if ticker.startswith('IT'):
+                        p_bi, d_bi = get_borsa_italiana_bond_price(ticker)
+                        if p_bi is not None:
+                            bi_series = pd.Series([float(p_bi)], index=[pd.to_datetime(d_bi)], name=ticker)
+                            bi_series = bi_series[bi_series.index >= start_fetch]
+                            if not bi_series.empty:
+                                new_data_frames.append(bi_series)
+                            downloaded = True
+                            print(f"Prezzo odierno per BTP {ticker} scaricato da Borsa Italiana.")
+                    if not downloaded:
+                        api_errors.append(f"tvdatafeed ({ticker})")
 
     # Combiniamo tutte le serie in un unico DataFrame
     dati_mercato_nuovi = pd.DataFrame()

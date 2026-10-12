@@ -10,6 +10,7 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Bug** Risolto errore 404 su `/api/prezzo/<ticker>` per BTP e titoli obbligazionari (es. `IT0005413171`) aggiungendo auto-retry e reset di connessione in tvDatafeed, fallback di scraping ufficiale su Borsa Italiana MOT e salvataggio/recupero dalla tabella locale `price_history`.
 - [x] **Feature** Tab Veicoli: Aggiunta linea della media mobile degli ultimi 12 mesi al grafico Spese Mensili per Categoria con calcolo dinamico sulle categorie attive.
 - [x] **Feature** Schedulazione del report annuale consolidato CoTrack per il 31 dicembre alle 21:00 con APScheduler e gestione personalizzata delle email dei destinatari nelle Impostazioni per report annuale, promemoria veicoli (giornalieri 08:00) e allerte richiami veicoli (mensili 1° del mese 04:00).
 - [x] **Feature** Disattivata l'analisi/report settimanale AI programmata di default nello scheduler, con flag di configurazione opzionale `WEEKLY_AI_REPORT_ENABLED` in `.env` e `docker-compose.yml`
