@@ -21,3 +21,4 @@ data/*.csv
 
 # Antigravity agency skills
 .agents/skills/agency-*/
+.ori/

@@ -180,7 +180,13 @@
                 <div class="bar-chart-wrapper"><canvas id="graficoWalletMensile"></canvas></div>
             </div>
             <div class="chart-box">
-                <div class="andamento-title">{{ _('Expenses by Category') }}</div>
+                <div class="andamento-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ _('Expenses by Category') }}</span>
+                    <div class="btn-group btn-group-sm" role="group" style="display: inline-flex; gap: 4px;">
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-wallet-chart-macro" onclick="toggleWalletChartVista('macro')" style="padding: 2px 8px; font-size: 0.78em; border-radius: 4px;">{{ _('Macro') }}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-wallet-chart-dettaglio" onclick="toggleWalletChartVista('dettaglio')" style="padding: 2px 8px; font-size: 0.78em; border-radius: 4px;">{{ _('Detail') }}</button>
+                    </div>
+                </div>
                 <div class="bar-chart-wrapper"><canvas id="graficoWalletCategorie"></canvas></div>
             </div>
         </div>
@@ -302,11 +308,15 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; width: 100%;">
-                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px;">
                         <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Filter by Account') }}</span>
                         <div id="filtroWalletConto" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 5px;"></div>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px;">
+                        <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Filter by Macro-Category') }}</span>
+                        <div id="filtroWalletMacro" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 5px;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px;">
                         <span style="font-size: 0.8em; color: #6c757d; font-weight: 500;">{{ _('Filter by Category') }}</span>
                         <div id="filtroWalletCategoria" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 5px;"></div>
                     </div>

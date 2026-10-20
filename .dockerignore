@@ -11,3 +11,4 @@ venv/
 .venv/
 .agents/
 *.log
+.ori/

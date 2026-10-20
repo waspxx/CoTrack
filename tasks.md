@@ -10,6 +10,8 @@
 
 ## 🟢 Completato (Completed)
 *Archivio storico dei task conclusi.*
+- [x] **Feature** Sync BudgetBakers: rimossa la mappatura categorie via Gemini (e la relativa cache in `configurations`) poiché le categorie BudgetBakers coincidono ormai con quelle di CoTrack; il sync normalizza solo il case verso le categorie esistenti nel wallet.
+- [x] **Feature** Tab Wallet: Introduzione delle Macro-Categorie (tassonomia centralizzata in `wallet_taxonomy.py`, colonna `macro_category` in `wallet_transactions` con migrazione idempotente e backfill, endpoint `GET /api/wallet/categories`, persistenza macro in creazione/modifica/import/sync BudgetBakers), selettore gerarchico nella modale transazione, filtro pillole per Macro-Categoria, badge macro nella tabella e grafico Spese con toggle vista Macro/Dettaglio.
 - [x] **Bug** Risolto errore 404 su `/api/prezzo/<ticker>` per BTP e titoli obbligazionari (es. `IT0005413171`) aggiungendo auto-retry e reset di connessione in tvDatafeed, fallback di scraping ufficiale su Borsa Italiana MOT e salvataggio/recupero dalla tabella locale `price_history`.
 - [x] **Feature** Tab Veicoli: Aggiunta linea della media mobile degli ultimi 12 mesi al grafico Spese Mensili per Categoria con calcolo dinamico sulle categorie attive.
 - [x] **Feature** Schedulazione del report annuale consolidato CoTrack per il 31 dicembre alle 21:00 con APScheduler e gestione personalizzata delle email dei destinatari nelle Impostazioni per report annuale, promemoria veicoli (giornalieri 08:00) e allerte richiami veicoli (mensili 1° del mese 04:00).

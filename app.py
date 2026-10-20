@@ -44,6 +44,7 @@ except ImportError:
 
 from drivvo_sync import drivvo_service
 from budgetbakers_sync import budgetbakers_service, execute_wallet_triggers
+from wallet_taxonomy import get_macro_category, WALLET_TAXONOMY, MACRO_CATEGORIES, get_taxonomy_hierarchy
 from scraping.scrape_engine import check_vin_recall
 from annual_report import get_annual_report_data, render_annual_report_html, send_annual_report_email
 
@@ -463,9 +464,14 @@ def init_db():
             date TEXT,
             note TEXT,
             type TEXT,
+            macro_category TEXT,
             FOREIGN KEY (wallet_id) REFERENCES wallets (id)
         )
     ''')
+    try:
+        conn.execute("ALTER TABLE wallet_transactions ADD COLUMN macro_category TEXT")
+    except sqlite3.OperationalError:
+        pass
     conn.execute('''
         CREATE TABLE IF NOT EXISTS wallet_account_config (
             wallet_id INTEGER NOT NULL,
@@ -4380,6 +4386,14 @@ def historical_performance():
     })
 
 # --- 5. INTEGRAZIONE WALLET (BUDGETBAKERS) ---
+@app.route('/api/wallet/categories', methods=['GET'])
+def get_wallet_categories():
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    return jsonify({
+        "taxonomy": get_taxonomy_hierarchy(),
+        "macros": MACRO_CATEGORIES
+    })
+
 @app.route('/api/wallet/transactions', methods=['GET'])
 def get_wallet_transactions():
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
@@ -4394,16 +4408,17 @@ def update_wallet_transaction_category(transaction_id):
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
     
     data = request.json
-    new_category = data.get('category')
+    new_category = (data.get('category') or '').strip()
     
     if not new_category:
         return jsonify({"errore": _("Missing category")}), 400
     
+    macro_cat = get_macro_category(new_category)
     conn = get_db_connection()
     try:
-        conn.execute('UPDATE wallet_transactions SET category = ? WHERE id = ?', (new_category, transaction_id))
+        conn.execute('UPDATE wallet_transactions SET category = ?, macro_category = ? WHERE id = ?', (new_category, macro_cat, transaction_id))
         conn.commit()
-        return jsonify({"messaggio": _("Category updated successfully")}), 200
+        return jsonify({"messaggio": _("Category updated successfully"), "macro_category": macro_cat}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({"errore": str(e)}), 500
@@ -4456,16 +4471,17 @@ def manage_single_wallet_transaction(transaction_id):
             elif tx_type == 'Income' and amount < 0:
                 amount = abs(amount)
                 
+            macro_cat = get_macro_category(category)
             conn.execute('''
                 UPDATE wallet_transactions 
-                SET date = ?, account = ?, category = ?, currency = ?, amount = ?, note = ?, type = ?
+                SET date = ?, account = ?, category = ?, macro_category = ?, currency = ?, amount = ?, note = ?, type = ?
                 WHERE id = ?
-            ''', (date, account, category, currency, amount, note, tx_type, transaction_id))
+            ''', (date, account, category, macro_cat, currency, amount, note, tx_type, transaction_id))
             execute_wallet_triggers(conn, session['user_id'], [{
                 'date': date, 'amount': amount, 'note': note, 'category': category, 'account': account, 'type': tx_type
             }])
             conn.commit()
-            return jsonify({"messaggio": _("Transaction updated successfully")}), 200
+            return jsonify({"messaggio": _("Transaction updated successfully"), "macro_category": macro_cat}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({"errore": str(e)}), 500
@@ -4730,14 +4746,15 @@ def import_wallet_csv():
                         parsed_rows += 1 # Parsata con successo ma ignorata poiché duplicata
                         continue
                         
-                    records.append((wallet_id, account, category, currency, amount, data_op, note, t_type))
+                    macro_cat = get_macro_category(category)
+                    records.append((wallet_id, account, category, currency, amount, data_op, note, t_type, macro_cat))
                     esistenti_set.add(record_tuple)
                     parsed_rows += 1
                 
             if records:
                 conn.executemany('''
-                    INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type, macro_category)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', records)
                 execute_wallet_triggers(conn, session['user_id'], records)
                 conn.commit()
@@ -4866,12 +4883,13 @@ def import_custom_wallet_csv():
                 parsed_rows += 1
                 continue
                 
-            records.append((wallet_id, account, category, 'EUR', amount, data_op, note, t_type))
+            macro_cat = get_macro_category(category)
+            records.append((wallet_id, account, category, 'EUR', amount, data_op, note, t_type, macro_cat))
             esistenti_set.add(record_tuple)
             parsed_rows += 1
         
         if records:
-            conn.executemany('INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', records)
+            conn.executemany('INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type, macro_category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', records)
             execute_wallet_triggers(conn, session['user_id'], records)
             conn.commit()
             

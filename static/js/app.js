@@ -2836,8 +2836,61 @@ function toggleEsclusioneSaldoWallet(conto, isChecked) {
     aggiornaDashboardWallet();
 }
 
+window.walletTaxonomy = null;
+window.getMacroForCategory = function(cat) {
+    if (!cat) return 'Altro';
+    let clean = cat.replace(' (Trasf.)', '').trim();
+    if (window.walletTaxonomy && window.walletTaxonomy.categoryToMacro) {
+        return window.walletTaxonomy.categoryToMacro[clean.toLowerCase()] || clean;
+    }
+    const initialMap = {
+        "abbigliamento adulti": "Shopping", "bellezza": "Shopping", "cancelleria, attrezzi": "Shopping",
+        "elettronica": "Shopping", "farmacia": "Shopping", "gioielli": "Shopping", "shopping casa": "Shopping",
+        "regali uscite": "Shopping", "tempo libero": "Shopping", "animali": "Shopping", "shopping": "Shopping",
+        "aerei": "Trasporti", "trasporto pubblico": "Trasporti", "taxi": "Trasporti", "viaggio di lavoro": "Trasporti", "trasporti": "Trasporti",
+        "bar": "Cibo", "ristorazione": "Cibo", "spesa": "Cibo", "cibo": "Cibo",
+        "assicurazione casa": "Casa", "utenze": "Casa", "manutenzione casa": "Casa", "mutuo": "Casa", "servizi casa": "Casa", "casa": "Casa",
+        "bollo": "Veicolo", "carburante": "Veicolo", "assicurazione veicolo": "Veicolo", "manutenzione veicolo": "Veicolo", "parcheggio": "Veicolo", "veicolo": "Veicolo",
+        "assistenza sanitaria adulti": "Vita", "cultura ed eventi": "Vita", "hobby": "Vita", "istruzione adulti": "Vita",
+        "libri e abbonamenti": "Vita", "lotterie": "Vita", "sport adulti": "Vita", "tv": "Vita", "vacanze": "Vita", "vita": "Vita",
+        "internet": "Computer", "software": "Computer", "telefono": "Computer", "servizi postali": "Computer", "computer": "Computer",
+        "lavoro elisa": "Spese finanziarie", "lavoro mattia": "Spese finanziarie", "commissioni": "Spese finanziarie", "assicurazioni": "Spese finanziarie",
+        "multe": "Spese finanziarie", "prestiti": "Spese finanziarie", "tasse": "Spese finanziarie", "consulenza": "Spese finanziarie", "spese finanziarie": "Spese finanziarie",
+        "scuola": "Figli", "salute figli": "Figli", "spesa e utilita figli": "Figli", "sport e svago figli": "Figli", "vestiti e scarpe figli": "Figli", "figli": "Figli",
+        "ricariche buoni pasto": "Entrate", "dividendi": "Entrate", "assegno unico": "Entrate", "regali entrate": "Entrate",
+        "rimborsi": "Entrate", "stipendio": "Entrate", "personal elisa": "Entrate", "vendita": "Entrate", "entrate": "Entrate",
+        "prelievo": "Prelievo", "transfer": "TRANSFER", "trasferisci, preleva": "TRANSFER"
+    };
+    return initialMap[clean.toLowerCase()] || clean;
+};
+
+async function caricaTaxonomyWallet() {
+    try {
+        let resp = await fetch('/api/wallet/categories');
+        if (resp.ok) {
+            let data = await resp.json();
+            window.walletTaxonomy = data;
+            let c2m = {};
+            if (data.taxonomy) {
+                data.taxonomy.forEach(item => {
+                    c2m[item.macro.toLowerCase()] = item.macro;
+                    item.subcategories.forEach(sub => {
+                        c2m[sub.toLowerCase()] = item.macro;
+                    });
+                });
+            }
+            window.walletTaxonomy.categoryToMacro = c2m;
+        }
+    } catch (e) {
+        console.warn("Could not load wallet taxonomy API:", e);
+    }
+}
+
 async function caricaDatiWallet() {
     if (!activeWalletId) return;
+    if (!window.walletTaxonomy) {
+        caricaTaxonomyWallet();
+    }
     try {
         let risposta = await fetch('/api/wallet/transactions?wallet_id=' + activeWalletId);
         if (risposta.ok) {
@@ -2972,8 +3025,19 @@ function modificaTransazioneWallet(id) {
     
     let dlCategories = document.getElementById('list-wallet-categories');
     if (dlCategories) {
-        let uniqueCats = [...new Set(transazioniWalletGlobal.map(item => (item.category || item.cat || '').replace(' (Trasf.)', '')).filter(Boolean))].sort();
-        dlCategories.innerHTML = uniqueCats.map(cat => `<option value="${cat.replace(/"/g, '&quot;')}">`).join('');
+        let optionsHtml = '';
+        if (window.walletTaxonomy && window.walletTaxonomy.taxonomy) {
+            window.walletTaxonomy.taxonomy.forEach(item => {
+                optionsHtml += `<option value="${item.macro}">📁 ${item.macro} (Macro)</option>`;
+                item.subcategories.forEach(sub => {
+                    optionsHtml += `<option value="${sub}">${sub} — [${item.macro}]</option>`;
+                });
+            });
+        } else {
+            let uniqueCats = [...new Set(transazioniWalletGlobal.map(item => (item.category || item.cat || '').replace(' (Trasf.)', '')).filter(Boolean))].sort();
+            optionsHtml = uniqueCats.map(cat => `<option value="${cat.replace(/"/g, '&quot;')}">`).join('');
+        }
+        dlCategories.innerHTML = optionsHtml;
     }
     
     let modal = document.getElementById('modal-modifica-transazione-wallet');
@@ -3123,6 +3187,18 @@ function calcolaPeriodiWallet() {
     return { startCur, endCur, startPrev, endPrev, label: "" };
 }
 
+function toggleWalletChartVista(vista) {
+    walletChartVista = vista;
+    if (typeof aggiornaDashboardWallet === 'function') aggiornaDashboardWallet();
+}
+
+function aggiornaBottoniVistaGraficoWallet() {
+    let btnMacro = document.getElementById('btn-wallet-chart-macro');
+    let btnDettaglio = document.getElementById('btn-wallet-chart-dettaglio');
+    if (btnMacro) btnMacro.className = walletChartVista === 'macro' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
+    if (btnDettaglio) btnDettaglio.className = walletChartVista === 'dettaglio' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
+}
+
 function aggiornaDashboardWallet() {
     let transazioni = transazioniWalletGlobal;
     if (!transazioni) return;
@@ -3132,7 +3208,7 @@ function aggiornaDashboardWallet() {
     let entrateCur = 0, speseCur = 0;
     let entratePrev = 0, spesePrev = 0;
 
-    let entrateMensili = {}, speseMensili = {}, spesePerCategoria = {};
+    let entrateMensili = {}, speseMensili = {}, spesePerCategoria = {}, spesePerMacro = {};
     let entratePerConto = {}, spesePerConto = {}, trasferimentiPerConto = {};
     let entratePreConto = {}, spesePreConto = {}, trasferimentiPreConto = {};
     let nettoMensileCur = {};
@@ -3152,6 +3228,7 @@ function aggiornaDashboardWallet() {
     if (typeof renderFiltroPills === "function") {
         renderFiltroPills('conto');
         renderFiltroPills('categoria');
+        renderFiltroPills('macro');
     }
 
 
@@ -3167,6 +3244,7 @@ function aggiornaDashboardWallet() {
         let importo = parseFloat(t.amount) || 0;
         let mese = dataStr.substring(0, 7);
         let cat = t.category || "Altro";
+        let macroCat = t.macro_category || getMacroForCategory(cat);
 
         let isTransfer = t.type === 'Transfer' ||
             (t.type && t.type.toLowerCase().match(/(transfer|trasferiment|trasferisci|preleva|giroconto)/)) ||
@@ -3195,6 +3273,7 @@ function aggiornaDashboardWallet() {
                     dataStr: dataStr,
                     conto: conto,
                     cat: cat + ' (Trasf.)',
+                    macro: macroCat,
                     note: t.note,
                     importo: importo,
                     isTransfer: true
@@ -3212,6 +3291,7 @@ function aggiornaDashboardWallet() {
                     speseCur += spesaAssoluta;
                     speseMensili[mese] = (speseMensili[mese] || 0) + spesaAssoluta;
                     spesePerCategoria[cat] = (spesePerCategoria[cat] || 0) + spesaAssoluta;
+                    spesePerMacro[macroCat] = (spesePerMacro[macroCat] || 0) + spesaAssoluta;
                     spesePerConto[conto] = (spesePerConto[conto] || 0) + spesaAssoluta;
                     nettoMensileCur[mese] = (nettoMensileCur[mese] || 0) - spesaAssoluta;
                 }
@@ -3221,6 +3301,7 @@ function aggiornaDashboardWallet() {
                     dataStr: dataStr,
                     conto: conto,
                     cat: cat,
+                    macro: macroCat,
                     note: t.note,
                     importo: importo,
                     isTransfer: false
@@ -3246,9 +3327,11 @@ function aggiornaDashboardWallet() {
     // Popola i dropdown dei filtri
     let contiUnici = new Set(transazioniValideWallet.map(t => t.conto));
     let categorieUniche = new Set(transazioniValideWallet.map(t => t.cat));
+    let macroUniche = new Set(transazioniValideWallet.filter(t => !t.isTransfer).map(t => t.macro).filter(Boolean));
     
     if (typeof popolaFiltroPills === "function") {
         popolaFiltroPills('conto', Array.from(contiUnici).sort());
+        popolaFiltroPills('macro', Array.from(macroUniche).sort());
         popolaFiltroPills('categoria', Array.from(categorieUniche).sort());
     }
 
@@ -3286,8 +3369,9 @@ function aggiornaDashboardWallet() {
         }
     });
 
-    // Ordiniamo le categorie per importo speso decrescente
-    let catOrdinate = Object.entries(spesePerCategoria).sort((a, b) => b[1] - a[1]);
+    // Ordiniamo le voci per importo speso decrescente (vista Macro o Dettaglio)
+    let datiChart = walletChartVista === 'macro' ? spesePerMacro : spesePerCategoria;
+    let catOrdinate = Object.entries(datiChart).sort((a, b) => b[1] - a[1]);
 
     let baseColors = ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#17a2b8', '#0d6efd', '#6f42c1', '#e83e8c', '#6610f2', '#adb5bd', '#6c757d'];
     let bgColors = catOrdinate.map((_, i) => baseColors[i % baseColors.length]);
@@ -3295,6 +3379,7 @@ function aggiornaDashboardWallet() {
     const ctxCat = document.getElementById('graficoWalletCategorie').getContext('2d');
     if (graficoWalletCategorieObj !== null) graficoWalletCategorieObj.destroy();
     graficoWalletCategorieObj = new Chart(ctxCat, { type: 'doughnut', data: { labels: catOrdinate.map(c => c[0]), datasets: [{ data: catOrdinate.map(c => c[1]), backgroundColor: bgColors }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: function (ctx) { return ctx.label + ': ' + formatEuro(ctx.raw); } } } } } });
+    aggiornaBottoniVistaGraficoWallet();
 
     // Disegna tabella saldi conti
     let htmlSaldiConti = "";
@@ -3888,7 +3973,9 @@ let itemsPerPageWallet = 20;
 let currentFiltertestoWallet = "";
 let currentFilterContoWallet = [];
 let currentFilterCategoriaWallet = [];
+let currentFilterMacroWallet = [];
 let transazioniValideWallet = [];
+let walletChartVista = 'dettaglio';
 
 // --- TABLE DATE WIDGET (shared with walletFilter) ---
 let tdfUiMesiYear = new Date().getFullYear();
@@ -4015,7 +4102,9 @@ function applicaFiltriWallet() {
 }
 
 function toggleFiltroPill(tipo, valore) {
-    let arr = tipo === 'conto' ? currentFilterContoWallet : currentFilterCategoriaWallet;
+    let arr = tipo === 'conto' ? currentFilterContoWallet
+            : tipo === 'macro' ? currentFilterMacroWallet
+            : currentFilterCategoriaWallet;
     
     if (valore === "") {
         arr.length = 0; 
@@ -4033,8 +4122,12 @@ function toggleFiltroPill(tipo, valore) {
 }
 
 function renderFiltroPills(tipo) {
-    const arr = tipo === 'conto' ? currentFilterContoWallet : currentFilterCategoriaWallet;
-    const containerId = tipo === 'conto' ? 'filtroWalletConto' : 'filtroWalletCategoria';
+    const arr = tipo === 'conto' ? currentFilterContoWallet
+              : tipo === 'macro' ? currentFilterMacroWallet
+              : currentFilterCategoriaWallet;
+    const containerId = tipo === 'conto' ? 'filtroWalletConto'
+                      : tipo === 'macro' ? 'filtroWalletMacro'
+                      : 'filtroWalletCategoria';
     const container = document.getElementById(containerId);
     if (!container) return;
     
@@ -4053,11 +4146,16 @@ function renderFiltroPills(tipo) {
 }
 
 function popolaFiltroPills(tipo, opzioni) {
-    const containerId = tipo === 'conto' ? 'filtroWalletConto' : 'filtroWalletCategoria';
+    const containerId = tipo === 'conto' ? 'filtroWalletConto'
+                      : tipo === 'macro' ? 'filtroWalletMacro'
+                      : 'filtroWalletCategoria';
     const container = document.getElementById(containerId);
     if (!container) return;
     
-    let labelTutti = document.documentElement.lang === 'it' ? (tipo === 'conto' ? 'Tutti i Conti' : 'Tutte le Categorie') : (tipo === 'conto' ? 'All Accounts' : 'All Categories');
+    let labelTutti;
+    if (tipo === 'conto') labelTutti = document.documentElement.lang === 'it' ? 'Tutti i Conti' : 'All Accounts';
+    else if (tipo === 'macro') labelTutti = document.documentElement.lang === 'it' ? 'Tutte le Macro' : 'All Macros';
+    else labelTutti = document.documentElement.lang === 'it' ? 'Tutte le Categorie' : 'All Categories';
     
     let html = `<div onclick="toggleFiltroPill('${tipo}', '')" data-value="" style="padding: 4px 10px; border-radius: 12px; border: 1px solid #ced4da; font-size: 0.85em; cursor: pointer; user-select: none; transition: 0.2s;">${labelTutti}</div>`;
     
@@ -4087,6 +4185,9 @@ function renderTabellaWallet() {
     }
     if (currentFilterContoWallet && currentFilterContoWallet.length > 0) {
         filtrate = filtrate.filter(t => currentFilterContoWallet.includes(t.conto));
+    }
+    if (currentFilterMacroWallet && currentFilterMacroWallet.length > 0) {
+        filtrate = filtrate.filter(t => currentFilterMacroWallet.includes(t.macro || getMacroForCategory(t.cat.replace(' (Trasf.)', ''))));
     }
     if (currentFilterCategoriaWallet && currentFilterCategoriaWallet.length > 0) {
         filtrate = filtrate.filter(t => currentFilterCategoriaWallet.includes(t.cat));
@@ -4136,6 +4237,11 @@ function renderTabellaWallet() {
         selectCat += `</select>`;
         if (t.isTransfer) {
             selectCat += ' <span style="font-size:0.8em; color:#6c757d;">(Trasf.)</span>';
+        } else {
+            let macroLabel = t.macro || getMacroForCategory(catAttuale);
+            if (macroLabel && macroLabel !== catAttuale) {
+                selectCat += ` <span title="${isIt ? 'Macro-categoria' : 'Macro-category'}: ${macroLabel}" style="display:inline-block; font-size:0.72em; color:#495057; background:#e9ecef; border-radius:10px; padding:1px 7px; margin-left:4px; vertical-align:middle;">${macroLabel}</span>`;
+            }
         }
 
         htmlRighe += `<tr>

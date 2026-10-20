@@ -5,13 +5,9 @@ import requests
 from datetime import datetime, date, timedelta
 from calendar import monthrange
 from dotenv import load_dotenv
+from wallet_taxonomy import get_macro_category
 
 load_dotenv()
-
-try:
-    from google import genai
-except ImportError:
-    genai = None
 
 logger = logging.getLogger("budgetbakers_sync")
 if not logger.handlers:
@@ -21,68 +17,6 @@ if not logger.handlers:
     logger.setLevel(logging.INFO)
 
 BASE_URL = "https://rest.budgetbakers.com/wallet/v1/api"
-
-
-def map_categories_with_gemini(incoming_categories: list, existing_categories: list) -> dict:
-    """
-    Usa Gemini per mappare una lista di categorie BudgetBakers alle categorie esistenti in CoTrack.
-    Ritorna un dizionario { "CategoriaBudgetBakers": "CategoriaCoTrackEsistente" }.
-    """
-    if not incoming_categories or not existing_categories:
-        return {c: c for c in incoming_categories}
-
-    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not gemini_key or not genai:
-        return {c: c for c in incoming_categories}
-
-    prompt = f"""Sei un assistente finanziario intelligente.
-Il tuo compito è associare ciascuna categoria di transazione in arrivo da BudgetBakers (spesso in inglese o con nomi standard) a una delle categorie GIÀ PRESENTI nel database di CoTrack.
-
-Regole:
-1. Per ogni categoria in arrivo, scegli la categoria più appropriata e semanticamente affine tra quelle elencate in 'Categorie Esistenti'.
-   Esempi:
-   - "Groceries" -> "Generi alimentari" (o "Spesa")
-   - "Interest, dividends" -> "Interessi, dividendi"
-   - "Wage, invoices" -> "Stipendio, fatture"
-   - "Vehicle - Fuel" o "Fuel" -> "Carburante"
-   - "Restaurant, fast-food" -> "Ristorante, fast-food"
-   - "Financial expenses" -> "Spese finanziarie"
-   - "Life & Entertainment" -> "Vita e intrattenimento"
-2. Se non esiste alcuna categoria affine adatta, traduci o mantieni un nome pulito in italiano.
-3. Rispondi ESCLUSIVAMENTE con un JSON valido (senza markdown o altro testo prima o dopo):
-{{
-  "CategoriaBudgetBakers": "CategoriaEsistenteScelta"
-}}
-
-Categorie Esistenti nel Database CoTrack:
-{json.dumps(existing_categories, ensure_ascii=False)}
-
-Categorie da Mappare:
-{json.dumps(incoming_categories, ensure_ascii=False)}
-"""
-
-    models_to_try = [
-        os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
-        os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
-        'gemini-2.5-flash'
-    ]
-
-    for model in models_to_try:
-        try:
-            client = genai.Client(api_key=gemini_key)
-            response = client.models.generate_content(
-                model=model,
-                contents=prompt
-            )
-            raw_text = response.text.replace("```json", "").replace("```", "").strip()
-            mapped = json.loads(raw_text)
-            if isinstance(mapped, dict):
-                logger.info(f"Mappatura categorie con Gemini ({model}) riuscita: {mapped}")
-                return mapped
-        except Exception as e:
-            logger.warning(f"Tentativo mappatura con modello {model} fallito: {e}")
-
-    return {c: c for c in incoming_categories}
 
 
 class BudgetBakersSyncService:
@@ -188,7 +122,6 @@ class BudgetBakersSyncService:
         """
         Sincronizza le transazioni di BudgetBakers nel wallet specificato per il periodo dato.
         Se start_date e end_date non sono specificati, sincronizza il mese precedente.
-        Include mappatura intelligente delle categorie tramite Gemini con cache persistente.
         """
         token = self.get_token(user_id=user_id, conn=conn)
         if not token:
@@ -217,49 +150,13 @@ class BudgetBakersSyncService:
         records = self.fetch_records_for_period(token, start_date, end_date)
         logger.info(f"Scaricati {len(records)} record da BudgetBakers.")
 
-        # 1. Recupera categorie esistenti nel wallet di CoTrack
+        # Recupera categorie esistenti nel wallet di CoTrack per normalizzare il case
         cat_rows = conn.execute(
             "SELECT DISTINCT category FROM wallet_transactions WHERE wallet_id = ? AND category IS NOT NULL AND category != ''",
             (wallet_id,)
         ).fetchall()
         existing_categories = [r['category'] for r in cat_rows]
         existing_categories_lower = {c.lower(): c for c in existing_categories}
-
-        # 2. Recupera cache delle mappature salvata in configurations
-        cache_key = f"user_config:{user_id}:budgetbakers_cat_cache"
-        cache_row = conn.execute("SELECT value FROM configurations WHERE key = ?", (cache_key,)).fetchone()
-        cat_cache = {}
-        if cache_row and cache_row['value']:
-            try:
-                cat_cache = json.loads(cache_row['value'])
-            except Exception:
-                cat_cache = {}
-
-        # 3. Individua categorie nuove in arrivo da mappare
-        unmapped_cats = set()
-        for r in records:
-            cat_obj = r.get('category') or {}
-            c_name = cat_obj.get('name') if isinstance(cat_obj, dict) else None
-            if not c_name and r.get('categoryId'):
-                c_name = categories_map.get(r.get('categoryId'))
-            if not c_name:
-                c_name = 'Altro'
-
-            # Se non è già identica (case-insensitive) a una categoria esistente e non è in cache
-            if c_name.lower() not in existing_categories_lower and c_name not in cat_cache:
-                unmapped_cats.add(c_name)
-
-        # 4. Se ci sono categorie da mappare ed esistono categorie nel DB, chiedi a Gemini
-        if unmapped_cats and existing_categories:
-            logger.info(f"Mappatura Gemini per {len(unmapped_cats)} nuove categorie: {list(unmapped_cats)}")
-            new_mappings = map_categories_with_gemini(list(unmapped_cats), existing_categories)
-            cat_cache.update(new_mappings)
-            # Salva la cache aggiornata nel DB per le prossime volte
-            conn.execute(
-                "INSERT OR REPLACE INTO configurations (key, value) VALUES (?, ?)",
-                (cache_key, json.dumps(cat_cache, ensure_ascii=False))
-            )
-            conn.commit()
 
         # Carica transazioni esistenti nel database per deduplicazione
         esistenti = conn.execute(
@@ -306,9 +203,7 @@ class BudgetBakersSyncService:
                 raw_cat = 'Altro'
 
             # Risoluzione categoria finale
-            if raw_cat in cat_cache:
-                category = cat_cache[raw_cat]
-            elif raw_cat.lower() in existing_categories_lower:
+            if raw_cat.lower() in existing_categories_lower:
                 category = existing_categories_lower[raw_cat.lower()]
             else:
                 category = raw_cat
@@ -354,14 +249,15 @@ class BudgetBakersSyncService:
                 gia_presenti += 1
                 continue
 
-            nuove_transazioni.append((wallet_id, account, category, currency, amount_val, data_op, note, t_type))
+            macro_cat = get_macro_category(category)
+            nuove_transazioni.append((wallet_id, account, category, currency, amount_val, data_op, note, t_type, macro_cat))
             esistenti_set.add(record_tuple)
             inseriti += 1
 
         if nuove_transazioni:
             conn.executemany('''
-                INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type, macro_category)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', nuove_transazioni)
             execute_wallet_triggers(conn, user_id, nuove_transazioni)
             conn.commit()
@@ -372,8 +268,7 @@ class BudgetBakersSyncService:
             "ignored": gia_presenti,
             "total_fetched": len(records),
             "start_date": start_date,
-            "end_date": end_date,
-            "mapped_categories": cat_cache
+            "end_date": end_date
         }
 
 
