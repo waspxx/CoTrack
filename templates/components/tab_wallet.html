@@ -187,7 +187,10 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-wallet-chart-dettaglio" onclick="toggleWalletChartVista('dettaglio')" style="padding: 2px 8px; font-size: 0.78em; border-radius: 4px;">{{ _('Detail') }}</button>
                     </div>
                 </div>
-                <div class="bar-chart-wrapper"><canvas id="graficoWalletCategorie"></canvas></div>
+                <div class="bar-chart-wrapper" style="display: flex; gap: 14px; align-items: stretch;">
+                    <div style="position: relative; flex: 1 1 auto; min-width: 0;"><canvas id="graficoWalletCategorie"></canvas></div>
+                    <div id="legendaWalletCategorie" style="flex: 0 0 auto; max-width: 45%; overflow-y: auto; font-size: 0.8em; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;"></div>
+                </div>
             </div>
         </div>
         <div class="dashboard-container" style="margin-bottom: 20px;">

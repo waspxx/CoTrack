@@ -3199,6 +3199,56 @@ function aggiornaBottoniVistaGraficoWallet() {
     if (btnDettaglio) btnDettaglio.className = walletChartVista === 'dettaglio' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
 }
 
+function renderLegendaWalletCategorie(catOrdinate, datiChartPrev, totaleChart, hasPrevPeriod, isIt) {
+    let container = document.getElementById('legendaWalletCategorie');
+    if (!container) return;
+
+    if (!catOrdinate.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let baseColors = ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#17a2b8', '#0d6efd', '#6f42c1', '#e83e8c', '#6610f2', '#adb5bd', '#6c757d'];
+
+    let html = '';
+    catOrdinate.forEach((c, i) => {
+        let nome = c[0];
+        let colore = baseColors[i % baseColors.length];
+        let pct = totaleChart > 0 ? ((c[1] / totaleChart) * 100).toFixed(1) : '0.0';
+        let prev = datiChartPrev[nome] || 0;
+        let nascosta = walletChartVociNascoste.has(nome);
+
+        let variazHtml = '';
+        if (prev > 0) {
+            let delta = ((c[1] - prev) / prev) * 100;
+            let coloreVar = delta > 0 ? '#dc3545' : (delta < 0 ? '#28a745' : '#6c757d');
+            let segno = delta > 0 ? '+' : '';
+            variazHtml = ` <span style="color: ${coloreVar}; font-weight: 600;" title="${isIt ? 'Variazione vs periodo precedente' : 'Change vs previous period'}">${segno}${delta.toFixed(1)}%</span>`;
+        } else if (hasPrevPeriod && c[1] > 0) {
+            variazHtml = ` <span style="color: #6c757d;">(${isIt ? 'nuovo' : 'new'})</span>`;
+        }
+
+        let barrato = nascosta ? 'text-decoration: line-through; opacity: 0.5;' : '';
+        html += `<div onclick="toggleVoceLegendaWallet('${nome.replace(/'/g, "\\'")}')" style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; ${barrato}">
+            <span style="flex: 0 0 auto; width: 10px; height: 10px; border-radius: 2px; background: ${colore};"></span>
+            <span style="flex: 1 1 auto; color: #333;">${nome} <span style="color: #6c757d;">(${pct}%)</span>${variazHtml}</span>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function toggleVoceLegendaWallet(nome) {
+    if (walletChartVociNascoste.has(nome)) walletChartVociNascoste.delete(nome);
+    else walletChartVociNascoste.add(nome);
+    if (!graficoWalletCategorieObj || !walletChartUltimoContesto) return;
+    let { catOrdinate, datiChartPrev, totaleChart, hasPrevPeriod, isIt } = walletChartUltimoContesto;
+    catOrdinate.forEach((c, i) => {
+        graficoWalletCategorieObj.getDatasetMeta(0).data[i].hidden = walletChartVociNascoste.has(c[0]);
+    });
+    graficoWalletCategorieObj.update();
+    renderLegendaWalletCategorie(catOrdinate, datiChartPrev, totaleChart, hasPrevPeriod, isIt);
+}
+
 function aggiornaDashboardWallet() {
     let transazioni = transazioniWalletGlobal;
     if (!transazioni) return;
@@ -3209,6 +3259,7 @@ function aggiornaDashboardWallet() {
     let entratePrev = 0, spesePrev = 0;
 
     let entrateMensili = {}, speseMensili = {}, spesePerCategoria = {}, spesePerMacro = {};
+    let spesePrevPerCategoria = {}, spesePrevPerMacro = {};
     let entratePerConto = {}, spesePerConto = {}, trasferimentiPerConto = {};
     let entratePreConto = {}, spesePreConto = {}, trasferimentiPreConto = {};
     let nettoMensileCur = {};
@@ -3312,7 +3363,10 @@ function aggiornaDashboardWallet() {
                 if (t.type === 'Income') {
                     entratePrev += importo;
                 } else if (t.type === 'Expense') {
-                    spesePrev += Math.abs(importo);
+                    let spesaPrevAssoluta = Math.abs(importo);
+                    spesePrev += spesaPrevAssoluta;
+                    spesePrevPerCategoria[cat] = (spesePrevPerCategoria[cat] || 0) + spesaPrevAssoluta;
+                    spesePrevPerMacro[macroCat] = (spesePrevPerMacro[macroCat] || 0) + spesaPrevAssoluta;
                 }
             }
         }
@@ -3371,14 +3425,58 @@ function aggiornaDashboardWallet() {
 
     // Ordiniamo le voci per importo speso decrescente (vista Macro o Dettaglio)
     let datiChart = walletChartVista === 'macro' ? spesePerMacro : spesePerCategoria;
+    let datiChartPrev = walletChartVista === 'macro' ? spesePrevPerMacro : spesePrevPerCategoria;
     let catOrdinate = Object.entries(datiChart).sort((a, b) => b[1] - a[1]);
+    let totaleChart = catOrdinate.reduce((acc, c) => acc + c[1], 0);
+    let hasPrevPeriod = endPrev > startPrev;
+    let isIt = document.documentElement.lang === 'it';
 
     let baseColors = ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#17a2b8', '#0d6efd', '#6f42c1', '#e83e8c', '#6610f2', '#adb5bd', '#6c757d'];
     let bgColors = catOrdinate.map((_, i) => baseColors[i % baseColors.length]);
 
+    // Etichette pulite: percentuale e variazione sono mostrate nella legenda HTML
+    let labelsChart = catOrdinate.map(c => c[0]);
+    let valoriChart = catOrdinate.map(c => c[1]);
+
     const ctxCat = document.getElementById('graficoWalletCategorie').getContext('2d');
     if (graficoWalletCategorieObj !== null) graficoWalletCategorieObj.destroy();
-    graficoWalletCategorieObj = new Chart(ctxCat, { type: 'doughnut', data: { labels: catOrdinate.map(c => c[0]), datasets: [{ data: catOrdinate.map(c => c[1]), backgroundColor: bgColors }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: function (ctx) { return ctx.label + ': ' + formatEuro(ctx.raw); } } } } } });
+    graficoWalletCategorieObj = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+            labels: labelsChart,
+            datasets: [{ data: valoriChart, backgroundColor: bgColors }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            let pct = totaleChart > 0 ? ((ctx.raw / totaleChart) * 100).toFixed(1) : '0.0';
+                            let nome = catOrdinate[ctx.dataIndex][0];
+                            let prev = datiChartPrev[nome] || 0;
+                            let riga = `${nome}: ${formatEuro(ctx.raw)} (${pct}%)`;
+                            if (prev > 0) {
+                                let delta = ((ctx.raw - prev) / prev) * 100;
+                                riga += ` — ${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs prec. (${formatEuro(prev)})`;
+                            }
+                            return riga;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    catOrdinate.forEach((c, i) => {
+        if (walletChartVociNascoste.has(c[0])) {
+            graficoWalletCategorieObj.getDatasetMeta(0).data[i].hidden = true;
+        }
+    });
+    graficoWalletCategorieObj.update();
+    walletChartUltimoContesto = { catOrdinate, datiChartPrev, totaleChart, hasPrevPeriod, isIt };
+    renderLegendaWalletCategorie(catOrdinate, datiChartPrev, totaleChart, hasPrevPeriod, isIt);
     aggiornaBottoniVistaGraficoWallet();
 
     // Disegna tabella saldi conti
@@ -3976,6 +4074,8 @@ let currentFilterCategoriaWallet = [];
 let currentFilterMacroWallet = [];
 let transazioniValideWallet = [];
 let walletChartVista = 'dettaglio';
+let walletChartVociNascoste = new Set();
+let walletChartUltimoContesto = null;
 
 // --- TABLE DATE WIDGET (shared with walletFilter) ---
 let tdfUiMesiYear = new Date().getFullYear();

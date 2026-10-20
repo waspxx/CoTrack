@@ -246,7 +246,6 @@ CoTrack (*Collaboration Tracking* / *Complete Tracking*) is a self-hosted, priva
 - `scraping/`:
   - `scrape_engine.py`: Scrapers for pension fund unit prices and Škoda/VAG VIN vehicle recall campaigns (`check_vin_recall`).
   - `fondi_pensione.json`: Registry and metadata for supported Italian pension fund compartments (Cometa, Fonchim, Fonte, Secondapensione, etc.).
-- `tasks.md`: Task board tracking development items (`## 📥 Idee Lampo (Inbox)`, `## 🟡 In Corso (In Progress)`, `## 🟢 Completato (Completed)`).
 - `templates/`:
   - `index.html`: Main dashboard container layout, tab navigation shell, and theme toggling.
   - `components/`: Modular Jinja2 tab templates:
@@ -351,9 +350,7 @@ CoTrack leverages Google Gemini AI via the `google-genai` SDK (`from google impo
 
 Whenever modifying code in this repository, you MUST follow these four steps:
 
-1. **Task Tracking (`tasks.md`)**:
-   - Check `tasks.md`. If the modification was listed under `## 📥 Idee Lampo (Inbox)` or `## 🟡 In Corso (In Progress)`, move it to `## 🟢 Completato (Completed)` and mark it as `- [x]`.
-2. **String Localization**:
+1. **String Localization**:
    - If any new user-facing strings were added in Python (wrapped in `_()` or `_l()`) or templates (`{{ _('...') }}`), extract, update, and compile the translations:
      ```bash
      pybabel extract -F babel.cfg -k _ -k _l -o messages.pot .
@@ -361,13 +358,13 @@ Whenever modifying code in this repository, you MUST follow these four steps:
      pybabel compile -d translations
      ```
    - Verify that new strings are extracted into `messages.pot` and compiled into `translations/it/LC_MESSAGES/messages.mo`.
-3. **Container Rebuild & Restart**:
+2. **Container Rebuild & Restart**:
    - Apply the changes to the running Docker environment:
      ```bash
      docker compose down && docker compose up -d --build
      ```
    - Check container health: `docker compose ps`
-4. **No Automatic Commits**:
+3. **No Automatic Commits**:
    - Never commit changes to git automatically. Wait for the user's explicit command.
 
 ---
