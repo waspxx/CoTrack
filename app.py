@@ -4394,10 +4394,54 @@ def get_wallet_categories():
         "macros": MACRO_CATEGORIES
     })
 
-@app.route('/api/wallet/transactions', methods=['GET'])
+@app.route('/api/wallet/transactions', methods=['GET', 'POST'])
 def get_wallet_transactions():
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
     wallet_id = request.args.get('wallet_id')
+
+    if request.method == 'POST':
+        data = request.json
+        if not data:
+            return jsonify({"errore": _("Missing data")}), 400
+
+        date = (data.get('date') or '').strip()
+        account = (data.get('account') or '').strip()
+        category = (data.get('category') or '').strip()
+        currency = data.get('currency', 'EUR')
+        note = (data.get('note') or '').strip()
+        tx_type = data.get('type', 'Expense')
+
+        try:
+            amount = float(data.get('amount', 0))
+        except (ValueError, TypeError):
+            return jsonify({"errore": _("Invalid amount")}), 400
+
+        if not date or not account or not category:
+            return jsonify({"errore": _("Date, account and category are required")}), 400
+
+        if tx_type == 'Expense' and amount > 0:
+            amount = -amount
+        elif tx_type == 'Income' and amount < 0:
+            amount = abs(amount)
+
+        macro_cat = get_macro_category(category)
+        conn = get_db_connection()
+        try:
+            conn.execute('''
+                INSERT INTO wallet_transactions (wallet_id, account, category, currency, amount, date, note, type, macro_category)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (wallet_id, account, category, currency, amount, date, note, tx_type, macro_cat))
+            execute_wallet_triggers(conn, session['user_id'], [{
+                'date': date, 'amount': amount, 'note': note, 'category': category, 'account': account, 'type': tx_type
+            }])
+            conn.commit()
+            return jsonify({"messaggio": _("Transaction added successfully")}), 201
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"errore": str(e)}), 500
+        finally:
+            conn.close()
+
     conn = get_db_connection()
     rows = conn.execute('SELECT * FROM wallet_transactions WHERE wallet_id = ? ORDER BY date DESC', (wallet_id,)).fetchall()
     conn.close()

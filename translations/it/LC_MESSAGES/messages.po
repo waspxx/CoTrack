@@ -4028,9 +4028,8 @@ msgid "Expense Reimbursement"
 msgstr "Rimborso Spese"
 
 #: templates/components/tab_stipendi.html:467
-#, fuzzy
 msgid "Amount (€)"
-msgstr "Importo"
+msgstr "Importo (€)"
 
 #: templates/components/tab_stipendi.html:480
 msgid "Map Salaries CSV Columns"
@@ -4356,9 +4355,8 @@ msgstr "Nuovo ricambio/lavoro (es. Pastiglie Freni)"
 #: templates/components/tab_veicoli.html:417
 #: templates/components/tab_veicoli.html:432
 #: templates/components/tab_veicoli.html:447
-#, fuzzy
 msgid "Add"
-msgstr "Max DD:"
+msgstr "Aggiungi"
 
 #: templates/components/tab_veicoli.html:427
 #, fuzzy
@@ -5314,4 +5312,13 @@ msgstr "Avvia Sincronizzazione"
 
 #~ msgid "Portfolio Management - Dashboard"
 #~ msgstr "Gestione Portafogli - Dashboard"
+
+
+#: app.py
+msgid "Transaction added successfully"
+msgstr "Transazione aggiunta con successo"
+
+#: templates/components/tab_wallet.html
+msgid "Note (optional)"
+msgstr "Note (opzionale)"
 

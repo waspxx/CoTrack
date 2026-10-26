@@ -2903,6 +2903,27 @@ async function caricaDatiWallet() {
             });
             contiWalletGlobal = Array.from(contiSet).sort();
 
+            // Popola datalist suggerimenti per form inserimento manuale
+            let dlAddAccounts = document.getElementById('list-add-wallet-accounts');
+            if (dlAddAccounts) dlAddAccounts.innerHTML = contiWalletGlobal.map(acc => `<option value="${acc.replace(/"/g, '&quot;')}">`).join('');
+            let dlAddCats = document.getElementById('list-add-wallet-categories');
+            if (dlAddCats) {
+                let catHtml = '';
+                if (window.walletTaxonomy && window.walletTaxonomy.taxonomy) {
+                    window.walletTaxonomy.taxonomy.forEach(item => {
+                        catHtml += `<option value="${item.macro}">📁 ${item.macro} (Macro)</option>`;
+                        item.subcategories.forEach(sub => { catHtml += `<option value="${sub}">${sub} — [${item.macro}]</option>`; });
+                    });
+                } else {
+                    let uniqueCats = [...new Set(transazioniWalletGlobal.map(item => (item.category || '').replace(' (Trasf.)', '')).filter(Boolean))].sort();
+                    catHtml = uniqueCats.map(cat => `<option value="${cat.replace(/"/g, '&quot;')}">`).join('');
+                }
+                dlAddCats.innerHTML = catHtml;
+            }
+            // Imposta data odierna se vuoto
+            let addDateInput = document.getElementById('add-wallet-date');
+            if (addDateInput && !addDateInput.value) addDateInput.value = new Date().toISOString().slice(0, 10);
+
             // Inizializza i conti selezionati o mantieni la selezione corrente
             if (activeContiWallet.length === 0 && contiWalletGlobal.length > 0) {
                 activeContiWallet = [...contiWalletGlobal];
@@ -3090,6 +3111,42 @@ async function salvaModificaTransazioneWallet() {
         caricaDatiWallet();
     } catch (error) {
         alert("Errore durante il salvataggio della transazione wallet.");
+    }
+}
+
+async function aggiungiTransazioneWallet() {
+    let date = document.getElementById('add-wallet-date').value;
+    let account = document.getElementById('add-wallet-account').value.trim();
+    let category = document.getElementById('add-wallet-category').value.trim();
+    let type = document.getElementById('add-wallet-type').value;
+    let amount = parseFloat(document.getElementById('add-wallet-amount').value) || 0;
+    let note = document.getElementById('add-wallet-note').value.trim();
+
+    if (!date || !account || !category || amount === 0) {
+        alert(window.Translations && window.Translations.fillRequiredFields ? window.Translations.fillRequiredFields : "Compila tutti i campi obbligatori (Data, Conto, Categoria, Importo).");
+        return;
+    }
+
+    try {
+        let res = await fetch(`/api/wallet/transactions?wallet_id=${activeWalletId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date, account, category, currency: 'EUR', type, amount, note })
+        });
+
+        if (!res.ok) {
+            let err = await res.json();
+            alert(err.errore || "Errore durante il salvataggio");
+            return;
+        }
+
+        // Reset form keeping account for quick consecutive entries
+        document.getElementById('add-wallet-amount').value = '';
+        document.getElementById('add-wallet-note').value = '';
+        document.getElementById('add-wallet-category').value = '';
+        caricaDatiWallet();
+    } catch (error) {
+        alert("Errore durante l'aggiunta della transazione.");
     }
 }
 

@@ -252,6 +252,28 @@
                     </div>
                 </div>
 
+                <!-- Manual Transaction Entry -->
+                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <div style="font-size: 0.85em; font-weight: bold; color: #212529; margin-bottom: 10px;">➕ {{ _('Add Transaction') }}</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <input type="date" id="add-wallet-date" style="width: 100%; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; box-sizing: border-box;">
+                        <input type="text" id="add-wallet-account" list="list-add-wallet-accounts" placeholder="{{ _('Account') }}" style="width: 100%; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; box-sizing: border-box;">
+                        <datalist id="list-add-wallet-accounts"></datalist>
+                        <input type="text" id="add-wallet-category" list="list-add-wallet-categories" placeholder="{{ _('Category') }}" style="width: 100%; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; box-sizing: border-box;">
+                        <datalist id="list-add-wallet-categories"></datalist>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="add-wallet-type" style="flex: 1; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; cursor: pointer; outline: none; box-sizing: border-box;">
+                                <option value="Expense">{{ _('Expense') }}</option>
+                                <option value="Income">{{ _('Income') }}</option>
+                                <option value="Transfer">{{ _('Transfer') }}</option>
+                            </select>
+                            <input type="number" id="add-wallet-amount" step="0.01" placeholder="{{ _('Amount (€)') }}" style="flex: 1; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; box-sizing: border-box;">
+                        </div>
+                        <input type="text" id="add-wallet-note" placeholder="{{ _('Note (optional)') }}" style="width: 100%; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.85em; box-sizing: border-box;">
+                        <button onclick="aggiungiTransazioneWallet()" class="btn-primary" style="width: 100%; margin-top: 2px; padding: 8px; border-radius: 6px; font-size: 0.85em; font-weight: bold; background-color: #198754; border: none; color: white; cursor: pointer;">{{ _('Add') }}</button>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-secondary" onclick="document.getElementById('file-wallet-csv').click()" style="flex: 1; background-color: #17a2b8;">{{ _('Import CSV') }}</button>
                     <button class="btn-secondary" onclick="esportaWalletCSV()" style="flex: 1;">{{ _('Export CSV') }}</button>
