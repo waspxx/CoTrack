@@ -75,6 +75,29 @@
             </div>
         </div>
 
+        <!-- Card: AI Assistant & Engine Provider -->
+        <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.3em;">🤖</span>
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0;">{{ _('AI Assistant & Engine') }}</h3>
+                </div>
+                <span id="setting-ai-provider-badge" style="font-size: 0.75em; padding: 3px 8px; border-radius: 4px; background: #ede9fe; color: #6d28d9; font-weight: 600; display: none;"></span>
+            </div>
+            <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">
+                {{ _('Select which AI provider powers the tab assistant, portfolio diagnostics, and document analysis. Only providers configured with valid API keys in your .env file are available.') }}
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="setting-ai-provider" style="font-size: 0.85em; font-weight: 600; color: var(--text-primary);">{{ _('Active AI Provider:') }}</label>
+                <select id="setting-ai-provider" onchange="window.salvaAiProviderSetting(this.value)" style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-app); color: var(--text-primary); outline: none; cursor: pointer; font-size: 0.95em;">
+                    <option value="">{{ _('Loading available providers...') }}</option>
+                </select>
+                <div id="setting-ai-provider-notice" style="display: none; padding: 10px 14px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; font-size: 0.85em; color: #856404; margin-top: 6px;"></div>
+                <div id="setting-ai-provider-feedback" style="display: none; font-size: 0.85em; font-weight: 600; margin-top: 4px;"></div>
+            </div>
+        </div>
+
         <!-- Card 3: Email Notifications & Schedules -->
         <div class="card" style="padding: 24px; background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); backdrop-filter: blur(12px);">
             <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">

@@ -6398,6 +6398,85 @@ window.caricaDatiSettings = function() {
     if (typeof window.caricaImpostazioniNotificheEmail === 'function') {
         window.caricaImpostazioniNotificheEmail();
     }
+    if (typeof window.caricaImpostazioniAiProvider === 'function') {
+        window.caricaImpostazioniAiProvider();
+    }
+};
+
+window.caricaImpostazioniAiProvider = async function() {
+    const select = document.getElementById('setting-ai-provider');
+    const badge = document.getElementById('setting-ai-provider-badge');
+    const notice = document.getElementById('setting-ai-provider-notice');
+    if (!select) return;
+
+    try {
+        const res = await fetch('/api/settings/ai_provider');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        select.innerHTML = '';
+        if (!data.available_providers || data.available_providers.length === 0) {
+            select.innerHTML = `<option value="">-- ${window.Translations?.noAiProviders || 'Nessun provider AI disponibile (.env)'} --</option>`;
+            select.disabled = true;
+            if (badge) badge.style.display = 'none';
+            if (notice) {
+                notice.style.display = 'block';
+                notice.innerHTML = '⚠️ <strong>Nessun provider AI configurato.</strong> Imposta <code>GEMINI_API_KEY</code> o <code>OPENROUTER_API_KEY</code> nel file <code>.env</code>.';
+            }
+            return;
+        }
+
+        select.disabled = false;
+        if (notice) notice.style.display = 'none';
+
+        data.available_providers.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.name} (${p.model})`;
+            if (p.id === data.current_provider) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+
+        if (badge) {
+            badge.style.display = 'inline-block';
+            badge.textContent = `⚡ ${data.current_provider === 'openrouter' ? 'OpenRouter' : 'Google Gemini'}`;
+        }
+    } catch (e) {
+        console.error("Errore caricamento impostazioni provider AI:", e);
+    }
+};
+
+window.salvaAiProviderSetting = async function(providerId) {
+    if (!providerId) return;
+    const badge = document.getElementById('setting-ai-provider-badge');
+    const feedback = document.getElementById('setting-ai-provider-feedback');
+
+    try {
+        const res = await fetch('/api/settings/ai_provider', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: providerId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (badge) {
+                badge.style.display = 'inline-block';
+                badge.textContent = `⚡ ${providerId === 'openrouter' ? 'OpenRouter' : 'Google Gemini'}`;
+            }
+            if (feedback) {
+                feedback.textContent = window.Translations?.aiProviderUpdated || 'Provider AI aggiornato con successo!';
+                feedback.style.color = 'var(--success-color, #198754)';
+                feedback.style.display = 'block';
+                setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+            }
+        } else {
+            alert(data.errore || "Errore durante il salvataggio del provider AI.");
+        }
+    } catch (e) {
+        console.error("Errore salvataggio provider AI:", e);
+    }
 };
 
 // ==========================================
@@ -7203,4 +7282,342 @@ window.salvaImpostazioniNotificheEmail = async function(event) {
         }
     }
 };
+
+// ==========================================================================
+// ASSISTENTE AI PER TAB & CHAT CONTESTUALE
+// ==========================================================================
+
+window.AiChatState = {
+    activeContext: 'vehicles',
+    history: [],
+    isLoading: false,
+    useSqlTool: false
+};
+
+window.toggleAiSqlMode = function(enabled) {
+    window.AiChatState.useSqlTool = !!enabled;
+};
+
+const AI_SUGGESTIONS_MAP = {
+    vehicles: [
+        "Quanto ho speso in veicoli lo scorso mese?",
+        "Quanto ho speso in carburante nel 2026?",
+        "Quali promemoria o scadenze ho in arrivo?",
+        "Qual è il veicolo con più costi quest'anno?"
+    ],
+    wallet: [
+        "Quali sono le categorie con più uscite questo mese?",
+        "Quanto ho risparmiato nel 2026?",
+        "Qual è il saldo complessivo dei miei conti?",
+        "Confronta le spese tra questo mese e lo scorso mese"
+    ],
+    bills: [
+        "Come sono variate le bollette di luce e gas negli ultimi mesi?",
+        "Quanto ho prodotto con il fotovoltaico quest'anno?",
+        "Qual è stata la spesa totale per l'energia nell'ultimo anno?",
+        "Quali sono i consumi medi mensili di energia?"
+    ],
+    investments: [
+        "Qual è il valore totale e il guadagno del mio portafoglio?",
+        "Com'è bilanciata la mia asset allocation attuale?",
+        "Quali titoli stanno registrando la miglior performance?",
+        "Quanto capitale complessivo ho investito?"
+    ],
+    loans: [
+        "A quanto ammonta il debito residuo e la rata mensile?",
+        "Quante rate ho già pagato e quante ne mancano?",
+        "Qual è il tasso di interesse applicato al mio finanziamento?",
+        "Quando terminerà il piano di ammortamento?"
+    ],
+    salaries: [
+        "Qual è stata la mia retribuzione netta media negli ultimi mesi?",
+        "A quanto ammontano le entrate complessive da lavoro quest'anno?",
+        "Ho ricevuto premi di produzione o 13a recentemente?",
+        "Come varia il netto rispetto al lordo dei cedolini?"
+    ],
+    pension: [
+        "Quanto ho versato al fondo pensione quest'anno?",
+        "A che punto sono rispetto alla deducibilità fiscale dei 5.164,57 €?",
+        "Qual è la suddivisione tra quota lavoratore, azienda e TFR?",
+        "Qual è il controvalore totale maturato?"
+    ],
+    all: [
+        "Fammi una sintesi della mia situazione finanziaria complessiva",
+        "Quanto ho speso complessivamente nell'ultimo mese tra tutte le categorie?",
+        "Qual è il bilancio generale tra entrate, spese e risparmio?",
+        "Quali scadenze imminenti ho tra veicoli e debiti?"
+    ]
+};
+
+function formatAiMarkdown(text) {
+    if (!text) return "";
+    let s = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // Headers
+    s = s.replace(/^### (.*$)/gim, '<h5 style="margin: 8px 0 4px; color: #1e293b; font-weight: 700;">$1</h5>');
+    s = s.replace(/^## (.*$)/gim, '<h4 style="margin: 10px 0 6px; color: #0f172a; font-weight: 800;">$1</h4>');
+    s = s.replace(/^# (.*$)/gim, '<h3 style="margin: 12px 0 8px; color: #0f172a; font-weight: 800;">$1</h3>');
+
+    // Bold & Italic
+    s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Inline code
+    s = s.replace(/`([^`]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-size: 0.9em;">$1</code>');
+
+    // Line items / lists
+    const lines = s.split('\n');
+    let inList = false;
+    const output = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const listMatch = line.match(/^\s*[-•*]\s+(.*)/);
+        if (listMatch) {
+            if (!inList) {
+                output.push('<ul style="margin: 6px 0; padding-left: 20px;">');
+                inList = true;
+            }
+            output.push(`<li>${listMatch[1]}</li>`);
+        } else {
+            if (inList) {
+                output.push('</ul>');
+                inList = false;
+            }
+            if (line.trim().length > 0) {
+                output.push(`<p style="margin: 4px 0;">${line}</p>`);
+            }
+        }
+    }
+    if (inList) {
+        output.push('</ul>');
+    }
+
+    return output.join('');
+}
+
+function renderAiSuggestions(context) {
+    const container = document.getElementById('ai-chat-suggestions');
+    if (!container) return;
+    container.innerHTML = '';
+    const suggestions = AI_SUGGESTIONS_MAP[context] || AI_SUGGESTIONS_MAP.all || [];
+
+    suggestions.forEach(text => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'ai-suggestion-chip';
+        chip.textContent = text;
+        chip.onclick = () => {
+            const input = document.getElementById('ai-chat-input');
+            if (input) {
+                input.value = text;
+                window.inviaDomandaAiForm();
+            }
+        };
+        container.appendChild(chip);
+    });
+}
+
+async function aggiornaBadgeProviderAiModal() {
+    const badge = document.getElementById('ai-chat-model-badge');
+    if (!badge) return;
+    try {
+        const res = await fetch('/api/settings/ai_provider');
+        if (res.ok) {
+            const data = await res.json();
+            const pName = data.current_provider === 'openrouter' ? 'OpenRouter' : 'Google Gemini';
+            badge.textContent = `⚡ ${pName}`;
+        }
+    } catch (e) {
+        console.error("Errore aggiornamento badge modal AI:", e);
+    }
+}
+
+window.apriModalAiChat = function(tabName) {
+    const modal = document.getElementById('modal-ask-ai');
+    if (!modal) return;
+
+    let targetTab = (tabName || 'vehicles').toLowerCase();
+    if (targetTab === 'tab-veicoli' || targetTab === 'vehicles') targetTab = 'vehicles';
+    else if (targetTab === 'tab-wallet' || targetTab === 'wallet') targetTab = 'wallet';
+    else if (targetTab === 'tab-bollette' || targetTab === 'bills') targetTab = 'bills';
+    else if (targetTab === 'tab-investimenti' || targetTab === 'investments') targetTab = 'investments';
+    else if (targetTab === 'tab-prestiti' || targetTab === 'loans') targetTab = 'loans';
+    else if (targetTab === 'tab-stipendi' || targetTab === 'salaries') targetTab = 'salaries';
+    else if (targetTab === 'tab-fondopensione' || targetTab === 'pension') targetTab = 'pension';
+    else targetTab = 'all';
+
+    window.AiChatState.activeContext = targetTab;
+
+    const select = document.getElementById('ai-chat-context-select');
+    if (select) select.value = targetTab;
+
+    renderAiSuggestions(targetTab);
+    aggiornaBadgeProviderAiModal();
+
+    modal.style.display = 'flex';
+    const input = document.getElementById('ai-chat-input');
+    if (input) {
+        setTimeout(() => input.focus(), 150);
+    }
+};
+
+window.chiudiModalAiChat = function() {
+    const modal = document.getElementById('modal-ask-ai');
+    if (modal) modal.style.display = 'none';
+};
+
+window.cambiaContestoAiChat = function(newContext) {
+    window.AiChatState.activeContext = newContext;
+    renderAiSuggestions(newContext);
+};
+
+window.svuotaChatAi = function() {
+    window.AiChatState.history = [];
+    const container = document.getElementById('ai-chat-messages');
+    if (container) {
+        container.innerHTML = `
+            <div class="ai-welcome-box">
+                <div class="ai-welcome-icon">🤖</div>
+                <div class="ai-welcome-text">
+                    <h4>${document.documentElement.lang === 'it' ? 'Conversazione azzerata.' : 'Conversation cleared.'}</h4>
+                    <p>${document.documentElement.lang === 'it' ? 'Fammi una nuova domanda sui tuoi dati o scegli un suggerimento sopra.' : 'Ask a new question about your data or pick a suggestion above.'}</p>
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.gestisciInvioAiChat = function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        window.inviaDomandaAiForm();
+    }
+};
+
+window.inviaDomandaAiForm = async function(event) {
+    if (event) event.preventDefault();
+    if (window.AiChatState.isLoading) return;
+
+    const input = document.getElementById('ai-chat-input');
+    if (!input) return;
+    const promptText = input.value.trim();
+    if (!promptText) return;
+
+    // Reset input
+    input.value = '';
+
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    const typingIndicator = document.getElementById('ai-chat-typing');
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+
+    // Rimuovi welcome box iniziale se presente
+    const welcome = messagesContainer.querySelector('.ai-welcome-box');
+    if (welcome) welcome.remove();
+
+    // 1. Aggiungi bolla utente
+    const userRow = document.createElement('div');
+    userRow.className = 'ai-msg-row user';
+    userRow.innerHTML = `
+        <div class="ai-msg-avatar user">👤</div>
+        <div class="ai-msg-bubble user">${promptText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+    `;
+    messagesContainer.appendChild(userRow);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Aggiungi a cronologia
+    window.AiChatState.history.push({ role: 'user', content: promptText });
+
+    // 2. Stato di caricamento
+    window.AiChatState.isLoading = true;
+    if (sendBtn) sendBtn.disabled = true;
+    if (typingIndicator) typingIndicator.style.display = 'flex';
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+        const response = await fetch('/api/ai/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tab: window.AiChatState.activeContext,
+                prompt: promptText,
+                history: window.AiChatState.history,
+                use_sql_tool: window.AiChatState.useSqlTool
+            }),
+            signal: controller.signal
+        });
+
+        const data = await response.json();
+
+        if (typingIndicator) typingIndicator.style.display = 'none';
+
+        if (response.ok && data.success) {
+            const assistantRow = document.createElement('div');
+            assistantRow.className = 'ai-msg-row assistant';
+            const metaInfo = data.model ? `<div class="ai-msg-meta">${data.provider === 'openrouter' ? 'OpenRouter' : 'Gemini'} • ${data.model}</div>` : '';
+            assistantRow.innerHTML = `
+                <div class="ai-msg-avatar assistant">🤖</div>
+                <div class="ai-msg-bubble assistant">
+                    ${formatAiMarkdown(data.reply)}
+                    ${metaInfo}
+                </div>
+            `;
+            messagesContainer.appendChild(assistantRow);
+            window.AiChatState.history.push({ role: 'assistant', content: data.reply });
+        } else {
+            const errRow = document.createElement('div');
+            errRow.className = 'ai-msg-row assistant';
+            errRow.innerHTML = `
+                <div class="ai-msg-avatar assistant" style="background: #ef4444;">⚠️</div>
+                <div class="ai-msg-bubble assistant" style="border-color: #fca5a5; background: #fef2f2; color: #991b1b;">
+                    ${data.errore || (document.documentElement.lang === 'it' ? 'Si è verificato un errore durante la richiesta.' : 'An error occurred during the request.')}
+                </div>
+            `;
+            messagesContainer.appendChild(errRow);
+        }
+    } catch (err) {
+        console.error("Errore fetch /api/ai/ask:", err);
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        const isTimeout = err.name === 'AbortError';
+        let errMessage;
+        if (isTimeout) {
+            errMessage = document.documentElement.lang === 'it'
+                ? "L'assistente non ha risposto entro 60 secondi. Riprova."
+                : "The assistant did not respond within 60 seconds. Please try again.";
+        } else {
+            errMessage = document.documentElement.lang === 'it'
+                ? 'Errore di connessione al server.'
+                : 'Network error communicating with the server.';
+        }
+        const errRow = document.createElement('div');
+        errRow.className = 'ai-msg-row assistant';
+        errRow.innerHTML = `
+            <div class="ai-msg-avatar assistant" style="background: #ef4444;">⚠️</div>
+            <div class="ai-msg-bubble assistant" style="border-color: #fca5a5; background: #fef2f2; color: #991b1b;">
+                ${errMessage}
+            </div>
+        `;
+        messagesContainer.appendChild(errRow);
+    } finally {
+        clearTimeout(timeoutId);
+        window.AiChatState.isLoading = false;
+        if (sendBtn) sendBtn.disabled = false;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (input) input.focus();
+    }
+};
+
+// Chiudi modale cliccando fuori dalla scheda
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modal-ask-ai');
+    if (modal && modal.style.display === 'flex' && e.target === modal) {
+        window.chiudiModalAiChat();
+    }
+});
 

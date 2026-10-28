@@ -7,6 +7,11 @@
         <button onclick="window.nuovoGruppoStipendi()" style="background:#f3e8ff;border:1px solid #d8b4fe;font-size:1em;cursor:pointer;color:#7c3aed;padding:5px 10px;border-radius:6px;font-weight:bold;">+</button>
         <button onclick="window.rinominaGruppoStipendi()" style="background:#f5f5f5;border:1px solid #e0e0e0;font-size:1em;cursor:pointer;color:#616161;padding:5px 10px;border-radius:6px;">✏️ {{ _('Rename') }}</button>
         <button onclick="window.eliminaGruppoStipendi()" style="background:#ffebee;border:1px solid #ffcdd2;font-size:1em;cursor:pointer;color:#c62828;padding:5px 10px;border-radius:6px;">🗑️ {{ _('Delete') }}</button>
+        <div style="margin-left: auto;">
+            <button type="button" onclick="window.apriModalAiChat('salaries')" class="btn-ask-ai" title="{{ _('Ask AI about your salaries') }}">
+                ✨ {{ _("Chiedi all'AI") }}
+            </button>
+        </div>
     </div>
 
     <div class="app-container">

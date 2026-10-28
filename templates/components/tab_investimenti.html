@@ -21,6 +21,11 @@
             <option value=".MC">🇪🇸 Bolsa Madrid (.MC)</option>
             <option value=".BR">🇧🇪 Euronext Bruxelles (.BR)</option>
         </select>
+        <div style="margin-left: auto;">
+            <button type="button" onclick="window.apriModalAiChat('investments')" class="btn-ask-ai" title="{{ _('Ask AI about your investments') }}">
+                ✨ {{ _("Chiedi all'AI") }}
+            </button>
+        </div>
     </div>
     <!-- BANNER ERRORE API -->
     <div id="api-error-banner" style="display: none; background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #ffeeba;">

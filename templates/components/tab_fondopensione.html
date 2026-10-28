@@ -7,6 +7,11 @@
         <button onclick="window.nuovoGruppoFP()" style="background:#fef3c7;border:1px solid #fcd34d;font-size:1em;cursor:pointer;color:#92400e;padding:5px 10px;border-radius:6px;font-weight:bold;">+</button>
         <button onclick="window.rinominaGruppoFP()" style="background:#f5f5f5;border:1px solid #e0e0e0;font-size:1em;cursor:pointer;color:#616161;padding:5px 10px;border-radius:6px;">✏️ {{ _('Rename') }}</button>
         <button onclick="window.eliminaGruppoFP()" style="background:#ffebee;border:1px solid #ffcdd2;font-size:1em;cursor:pointer;color:#c62828;padding:5px 10px;border-radius:6px;">🗑️ {{ _('Delete') }}</button>
+        <div style="margin-left: auto;">
+            <button type="button" onclick="window.apriModalAiChat('pension')" class="btn-ask-ai" title="{{ _('Ask AI about your pension fund') }}">
+                ✨ {{ _("Chiedi all'AI") }}
+            </button>
+        </div>
     </div>
 
     <div class="app-container">

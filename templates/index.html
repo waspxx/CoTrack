@@ -35,6 +35,7 @@
         {% include 'components/tab_stipendi.html' %}
         {% include 'components/tab_fondopensione.html' %}
         {% include 'components/tab_settings.html' %}
+        {% include 'components/modal_ask_ai.html' %}
 
 
     <!-- TRANSAZIONI GLOBALI JS -->
@@ -109,7 +110,9 @@
             appliances: {{ _('Appliances') | tojson }},
             noAppliances: {{ _('No appliances added yet.') | tojson }},
             deleteApplianceConfirm: {{ _('Are you sure you want to delete this appliance and all its recorded consumptions?') | tojson }},
-            deleteBillConfirm: {{ _('Are you sure you want to delete this bill and its associated energy data?') | tojson }}
+            deleteBillConfirm: {{ _('Are you sure you want to delete this bill and its associated energy data?') | tojson }},
+            noAiProviders: {{ _('No AI providers configured in .env') | tojson }},
+            aiProviderUpdated: {{ _('AI Provider updated successfully!') | tojson }}
         };
     </script>
     <!-- MODALE MAPPING FONDO PENSIONE CSV (body-level) -->

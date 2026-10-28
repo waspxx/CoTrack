@@ -54,6 +54,10 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') # Obbligatoria per i for
 app.config['GEMINI_API_KEY'] = os.environ.get('GEMINI_API_KEY')
 app.config['GEMINI_MODEL_PRIMARY'] = os.environ.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
 app.config['GEMINI_MODEL_FALLBACK'] = os.environ.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
+app.config['AI_PROVIDER'] = os.environ.get('AI_PROVIDER', 'gemini').lower().strip()
+app.config['OPENROUTER_API_KEY'] = os.environ.get('OPENROUTER_API_KEY')
+app.config['OPENROUTER_MODEL'] = os.environ.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash')
+app.config['OPENROUTER_BASE_URL'] = os.environ.get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1').rstrip('/')
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['en', 'it']
 app.config['SMTP_SERVER'] = os.environ.get('SMTP_SERVER')
@@ -1220,9 +1224,466 @@ def markdown_to_html(md_text):
     html = html.replace('\n', '<br>')
     return html
 
-def get_gemini_analysis_html(snapshot, portfolio_id=None):
-    if not genai or not app.config.get('GEMINI_API_KEY'):
-        return "<p>Errore: API Gemini non configurata.</p>"
+def strip_markdown_fences(text):
+    """Rimuove i blocchi di codice markdown (es. ```json ... ``` o ```markdown ... ```)."""
+    if not text:
+        return ""
+    t = text.strip()
+    if t.startswith("```"):
+        lines = t.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        t = "\n".join(lines).strip()
+    return t
+
+def execute_ai_completion(prompt, user_id=None, system_instruction=None, json_mode=False, max_tokens=None, history=None):
+    """
+    Esegue una richiesta AI verso il provider attivo per l'utente (o globale).
+    Supporta Google Gemini e OpenRouter.
+    Restituisce un dizionario:
+    {
+        'success': bool,
+        'text': str,
+        'provider': str ('gemini' | 'openrouter' | None),
+        'model': str | None,
+        'error': str | None
+    }
+    """
+    provider = get_active_ai_provider(user_id)
+    if not provider:
+        return {
+            "success": False,
+            "text": "",
+            "provider": None,
+            "model": None,
+            "error": "Nessun provider AI disponibile. Configura GEMINI_API_KEY o OPENROUTER_API_KEY nel file .env."
+        }
+
+    # 1. OPENROUTER
+    if provider == 'openrouter':
+        api_key = (app.config.get('OPENROUTER_API_KEY') or os.environ.get('OPENROUTER_API_KEY') or '').strip()
+        if not api_key:
+            return {
+                "success": False,
+                "text": "",
+                "provider": "openrouter",
+                "model": None,
+                "error": "Chiave API OpenRouter non configurata."
+            }
+        model = app.config.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash')
+        base_url = app.config.get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1').rstrip('/')
+
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+
+        if history:
+            for m in history:
+                if isinstance(m, dict) and 'role' in m and 'content' in m:
+                    r = m['role'] if m['role'] in ('user', 'assistant', 'system') else 'user'
+                    messages.append({"role": r, "content": str(m['content'])})
+
+        messages.append({"role": "user", "content": prompt})
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:5001",
+            "X-Title": "CoTrack"
+        }
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.2
+        }
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
+
+        try:
+            res = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
+            if res.status_code != 200:
+                err_body = res.text[:500]
+                return {
+                    "success": False,
+                    "text": "",
+                    "provider": "openrouter",
+                    "model": model,
+                    "error": f"OpenRouter HTTP {res.status_code}: {err_body}"
+                }
+            data = res.json()
+            reply_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return {
+                "success": True,
+                "text": reply_text,
+                "provider": "openrouter",
+                "model": model,
+                "error": None
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "text": "",
+                "provider": "openrouter",
+                "model": model,
+                "error": f"Errore chiamata OpenRouter: {str(e)}"
+            }
+
+    # 2. GOOGLE GEMINI
+    if provider == 'gemini':
+        if genai is None:
+            return {
+                "success": False,
+                "text": "",
+                "provider": "gemini",
+                "model": None,
+                "error": "Google Generative AI SDK non installato."
+            }
+        api_key = (app.config.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY') or '').strip()
+        if not api_key:
+            return {
+                "success": False,
+                "text": "",
+                "provider": "gemini",
+                "model": None,
+                "error": "GEMINI_API_KEY non configurata."
+            }
+
+        client = genai.Client(api_key=api_key, http_options={'timeout': 60000})
+        primary_model = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
+        fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
+
+        prompt_parts = []
+        if system_instruction:
+            prompt_parts.append(f"Istruzioni di sistema:\n{system_instruction}\n")
+        if history:
+            prompt_parts.append("Cronologia conversazione:")
+            for m in history:
+                role_label = "Utente" if m.get('role') == 'user' else "Assistente"
+                prompt_parts.append(f"{role_label}: {m.get('content', '')}")
+            prompt_parts.append("\nRichiesta corrente:")
+        prompt_parts.append(prompt)
+        full_prompt = "\n".join(prompt_parts)
+
+        used_model = primary_model
+        try:
+            response = client.models.generate_content(
+                model=primary_model,
+                contents=full_prompt
+            )
+        except Exception as primary_e:
+            print(f"Errore modello primario Gemini ({primary_model}): {primary_e}. Tentativo fallback con {fallback_model}...")
+            try:
+                used_model = fallback_model
+                response = client.models.generate_content(
+                    model=fallback_model,
+                    contents=full_prompt
+                )
+            except Exception as fb_e:
+                return {
+                    "success": False,
+                    "text": "",
+                    "provider": "gemini",
+                    "model": used_model,
+                    "error": f"Errore Gemini: {str(fb_e)}"
+                }
+
+        reply_text = getattr(response, 'text', '') or ''
+        return {
+            "success": True,
+            "text": reply_text,
+            "provider": "gemini",
+            "model": used_model,
+            "error": None
+        }
+
+    return {
+        "success": False,
+        "text": "",
+        "provider": provider,
+        "model": None,
+        "error": f"Provider AI non riconosciuto: {provider}"
+    }
+
+AI_SQL_TABLES = {
+    'bills', 'bills_appliance_consumptions', 'bills_appliances', 'bills_profiles', 'bills_solar_incentives',
+    'drivvo_activities', 'drivvo_vehicles', 'garages', 'loan_groups', 'loan_payments', 'loans',
+    'pension_contributions', 'pension_fund_compartments', 'pension_fund_groups', 'pension_fund_prices',
+    'pension_funds', 'portfolios', 'price_history', 'salaries', 'salary_groups', 'saldi_conto',
+    'transactions', 'vehicle_activities', 'vehicles', 'wallet_account_config', 'wallet_transactions',
+    'wallet_triggers', 'wallets',
+}
+
+AI_SQL_MAX_ROWS = 200
+AI_SQL_MAX_ITERATIONS = 4
+
+# Le colonne tipo/categoria usano valori con maiuscole/minuscole incoerenti nel DB
+# (es. wallet_transactions.type = 'Expense', non 'EXPENSE'): senza normalizzare, un filtro
+# sbagliato restituisce zero righe e il modello lo presenta come "nessun dato" invece che come errore.
+AI_SQL_CASE_INSENSITIVE_COLUMNS = {
+    'type', 'category', 'person_name', 'operation_type', 'rate_type', 'fund_type', 'fuel', 'account',
+}
+
+AI_SQL_DOMAIN_CARD = """SCHEDA DI DOMINIO CoTrack (regole tassative)
+
+FORMATI DELLE DATE
+- salaries.month: 'YYYY-MM' (es. '2024-02')
+- bills.year (INTEGER) + bills.month (INTEGER 1-12), separati
+- wallet_transactions.date, loan_payments.date: 'YYYY-MM-DD'
+- vehicle_activities.date: 'YYYY-MM-DD HH:MM:SS' (include anche l'ora). Per filtrare un anno usa
+  date LIKE '<anno>%', dove <anno> e' quello richiesto nella domanda. Non usare mai una data fissa.
+
+VALORI ESATTI DELLE COLONNE (rispettane il case; i confronti sono sensibili al maiuscolo)
+- wallet_transactions.type: 'Income', 'Expense', 'Transfer'
+- vehicle_activities.type: 'refuel', 'service', 'expense', 'reminder', 'income'
+- transactions.operation_type: 'Buy', 'Dividend'
+- loans.rate_type: 'fixed'
+Non filtrare mai una colonna su un valore che non compare in questo elenco.
+
+REGOLE DI CALCOLO (la colonna del costo dipende dal tipo)
+- vehicle_activities: per type='refuel' il costo e' totalCost + totalCost2 + totalCost3;
+  per type='service', 'expense', 'income' il costo e' nella colonna cost.
+  La colonna totalCost e' NULL/0 per service: usare totalCost per service da' un risultato sbagliato.
+  Escludere sempre type='reminder' (non e' una spesa).
+- wallet_transactions: gli importi Expense sono negativi, quindi usa ABS(amount).
+  Per le entrate filtra type='Income'.
+
+ALTRE NOTE
+- salaries e' per persona: person_name vale 'Mattia', 'Elisa', 'Assegno Unico'. Per "stipendio di X" filtra person_name.
+- bills: il totale di una bolletta e' electricity_price + gas_price + water_price + waste_price.
+- pension_contributions.total_value e' il versamento totale; tfr/worker_contrib/employer_contrib le sue componenti.
+- wallet_triggers non ha una colonna 'type': usa trigger_type.
+
+REGOLE DI OUTPUT
+- Scrivi UNA sola query SELECT. Nessun commento, nessun punto e virgola finale, nessuna scrittura.
+- Usa esclusivamente tabelle e colonne presenti nello schema.
+- Se il dato richiesto non esiste, restituisci comunque una SELECT valida: il risultato vuoto verra' mostrato come tale.
+- Usa SEMPRE il periodo indicato nella domanda (anno, mese, "dal <anno>"). Non sostituirlo con un
+  intervallo diverso e non inventare date: se la domanda dice "dal 2020", il filtro parte dal 2020.
+"""
+
+def build_ai_sql_schema():
+    """Schema delle tabelle consentite (nome + colonne), da fornire al modello insieme alla scheda di dominio."""
+    if not os.path.exists(DATABASE_PATH):
+        return ""
+    conn = None
+    try:
+        conn = sqlite3.connect(f"file:{os.path.abspath(DATABASE_PATH)}?mode=ro", uri=True)
+        lines = []
+        for table in sorted(AI_SQL_TABLES):
+            try:
+                cols = [d[1] for d in conn.execute(f"PRAGMA table_info({table})")]
+            except Exception:
+                continue
+            if cols:
+                lines.append(f"{table}: {', '.join(cols)}")
+        return "\n".join(lines)
+    except Exception:
+        return ""
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def build_ai_sql_system_prompt():
+    return (
+        "Sei un generatore di query SQLite in sola lettura per il database personale CoTrack.\n"
+        "Data una domanda dell'utente, produci UNA sola query SELECT che risponda esattamente.\n\n"
+        + AI_SQL_DOMAIN_CARD +
+        "\nSCHEMA DEL DATABASE (usa SOLO queste tabelle e queste colonne, con i nomi esatti):\n"
+        + build_ai_sql_schema() +
+        "\n\nRispondi SOLO con un oggetto JSON: {\"sql\": \"<query>\"}\n"
+    )
+
+
+def _ai_sql_strip_literals(sql):
+    """Sostituisce i letterali stringa con un segnaposto, per validare la struttura senza falsi positivi."""
+    return re.sub(r"'(?:[^']|'')*'", "''", sql)
+
+
+def _ai_sql_normalize(sql):
+    """
+    Riscrive i confronti sui valori a case incoerente rendendoli case-insensitive.
+    Senza questo, un filtro come type='EXPENSE' non trova righe (nel DB e' 'Expense')
+    e la query sembra valida pur restituendo un risultato vuoto.
+    """
+    def repl(m):
+        col, value = m.group('col'), m.group('val')
+        if col.lower() not in AI_SQL_CASE_INSENSITIVE_COLUMNS:
+            return m.group(0)
+        return f"UPPER({col}) = UPPER({value})"
+
+    pattern = re.compile(
+        r"\b(?P<col>[A-Za-z_][A-Za-z0-9_.]*)\s*(?P<op>=|!=|<>)\s*(?P<val>'(?:[^']|'')*')"
+    )
+    return pattern.sub(repl, sql)
+
+
+def validate_ai_sql(sql):
+    """Valida una query generata dal modello. Restituisce (query_normalizzata, errore)."""
+    if not sql or not sql.strip():
+        return None, "Query vuota."
+
+    cleaned = sql.strip().rstrip(';').strip()
+    if not cleaned:
+        return None, "Query vuota."
+
+    if ';' in cleaned:
+        return None, "Sono ammesse solo query singole (nessun ';')."
+
+    structure = _ai_sql_strip_literals(cleaned)
+    if '--' in structure or '/*' in structure:
+        return None, "I commenti non sono ammessi."
+
+    first_word = re.match(r"\s*([A-Za-z_]+)", structure)
+    if not first_word or first_word.group(1).lower() not in ('select', 'with'):
+        return None, "Sono ammesse solo query SELECT."
+
+    forbidden = ('insert', 'update', 'delete', 'drop', 'alter', 'create', 'replace', 'attach',
+                 'detach', 'pragma', 'vacuum', 'reindex', 'truncate', 'grant', 'revoke', 'begin',
+                 'commit', 'rollback', 'savepoint', 'analyze')
+    for kw in forbidden:
+        if re.search(rf"\b{kw}\b", structure, re.IGNORECASE):
+            return None, f"Il comando '{kw.upper()}' non e' ammesso."
+
+    # I nomi definiti in WITH ... AS (...) non sono tabelle ma vanno considerati riferimenti leciti.
+    cte_names = {n.lower() for n in re.findall(
+        r"(?:\bwith\b(?:\s+recursive)?|,)\s*([A-Za-z_][A-Za-z0-9_]*)\s+as\s*\(",
+        structure, re.IGNORECASE)}
+    referenced = {t.lower() for t in re.findall(r"\b(?:from|join)\s+([A-Za-z_][A-Za-z0-9_]*)",
+                                                structure, re.IGNORECASE)}
+    for table in referenced:
+        if table not in AI_SQL_TABLES and table not in cte_names:
+            return None, f"Tabella non consentita: '{table}'."
+
+    normalized = _ai_sql_normalize(cleaned)
+    return normalized, None
+
+
+def run_ai_sql(sql, user_id):
+    """
+    Esegue una query validata su una connessione in sola lettura.
+    Restituisce (righe, colonne, errore). user_id non viene usato per filtrare:
+    il DB attuale e' mono-utente e le tabelle non espongono dati di altri utenti.
+    """
+    normalized, error = validate_ai_sql(sql)
+    if error:
+        return None, None, error
+
+    if not os.path.exists(DATABASE_PATH):
+        return None, None, "Database non disponibile."
+
+    conn = None
+    try:
+        conn = sqlite3.connect(f"file:{os.path.abspath(DATABASE_PATH)}?mode=ro", uri=True)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA query_only = ON")
+        # Interrompe le query troppo lunghe invece di occupare un thread a tempo indefinito.
+        deadline = time.monotonic() + 5.0
+        conn.set_progress_handler(lambda: 1 if time.monotonic() > deadline else 0, 10000)
+
+        cursor = conn.execute(normalized)
+        rows = cursor.fetchmany(AI_SQL_MAX_ROWS)
+        columns = [d[0] for d in cursor.description] if cursor.description else []
+        return rows, columns, None
+    except Exception as e:
+        return None, None, f"Errore SQL: {e}"
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def _ai_sql_openrouter_call(messages, api_key, model, base_url):
+    payload = {"model": model, "messages": messages, "temperature": 0}
+    res = requests.post(f"{base_url}/chat/completions",
+                        headers={"Authorization": f"Bearer {api_key}",
+                                 "Content-Type": "application/json",
+                                 "HTTP-Referer": "http://localhost:5001",
+                                 "X-Title": "CoTrack"},
+                        json=payload, timeout=60)
+    if res.status_code != 200:
+        return None, f"OpenRouter HTTP {res.status_code}: {res.text[:300]}"
+    return res.json(), None
+
+
+def answer_with_sql_tool(prompt, user_id, system_instruction=None, history=None):
+    """
+    Risponde a una domanda libera generando ed eseguendo query SQL in sola lettura.
+    Restituisce un dict con la stessa forma di execute_ai_completion.
+    """
+    provider = get_active_ai_provider(user_id)
+    if provider != 'openrouter':
+        return {"success": False, "text": "", "provider": provider, "model": None,
+                "error": "Il tool SQL richiede il provider OpenRouter."}
+
+    api_key = (app.config.get('OPENROUTER_API_KEY') or os.environ.get('OPENROUTER_API_KEY') or '').strip()
+    if not api_key:
+        return {"success": False, "text": "", "provider": "openrouter", "model": None,
+                "error": "Chiave API OpenRouter non configurata."}
+
+    model = app.config.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash')
+    base_url = app.config.get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1').rstrip('/')
+
+    messages = [{"role": "system", "content": build_ai_sql_system_prompt()}]
+    if system_instruction:
+        messages.append({"role": "system", "content": system_instruction})
+    if history:
+        for m in history:
+            if isinstance(m, dict) and 'role' in m and 'content' in m:
+                role = m['role'] if m['role'] in ('user', 'assistant', 'system') else 'user'
+                messages.append({"role": role, "content": str(m['content'])})
+    messages.append({"role": "user", "content": prompt})
+
+    for _ in range(AI_SQL_MAX_ITERATIONS):
+        data, error = _ai_sql_openrouter_call(messages, api_key, model, base_url)
+        if error:
+            return {"success": False, "text": "", "provider": "openrouter", "model": model, "error": error}
+
+        content = (data.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
+        parsed = None
+        try:
+            parsed = json.loads(strip_markdown_fences(content))
+        except Exception:
+            parsed = None
+
+        if isinstance(parsed, dict) and parsed.get("sql"):
+            rows, columns, sql_error = run_ai_sql(parsed["sql"], user_id)
+            if sql_error is None:
+                if not rows:
+                    result_text = "La query e' stata eseguita correttamente ma non ha restituito righe."
+                else:
+                    result_text = " | ".join(columns) + "\n" + "\n".join(
+                        " | ".join("" if r[c] is None else str(r[c]) for c in columns) for r in rows)
+                messages.append({"role": "assistant", "content": content})
+                messages.append({
+                    "role": "user",
+                    "content": ("Risultato della query:\n" + result_text +
+                                "\n\nRispondi ora all'utente in italiano, in modo sintetico e in Markdown, "
+                                "usando solo questi dati. Non mostrare la query SQL.")
+                })
+                final, ferror = _ai_sql_openrouter_call(messages, api_key, model, base_url)
+                if ferror:
+                    return {"success": False, "text": "", "provider": "openrouter", "model": model, "error": ferror}
+                final_text = (final.get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
+                return {"success": True, "text": final_text, "provider": "openrouter", "model": model, "error": None}
+
+            messages.append({"role": "assistant", "content": content})
+            messages.append({"role": "user",
+                             "content": f"La query non e' valida: {sql_error}\nCorreggi e restituisci una nuova query."})
+            continue
+
+        # Nessuna query: il modello ha risposto direttamente (es. saluto o domanda non pertinente).
+        return {"success": True, "text": content, "provider": "openrouter", "model": model, "error": None}
+
+    return {"success": False, "text": "", "provider": "openrouter", "model": model,
+            "error": "Impossibile generare una query valida per questa domanda."}
+
+def get_gemini_analysis_html(snapshot, portfolio_id=None, user_id=None):
+    if not get_available_ai_providers():
+        return "<p>Errore: Nessun provider AI configurato.</p>"
         
     # Standardize snapshot data
     norm = {
@@ -1276,24 +1737,12 @@ Guidelines:
 Portfolio Data:
 {prompt_data}"""
 
-    try:
-        client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
-        try:
-            response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
-                contents=prompt
-            )
-        except Exception as primary_e:
-            print(f"Errore modello primario in get_gemini_analysis_html: {primary_e}. Tentativo con il fallback.")
-            response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
-                contents=prompt
-            )
-        
-        markdown_text = response.text.replace("```markdown", "").replace("```html", "").replace("```", "").strip()
-        return markdown_to_html(markdown_text)
-    except Exception as e:
-        return f"<p>Errore durante l'analisi: {str(e)}</p>"
+    res = execute_ai_completion(prompt, user_id=user_id)
+    if not res['success']:
+        return f"<p>Errore durante l'analisi: {res.get('error')}</p>"
+
+    markdown_text = strip_markdown_fences(res['text']).replace("```markdown", "").replace("```html", "").replace("```", "").strip()
+    return markdown_to_html(markdown_text)
 
 def get_user_active_tabs(conn, user_id):
     tabs_keys = [
@@ -1697,9 +2146,9 @@ def get_pension_summary(conn, fund_id):
         'year_ago_val': c_year_ago['total_value'] if c_year_ago else None
     }
 
-def get_gemini_holistic_analysis(compiled_data_text):
-    if not genai or not app.config.get('GEMINI_API_KEY'):
-        return "<p>Errore: API Gemini non configurata.</p>"
+def get_gemini_holistic_analysis(compiled_data_text, user_id=None):
+    if not get_available_ai_providers():
+        return "<p>Errore: Nessun provider AI configurato.</p>"
         
     prompt = f"""Role: Professional financial advisor (objective analysis only).
 Task: Analyze the user's financial overview and perform a concise comparison of performance and shifts across active accounts compared to the previous week or month.
@@ -1713,24 +2162,12 @@ Guidelines:
 Financial Overview:
 {compiled_data_text}"""
 
-    try:
-        client = genai.Client(api_key=app.config['GEMINI_API_KEY'])
-        try:
-            response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
-                contents=prompt
-            )
-        except Exception as primary_e:
-            print(f"Errore modello primario in get_gemini_holistic_analysis: {primary_e}. Tentativo con il fallback.")
-            response = client.models.generate_content(
-                model=app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite'),
-                contents=prompt
-            )
-        
-        markdown_text = response.text.replace("```markdown", "").replace("```html", "").replace("```", "").strip()
-        return markdown_to_html(markdown_text)
-    except Exception as e:
-        return f"<p>Errore durante l'analisi: {str(e)}</p>"
+    res = execute_ai_completion(prompt, user_id=user_id)
+    if not res['success']:
+        return f"<p>Errore durante l'analisi: {res.get('error')}</p>"
+
+    markdown_text = strip_markdown_fences(res['text']).replace("```markdown", "").replace("```html", "").replace("```", "").strip()
+    return markdown_to_html(markdown_text)
 
 def send_weekly_report():
     if not app.config.get('WEEKLY_AI_REPORT_ENABLED', False):
@@ -1937,8 +2374,8 @@ def send_weekly_report():
                     
             compiled_data_text = "\n".join(compiled_text_parts)
             
-            # Call Gemini ONCE for holistic analysis
-            analisi_ai = get_gemini_holistic_analysis(compiled_data_text)
+            # Call AI ONCE for holistic analysis (using user preferred provider)
+            analisi_ai = get_gemini_holistic_analysis(compiled_data_text, user_id=user['id'])
             
             # Construct premium HTML email body
             report_body_html = ""
@@ -3137,6 +3574,559 @@ def settings_notifications():
         conn.close()
         return jsonify(res)
 
+def get_available_ai_providers():
+    """Restituisce i provider AI le cui API key sono configurate nel .env."""
+    providers = []
+    gemini_key = (app.config.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY') or '').strip()
+    openrouter_key = (app.config.get('OPENROUTER_API_KEY') or os.environ.get('OPENROUTER_API_KEY') or '').strip()
+
+    if gemini_key:
+        providers.append({
+            'id': 'gemini',
+            'name': 'Google Gemini',
+            'model': app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash'),
+            'description': f"Google AI Studio ({app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')})"
+        })
+    if openrouter_key:
+        providers.append({
+            'id': 'openrouter',
+            'name': 'OpenRouter',
+            'model': app.config.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash'),
+            'description': f"OpenRouter ({app.config.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash')})"
+        })
+    return providers
+
+def get_active_ai_provider(user_id=None):
+    """
+    Risolve il provider AI attivo per l'utente (o globale):
+    1. Preferenza utente nel DB (configurations: user_config:{user_id}:ai_provider)
+    2. Preferenza globale nel DB (configurations: ai_provider)
+    3. Variabile d'ambiente AI_PROVIDER
+    4. Auto-detection basata sui provider effettivamente disponibili.
+    """
+    available = get_available_ai_providers()
+    available_ids = [p['id'] for p in available]
+    if not available_ids:
+        return None
+
+    chosen = None
+    conn = None
+    try:
+        conn = get_db_connection()
+        if user_id:
+            row = conn.execute(
+                "SELECT value FROM configurations WHERE key = ?",
+                (f"user_config:{user_id}:ai_provider",)
+            ).fetchone()
+            if row and row['value']:
+                chosen = row['value'].strip().lower()
+        if not chosen:
+            row = conn.execute("SELECT value FROM configurations WHERE key = 'ai_provider'").fetchone()
+            if row and row['value']:
+                chosen = row['value'].strip().lower()
+    except Exception as e:
+        print(f"Errore lettura configurazione ai_provider dal DB: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+    if not chosen:
+        chosen = (app.config.get('AI_PROVIDER') or 'gemini').strip().lower()
+
+    if chosen in available_ids:
+        return chosen
+    return available_ids[0]
+
+@app.route('/api/settings/ai_provider', methods=['GET', 'POST'])
+def settings_ai_provider():
+    """Gestisce il provider AI selezionato dall'utente nelle impostazioni."""
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+    available = get_available_ai_providers()
+    available_ids = [p['id'] for p in available]
+
+    if request.method == 'POST':
+        data = request.json or {}
+        req_provider = (data.get('provider') or '').strip().lower()
+        if req_provider not in available_ids:
+            return jsonify({
+                "errore": _("Selected AI provider is not available or its API key is not configured.")
+            }), 400
+
+        conn = get_db_connection()
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO configurations (key, value) VALUES (?, ?)",
+                (f"user_config:{user_id}:ai_provider", req_provider)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        return jsonify({
+            "success": True,
+            "messaggio": _("AI Provider updated successfully"),
+            "current_provider": req_provider
+        })
+    else:
+        current = get_active_ai_provider(user_id)
+        return jsonify({
+            "current_provider": current,
+            "available_providers": available
+        })
+
+def build_ai_tab_context(conn, user_id, tab):
+    """
+    Raccoglie i dati pertinenti per l'utente loggato in base al tab selezionato.
+    Formatta le informazioni in testo compatto e strutturato ad alto segnale per l'AI.
+    """
+    today = datetime.today()
+    today_str = today.strftime('%Y-%m-%d')
+    curr_month_str = today.strftime('%Y-%m')
+    first_of_curr_month = today.replace(day=1)
+    last_of_prev_month = first_of_curr_month - timedelta(days=1)
+    prev_month_str = last_of_prev_month.strftime('%Y-%m')
+    curr_year = today.year
+    prev_year = today.year - 1
+
+    tab_norm = (tab or '').lower().strip()
+    if tab_norm in ('investimenti', 'investments'):
+        tab_key = 'investments'
+    elif tab_norm in ('wallet', 'entrate_uscite', 'transazioni'):
+        tab_key = 'wallet'
+    elif tab_norm in ('bollette', 'bills', 'energia'):
+        tab_key = 'bills'
+    elif tab_norm in ('veicoli', 'vehicles', 'garage'):
+        tab_key = 'vehicles'
+    elif tab_norm in ('prestiti', 'loans', 'mutui', 'debiti'):
+        tab_key = 'loans'
+    elif tab_norm in ('stipendi', 'salaries', 'retribuzioni'):
+        tab_key = 'salaries'
+    elif tab_norm in ('fondopensione', 'pension', 'pensione'):
+        tab_key = 'pension'
+    else:
+        tab_key = 'all'
+
+    sections = [
+        f"CALENDARIO & DATE DI RIFERIMENTO:\n"
+        f"- Data odierna: {today_str}\n"
+        f"- Mese corrente: {curr_month_str}\n"
+        f"- Mese precedente (lo scorso mese): {prev_month_str}\n"
+        f"- Anno corrente: {curr_year}, Anno precedente: {prev_year}\n"
+    ]
+
+    # --- VEICOLI ---
+    if tab_key in ('vehicles', 'all'):
+        garages = conn.execute("SELECT id, name FROM garages WHERE user_id = ?", (user_id,)).fetchall()
+        garage_ids = [g['id'] for g in garages]
+        if garage_ids:
+            placeholders = ','.join('?' for _ in garage_ids)
+            vehicles = conn.execute(
+                f"SELECT id, brand, model, plate, fuel, year, odometer FROM vehicles WHERE garage_id IN ({placeholders}) AND (archived = 0 OR archived IS NULL)",
+                garage_ids
+            ).fetchall()
+            v_map = {v['id']: f"{v['brand']} {v['model']} ({v['plate'] or 'senza targa'})" for v in vehicles}
+            
+            v_text = ["=== DATI SEZIONE VEICOLI ==="]
+            v_text.append(f"Parco veicoli attivi ({len(vehicles)}):")
+            for v in vehicles:
+                v_text.append(f"• {v['brand']} {v['model']} - Targa: {v['plate'] or 'N/D'}, Alim: {v['fuel'] or 'N/D'}, Anno: {v['year'] or 'N/D'}, Km attuali: {v['odometer'] or 0:,.0f}")
+            
+            if vehicles:
+                v_ids = [v['id'] for v in vehicles]
+                v_placeholders = ','.join('?' for _ in v_ids)
+                
+                acts = conn.execute(
+                    f"SELECT vehicleId, type, date, totalCost, totalCost2, totalCost3, cost, amount, category, description, notes, odometer "
+                    f"FROM vehicle_activities WHERE vehicleId IN ({v_placeholders}) ORDER BY date DESC",
+                    v_ids
+                ).fetchall()
+                
+                monthly_costs = {}
+                monthly_totals = {}
+                recent_acts = []
+                reminders = []
+                
+                for a in acts:
+                    d_raw = a['date'] or ''
+                    d_str = d_raw.split(' ')[0].split('T')[0] if d_raw else ''
+                    m_str = d_str[:7] if len(d_str) >= 7 else ''
+                    a_type = a['type'] or ''
+                    
+                    cost = 0.0
+                    if a_type == 'refuel':
+                        cost = (a['totalCost'] or 0.0) + (a['totalCost2'] or 0.0) + (a['totalCost3'] or 0.0)
+                    else:
+                        cost = float(a['cost'] or a['totalCost'] or a['amount'] or 0.0)
+                        
+                    v_name = v_map.get(a['vehicleId'], a['vehicleId'])
+                    
+                    if a_type == 'reminder':
+                        if len(reminders) < 10:
+                            reminders.append(f"• Promemoria: {v_name} - {a['category'] or a['description'] or a['notes']} (Data/Scadenza: {d_str})")
+                        continue
+                        
+                    if m_str:
+                        key = (m_str, v_name)
+                        if key not in monthly_costs:
+                            monthly_costs[key] = {'fuel': 0.0, 'service': 0.0, 'expense': 0.0, 'total': 0.0}
+                        if a_type == 'refuel': monthly_costs[key]['fuel'] += cost
+                        elif a_type == 'service': monthly_costs[key]['service'] += cost
+                        else: monthly_costs[key]['expense'] += cost
+                        monthly_costs[key]['total'] += cost
+                        monthly_totals[m_str] = monthly_totals.get(m_str, 0.0) + cost
+                        
+                    if len(recent_acts) < 25:
+                        desc = a['description'] or a['category'] or a['notes'] or a_type
+                        recent_acts.append(f"• {d_str}: {v_name} | {a_type.upper()} | {desc} | {cost:,.2f} €")
+                        
+                v_text.append("\nRiepilogo Spese Mensili Veicoli (tutti i mesi registrati):")
+                v_text.append("mese | totale | carburante | tagliandi/manutenzione | altro")
+                month_type_totals = {}
+                for (month, _v_name), val in monthly_costs.items():
+                    agg = month_type_totals.setdefault(month, {'total': 0.0, 'fuel': 0.0, 'service': 0.0, 'expense': 0.0})
+                    agg['total'] += val['total']
+                    agg['fuel'] += val['fuel']
+                    agg['service'] += val['service']
+                    agg['expense'] += val['expense']
+                for month in sorted(month_type_totals.keys()):
+                    agg = month_type_totals[month]
+                    v_text.append(f"{month} | {agg['total']:,.2f} € | {agg['fuel']:,.2f} € | {agg['service']:,.2f} € | {agg['expense']:,.2f} €")
+
+                if reminders:
+                    v_text.append("\nPromemoria e Scadenze Veicoli:")
+                    v_text.extend(reminders)
+                    
+                if recent_acts:
+                    v_text.append("\nUltime attività registrate nei veicoli:")
+                    v_text.extend(recent_acts[:15])
+
+            sections.append('\n'.join(v_text))
+
+    # --- WALLET (ENTRATE / USCITE) ---
+    if tab_key in ('wallet', 'all'):
+        wallets = conn.execute("SELECT id, name FROM wallets WHERE user_id = ?", (user_id,)).fetchall()
+        w_ids = [w['id'] for w in wallets]
+        if w_ids:
+            w_text = ["=== DATI SEZIONE WALLET (ENTRATE / USCITE) ==="]
+            placeholders = ','.join('?' for _ in w_ids)
+            balances = {}
+            for row in conn.execute(
+                f"SELECT account, SUM(amount) AS movimenti FROM wallet_transactions "
+                f"WHERE wallet_id IN ({placeholders}) GROUP BY account",
+                w_ids
+            ).fetchall():
+                balances[row['account']] = {
+                    'initial': 0.0, 'movimenti': row['movimenti'] or 0.0, 'excluded': 0
+                }
+            for row in conn.execute(
+                f"SELECT account, COALESCE(initial_balance, 0) AS initial_balance, COALESCE(excluded, 0) AS excluded "
+                f"FROM wallet_account_config WHERE wallet_id IN ({placeholders})",
+                w_ids
+            ).fetchall():
+                entry = balances.setdefault(row['account'], {'initial': 0.0, 'movimenti': 0.0, 'excluded': 0})
+                entry['initial'] = row['initial_balance'] or 0.0
+                entry['excluded'] = row['excluded'] or 0
+            if balances:
+                w_text.append("Saldi Conti Wallet (saldo iniziale + movimenti registrati):")
+                total_included = 0.0
+                for account, b in sorted(
+                    balances.items(),
+                    key=lambda kv: kv[1]['initial'] + kv[1]['movimenti'],
+                    reverse=True
+                ):
+                    saldo = b['initial'] + b['movimenti']
+                    if b['excluded']:
+                        w_text.append(f"• {account}: {saldo:,.2f} € (escluso dal totale)")
+                    else:
+                        total_included += saldo
+                        w_text.append(f"• {account}: {saldo:,.2f} €")
+                w_text.append(f"Totale conti (esclusi i conti marcati come esclusi): {total_included:,.2f} €")
+                    
+            monthly_wf = conn.execute(
+                f"SELECT SUBSTR(date, 1, 7) as m, type, SUM(amount) as tot FROM wallet_transactions WHERE wallet_id IN ({placeholders}) GROUP BY m, type ORDER BY m DESC",
+                w_ids
+            ).fetchall()
+            wf_summary = {}
+            for row in monthly_wf:
+                m = row['m']
+                if not m: continue
+                if m not in wf_summary:
+                    wf_summary[m] = {'income': 0.0, 'expense': 0.0}
+                t = (row['type'] or '').upper()
+                if t in ('INCOME', 'ENTRATA'): wf_summary[m]['income'] += row['tot']
+                elif t in ('EXPENSE', 'USCITA'): wf_summary[m]['expense'] += abs(row['tot'])
+                
+            w_text.append("\nFlussi di Cassa Mensili (tutti i mesi registrati: Entrate, Uscite, Risparmio):")
+            for m in sorted(wf_summary.keys()):
+                inc = wf_summary[m]['income']
+                exp = wf_summary[m]['expense']
+                net = inc - exp
+                w_text.append(f"{m} | {inc:,.2f} € | {exp:,.2f} € | {net:,.2f} €")
+                
+            top_cats = conn.execute(
+                f"SELECT SUBSTR(date, 1, 7) as m, category, SUM(ABS(amount)) as tot "
+                f"FROM wallet_transactions WHERE wallet_id IN ({placeholders}) AND UPPER(type) = 'EXPENSE' AND (SUBSTR(date, 1, 7) = ? OR SUBSTR(date, 1, 7) = ?) "
+                f"GROUP BY m, category ORDER BY m DESC, tot DESC",
+                (*w_ids, curr_month_str, prev_month_str)
+            ).fetchall()
+            if top_cats:
+                w_text.append("\nSpese per Categoria (Mese Corrente e Mese Precedente):")
+                current_m = None
+                for c in top_cats:
+                    if c['m'] != current_m:
+                        current_m = c['m']
+                        w_text.append(f"  * Dettaglio Categorie Mese {current_m}:")
+                    w_text.append(f"      - {c['category'] or 'Altro'}: {c['tot']:,.2f} €")
+                    
+            recent_wtx = conn.execute(
+                f"SELECT date, account, category, amount, type, note FROM wallet_transactions WHERE wallet_id IN ({placeholders}) ORDER BY date DESC LIMIT 20",
+                w_ids
+            ).fetchall()
+            if recent_wtx:
+                w_text.append("\nUltime transazioni registrate:")
+                for tx in recent_wtx[:15]:
+                    w_text.append(f"• {tx['date']}: {tx['type']} {tx['amount']:,.2f} € | {tx['account']} | {tx['category']} | {tx['note'] or ''}")
+
+            sections.append('\n'.join(w_text))
+
+    # --- BOLLETTE & ENERGIA ---
+    if tab_key in ('bills', 'all'):
+        profiles = conn.execute("SELECT id, name FROM bills_profiles WHERE user_id = ?", (user_id,)).fetchall()
+        p_ids = [p['id'] for p in profiles]
+        if p_ids:
+            b_text = ["=== DATI SEZIONE BOLLETTE ED ENERGIA ==="]
+            placeholders = ','.join('?' for _ in p_ids)
+            bills = conn.execute(
+                f"SELECT year, month, water_price, water_consumption, electricity_price, electricity_consumption, gas_price, gas_consumption, waste_price, solar_production, grid_feed_in "
+                f"FROM bills WHERE bills_id IN ({placeholders}) "
+                f"ORDER BY year DESC, month DESC",
+                p_ids
+            ).fetchall()
+            if bills:
+                b_text.append("Storico Bollette per Mese (tutti i mesi registrati):")
+                for b in bills:
+                    m_key = f"{b['year']}-{int(b['month']):02d}"
+                    parts = []
+                    if (b['electricity_price'] or 0) > 0: parts.append(f"Luce: {b['electricity_price']:,.2f} € ({b['electricity_consumption'] or 0} kWh)")
+                    if (b['gas_price'] or 0) > 0: parts.append(f"Gas: {b['gas_price']:,.2f} € ({b['gas_consumption'] or 0} Smc)")
+                    if (b['water_price'] or 0) > 0: parts.append(f"Acqua: {b['water_price']:,.2f} € ({b['water_consumption'] or 0} m³)")
+                    if (b['waste_price'] or 0) > 0: parts.append(f"TARI/Rifiuti: {b['waste_price']:,.2f} €")
+                    tot = (b['electricity_price'] or 0) + (b['gas_price'] or 0) + (b['water_price'] or 0) + (b['waste_price'] or 0)
+                    solar_str = f" | FV: Prod={b['solar_production'] or 0} kWh, Imm={b['grid_feed_in'] or 0} kWh" if (b['solar_production'] or 0) > 0 else ""
+                    b_text.append(f"• {m_key}: TOTALE = {tot:,.2f} € [{', '.join(parts)}]{solar_str}")
+            sections.append('\n'.join(b_text))
+
+    # --- PRESTITI & DEBITI ---
+    if tab_key in ('loans', 'all'):
+        loan_groups = conn.execute("SELECT id, name FROM loan_groups WHERE user_id = ?", (user_id,)).fetchall()
+        lg_ids = [lg['id'] for lg in loan_groups]
+        if lg_ids:
+            l_text = ["=== DATI SEZIONE PRESTITI E MUTUI ==="]
+            placeholders = ','.join('?' for _ in lg_ids)
+            loans = conn.execute(
+                f"SELECT id, name, principal, interest_rate, term_months, start_date, monthly_payment, rate_type, loan_group_id FROM loans WHERE loan_group_id IN ({placeholders})",
+                lg_ids
+            ).fetchall()
+            for l in loans:
+                p_stats = conn.execute(
+                    "SELECT COUNT(*), COALESCE(SUM(amount), 0) FROM loan_payments WHERE loan_id = ?", (l['id'],)
+                ).fetchone()
+                num_paid = p_stats[0] or 0
+                tot_paid = p_stats[1] or 0.0
+                rate_str = f"{l['interest_rate']}%" if l['interest_rate'] else "N/D"
+                l_text.append(
+                    f"• {l['name']} (Gruppo ID: {l['loan_group_id']}):\n"
+                    f"    Capitale iniziale: {l['principal']:,.2f} €, Tasso: {rate_str} ({l['rate_type'] or 'fisso'}), Rata: {l['monthly_payment'] or 0:,.2f} €/mese\n"
+                    f"    Durata totale: {l['term_months'] or 0} mesi, Inizio: {l['start_date'] or 'N/D'}\n"
+                    f"    Rate pagate registrate: {num_paid}, Totale rimborsato: {tot_paid:,.2f} €"
+                )
+            sections.append('\n'.join(l_text))
+
+    # --- STIPENDI & REDDITI ---
+    if tab_key in ('salaries', 'all'):
+        salary_groups = conn.execute("SELECT id, name FROM salary_groups WHERE user_id = ?", (user_id,)).fetchall()
+        sg_ids = [sg['id'] for sg in salary_groups]
+        if sg_ids:
+            s_text = ["=== DATI SEZIONE STIPENDI E RETRIBUZIONI ==="]
+            placeholders = ','.join('?' for _ in sg_ids)
+            yearly = conn.execute(
+                f"SELECT SUBSTR(month, 1, 4) AS y, COUNT(*) AS slips, SUM(net) AS net, SUM(gross) AS gross "
+                f"FROM salaries WHERE salary_group_id IN ({placeholders}) GROUP BY y ORDER BY y DESC",
+                sg_ids
+            ).fetchall()
+            if yearly:
+                s_text.append("Riepilogo annuale stipendi (tutti gli anni registrati):")
+                for y in yearly:
+                    s_text.append(
+                        f"- {y['y']}: {y['slips']} cedolini, Netto = {y['net'] or 0:,.2f} €, Lordo = {y['gross'] or 0:,.2f} €"
+                    )
+            monthly_sal = conn.execute(
+                f"SELECT month, person_name, SUM(net) AS net FROM salaries "
+                f"WHERE salary_group_id IN ({placeholders}) GROUP BY month, person_name ORDER BY month DESC",
+                sg_ids
+            ).fetchall()
+            if monthly_sal:
+                s_text.append("\nStorico mensile completo (tutti i mesi registrati) — mese | persona | netto:")
+                for ms in monthly_sal:
+                    s_text.append(f"{ms['month']} | {ms['person_name'] or 'Dipendente'} | {ms['net'] or 0:,.2f} €")
+            salaries_cut = conn.execute(
+                f"SELECT MIN(month) FROM (SELECT DISTINCT month FROM salaries "
+                f"WHERE salary_group_id IN ({placeholders}) ORDER BY month DESC LIMIT 12)",
+                sg_ids
+            ).fetchone()[0]
+            salaries = conn.execute(
+                f"SELECT month, person_name, net, gross, rimborso_spese, conguaglio_fiscale, premio_produzione_netto, tredicesima, notes FROM salaries WHERE salary_group_id IN ({placeholders}) "
+                f"AND month >= ? ORDER BY month DESC",
+                (*sg_ids, salaries_cut)
+            ).fetchall()
+            if salaries:
+                s_text.append("\nUltimi 12 mesi di cedolini (dettaglio completo):")
+                for sal in salaries:
+                    extra_parts = []
+                    if (sal['premio_produzione_netto'] or 0) > 0: extra_parts.append(f"Premio: {sal['premio_produzione_netto']:,.2f} €")
+                    if (sal['tredicesima'] or 0) > 0: extra_parts.append(f"13a: {sal['tredicesima']:,.2f} €")
+                    extra_str = f" [{', '.join(extra_parts)}]" if extra_parts else ""
+                    s_text.append(f"• {sal['month']} ({sal['person_name'] or 'Dipendente'}): Netto = {sal['net']:,.2f} €, Lordo = {sal['gross']:,.2f} €{extra_str}")
+            sections.append('\n'.join(s_text))
+
+    # --- FONDO PENSIONE ---
+    if tab_key in ('pension', 'all'):
+        pgroups = conn.execute("SELECT id, name FROM pension_fund_groups WHERE user_id = ?", (user_id,)).fetchall()
+        pg_ids = [pg['id'] for pg in pgroups]
+        if pg_ids:
+            fp_text = ["=== DATI SEZIONE FONDO PENSIONE ==="]
+            placeholders = ','.join('?' for _ in pg_ids)
+            funds = conn.execute(
+                f"SELECT id, name, provider, fund_type FROM pension_funds WHERE pension_fund_group_id IN ({placeholders})",
+                pg_ids
+            ).fetchall()
+            for f in funds:
+                fp_text.append(f"• Fondo '{f['name']}' ({f['provider'] or ''} - {f['fund_type'] or ''}):")
+                c_rows = conn.execute(
+                    "SELECT SUBSTR(month, 1, 4) as y, SUM(tfr) as tfr, SUM(worker_contrib) as worker, SUM(employer_contrib) as employer, SUM(total_value) as tot "
+                    "FROM pension_contributions WHERE fund_id = ? GROUP BY y ORDER BY y DESC LIMIT 3",
+                    (f['id'],)
+                ).fetchall()
+                for c in c_rows:
+                    deductible = (c['worker'] or 0.0) + (c['employer'] or 0.0)
+                    fp_text.append(f"    - Anno {c['y']}: Versato Totale = {c['tot'] or 0:,.2f} € (TFR: {c['tfr'] or 0:,.2f} €, Aderente: {c['worker'] or 0:,.2f} €, Azienda: {c['employer'] or 0:,.2f} € | Deducibile: {deductible:,.2f} € / 5.164,57 €)")
+            sections.append('\n'.join(fp_text))
+
+    # --- INVESTIMENTI ---
+    if tab_key in ('investments', 'all'):
+        portfolios = conn.execute("SELECT id, name FROM portfolios WHERE user_id = ?", (user_id,)).fetchall()
+        if portfolios:
+            inv_text = ["=== DATI SEZIONE INVESTIMENTI ==="]
+            for p in portfolios:
+                try:
+                    snap = get_portfolio_snapshot_at_date(p['id'])
+                    if snap:
+                        inv_text.append(
+                            f"• Portafoglio '{p['name']}':\n"
+                            f"    Valore Attuale: {snap.get('value', 0):,.2f} €, Investito: {snap.get('invested', 0):,.2f} €, Guadagno: {snap.get('gain', 0):,.2f} € ({snap.get('return_pct', 0):.2f}%)\n"
+                            f"    Allocazione Asset: {snap.get('allocation', 'N/D')}"
+                        )
+                except Exception as e:
+                    inv_text.append(f"• Portafoglio '{p['name']}': Dati non disponibili ({e})")
+            sections.append('\n'.join(inv_text))
+
+    return "\n\n".join(sections)
+
+@app.route('/api/ai/ask', methods=['POST'])
+@limiter.limit("20 per minute")
+def ai_ask_tab():
+    """Riceve un prompt utente per la tab selezionata ed esegue la risposta AI contestuale."""
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
+
+    available_providers = get_available_ai_providers()
+    if not available_providers:
+        return jsonify({
+            "errore": _("Nessun provider AI configurato. Configura GEMINI_API_KEY o OPENROUTER_API_KEY nel file .env per utilizzare l'assistente.")
+        }), 400
+
+    data = request.json or {}
+    prompt = (data.get('prompt') or '').strip()
+    tab = (data.get('tab') or 'all').strip()
+    history = data.get('history') or []
+    use_sql_tool = bool(data.get('use_sql_tool'))
+
+    if not prompt:
+        return jsonify({"errore": _("La domanda non può essere vuota.")}), 400
+
+    if use_sql_tool:
+        locale = get_locale()
+        lang_instruction = "Rispondi in lingua italiana." if locale == 'it' else "Respond in English."
+        tool_instruction = (
+            "Sei l'Assistente AI personale e consulente finanziario integrato in CoTrack.\n"
+            "Rispondi basandoti ESCLUSIVAMENTE sui dati ottenuti dalle query al database.\n"
+            "- Sii preciso, diretto, chiaro e sintetico. Evita convenevoli e disclaimer prolissi.\n"
+            "- Formatta gli importi monetari in euro (es. 1.234,50 €).\n"
+            "- Usa il formato Markdown (grassetto per i numeri salienti, elenchi o tabelle per i confronti).\n"
+            "- Se una query non restituisce righe, dillo con trasparenza invece di inventare un valore.\n"
+            f"- {lang_instruction}"
+        )
+        res = answer_with_sql_tool(prompt=prompt, user_id=user_id,
+                                   system_instruction=tool_instruction, history=history)
+        if not res['success']:
+            return jsonify({
+                "errore": res.get('error') or _("Errore durante l'interrogazione dell'assistente AI.")
+            }), 500
+        return jsonify({
+            "success": True,
+            "reply": strip_markdown_fences(res['text']).strip(),
+            "tab": tab,
+            "provider": res.get('provider'),
+            "model": res.get('model'),
+            "mode": "sql_tool"
+        }), 200
+
+    conn = get_db_connection()
+    try:
+        context_data = build_ai_tab_context(conn, user_id, tab)
+    finally:
+        conn.close()
+
+    locale = get_locale()
+    lang_instruction = "Rispondi in lingua italiana." if locale == 'it' else "Respond in English."
+
+    system_instruction = (
+        "Sei l'Assistente AI personale e consulente finanziario integrato in CoTrack.\n"
+        "Rispondi alle domande dell'utente basandoti ESCLUSIVAMENTE sui dati reali forniti nel seguente contesto.\n"
+        "Linee guida tassative:\n"
+        "- Sii preciso, diretto, chiaro e sintetico. Evita convenevoli, preamboli o disclaimer prolissi.\n"
+        "- Se l'utente chiede spese o importi riferiti a periodi relativi (come 'lo scorso mese', 'questo mese', 'quest'anno'), consulta la sezione CALENDARIO & DATE DI RIFERIMENTO per identificare il mese esatto (es. per 'lo scorso mese' usa il mese precedente indicato).\n"
+        "- Formatta gli importi monetari in euro (es. 1.234,50 €).\n"
+        "- Usa il formato Markdown (grassetto per i numeri salienti, elenchi puntati per confronti o elenchi di spese).\n"
+        "- Se il dato richiesto non è presente nel contesto o non ci sono registrazioni, rispondi con trasparenza che l'informazione non risulta nei dati inseriti.\n"
+        f"- {lang_instruction}\n\n"
+        f"Contesto Dati CoTrack:\n{context_data}"
+    )
+
+    res = execute_ai_completion(
+        prompt=prompt,
+        user_id=user_id,
+        system_instruction=system_instruction,
+        history=history
+    )
+
+    if not res['success']:
+        return jsonify({
+            "errore": res.get('error') or _("Errore durante l'interrogazione dell'assistente AI.")
+        }), 500
+
+    reply = strip_markdown_fences(res['text']).strip()
+    return jsonify({
+        "success": True,
+        "reply": reply,
+        "tab": tab,
+        "provider": res.get('provider'),
+        "model": res.get('model')
+    }), 200
+
 @app.route('/api/drivvo/status', methods=['GET'])
 def drivvo_status():
     if 'user_id' not in session:
@@ -3912,15 +4902,12 @@ def preview_pdf():
 @app.route('/api/analyze_portfolio', methods=['POST'])
 def analyze_portfolio():
     if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    user_id = session['user_id']
     
-    if genai is None:
-        return jsonify({"errore": _("Google Generative AI SDK not installed. Run 'pip install google-genai'.")}), 500
-        
-    api_key = app.config.get('GEMINI_API_KEY')
-    if not api_key:
-        return jsonify({"errore": _("Gemini API key not configured. Please set GEMINI_API_KEY environment variable.")}), 400
+    if not get_available_ai_providers():
+        return jsonify({"errore": _("Nessun provider AI configurato. Imposta GEMINI_API_KEY o OPENROUTER_API_KEY nel file .env.")}), 400
 
-    data = request.json
+    data = request.json or {}
     locale = get_locale()
     language_name = "Italian" if locale == 'it' else "English"
 
@@ -3975,25 +4962,16 @@ Guidelines:
 Portfolio Data:
 {prompt_data}"""
 
-    try:
-        client = genai.Client(api_key=api_key)
-        try:
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
-        except Exception as primary_e:
-            print(f"Errore modello primario in analyze_portfolio: {primary_e}. Tentativo con il fallback.")
-            fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
-            response = client.models.generate_content(
-                model=fallback_model,
-                contents=prompt
-            )
-        markdown_text = response.text.replace("```markdown", "").replace("```html", "").replace("```", "").strip()
-        return jsonify({"analisi": markdown_text}), 200
-    except Exception as e:
-        return jsonify({"errore": str(e)}), 500
+    res = execute_ai_completion(prompt, user_id=user_id)
+    if not res['success']:
+        return jsonify({"errore": res.get('error') or _("Errore durante l'analisi")}), 500
+
+    markdown_text = strip_markdown_fences(res['text']).replace("```markdown", "").replace("```html", "").replace("```", "").strip()
+    return jsonify({
+        "analisi": markdown_text,
+        "provider": res.get('provider'),
+        "model": res.get('model')
+    }), 200
 
 # --- 3. PREZZI REAL-TIME (OGGI) ---
 @app.route('/api/prezzo/<ticker>', methods=['GET'])
@@ -7359,10 +8337,7 @@ def parse_statement_pdf():
         if not text.strip():
             return jsonify({"errore": "Could not extract text from PDF (it might be an image/scanned PDF)"}), 400
 
-        # Now, call Gemini
-        api_key = app.config.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY')
-        if not genai or not api_key:
-            # Simple rule-based regex parser fallback for safety
+        def run_statement_regex_fallback():
             import re
             transactions = []
             lines = text.split('\n')
@@ -7388,9 +8363,9 @@ def parse_statement_pdf():
                             pass
             return jsonify({"transactions": transactions, "method": "regex_fallback"})
 
-        client = genai.Client(api_key=api_key)
-        model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
-        
+        if not get_available_ai_providers():
+            return run_statement_regex_fallback()
+
         prompt = (
             "Sei un assistente contabile esperto. Analizza il seguente testo estratto da un "
             "estratto conto / documento finanziario di un intermediario di prestiti/finanziamenti.\n"
@@ -7412,31 +8387,24 @@ def parse_statement_pdf():
             f"Testo estratto:\n{text}"
         )
 
+        user_id = session.get('user_id')
+        res = execute_ai_completion(prompt, user_id=user_id, json_mode=True)
+        if not res['success']:
+            print(f"AI completion error in parse_statement_pdf: {res.get('error')}. Falling back to regex.")
+            return run_statement_regex_fallback()
+
+        resp_text = strip_markdown_fences(res['text'])
         try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
-        except Exception as primary_e:
-            print(f"Errore modello primario in parse_statement_pdf: {primary_e}. Tentativo con il fallback.")
-            fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
-            response = client.models.generate_content(
-                model=fallback_model,
-                contents=prompt
-            )
-
-        resp_text = response.text
-        if resp_text.startswith("```"):
-            lines = resp_text.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-            resp_text = "\n".join(lines)
-
-        import json
-        transactions = json.loads(resp_text.strip())
-        return jsonify({"transactions": transactions, "method": "gemini"})
+            import json
+            transactions = json.loads(resp_text.strip())
+            return jsonify({
+                "transactions": transactions,
+                "method": res.get('provider') or "ai",
+                "model": res.get('model')
+            })
+        except Exception as json_err:
+            print(f"JSON parsing error from AI in parse_statement_pdf: {json_err}. Falling back to regex.")
+            return run_statement_regex_fallback()
 
     except Exception as e:
         print(f"Error in parse_statement_pdf: {e}")
@@ -8498,63 +9466,51 @@ def parse_pension_pdf():
                 "method": "regex"
             })
 
-        api_key = app.config.get('GEMINI_API_KEY') or os.environ.get('GEMINI_API_KEY')
-        if not genai or not api_key:
+        if not get_available_ai_providers():
             return run_pension_pdf_regex_fallback(text)
 
+        prompt = (
+            "Sei un esperto contabile italiano. Analizza il testo estratto da un documento che può essere una busta paga italiana o un estratto conto di un fondo pensione (es. Cometa, Fonchim, Fonte, Secondapensione, ecc.).\n"
+            "Estrai tutti i contributi versati al fondo pensione (TFR, quota lavoratore/aderente, quota azienda/datore).\n"
+            "Restituisci SOLO un oggetto JSON valido (senza markdown o altri blocchi di codice) con questa struttura:\n"
+            "{\n"
+            "  \"type\": \"payslip\" o \"statement\",\n"
+            "  \"contributions\": [\n"
+            "    {\n"
+            "      \"month\": \"YYYY-MM\",\n"
+            "      \"tfr\": float,\n"
+            "      \"worker_contrib\": float,\n"
+            "      \"employer_contrib\": float,\n"
+            "      \"total_value\": float,\n"
+            "      \"notes\": string\n"
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "Nota:\n"
+            "- Il mese deve essere nel formato YYYY-MM.\n"
+            "- Se un valore non è presente, impostalo a 0.0.\n"
+            "- Se è una busta paga (payslip), di solito c'è un solo mese e un solo contributo.\n"
+            "- Se è un estratto conto (statement), estrai la lista storica dei contributi mese per mese presenti nel documento.\n\n"
+            f"Testo:\n{text}"
+        )
+
+        user_id = session.get('user_id')
+        res = execute_ai_completion(prompt, user_id=user_id, json_mode=True)
+        if not res['success']:
+            print(f"AI completion error in parse_pension_pdf: {res.get('error')}. Falling back to regex.")
+            return run_pension_pdf_regex_fallback(text)
+
+        resp_text = strip_markdown_fences(res['text'])
         try:
-            client = genai.Client(api_key=api_key)
-            model_name = app.config.get('GEMINI_MODEL_PRIMARY', 'gemini-3.8-flash')
-            prompt = (
-                "Sei un esperto contabile italiano. Analizza il testo estratto da un documento che può essere una busta paga italiana o un estratto conto di un fondo pensione (es. Cometa, Fonchim, Fonte, Secondapensione, ecc.).\n"
-                "Estrai tutti i contributi versati al fondo pensione (TFR, quota lavoratore/aderente, quota azienda/datore).\n"
-                "Restituisci SOLO un oggetto JSON valido (senza markdown o altri blocchi di codice) con questa struttura:\n"
-                "{\n"
-                "  \"type\": \"payslip\" o \"statement\",\n"
-                "  \"contributions\": [\n"
-                "    {\n"
-                "      \"month\": \"YYYY-MM\",\n"
-                "      \"tfr\": float,\n"
-                "      \"worker_contrib\": float,\n"
-                "      \"employer_contrib\": float,\n"
-                "      \"total_value\": float,\n"
-                "      \"notes\": string\n"
-                "    }\n"
-                "  ]\n"
-                "}\n"
-                "Nota:\n"
-                "- Il mese deve essere nel formato YYYY-MM.\n"
-                "- Se un valore non è presente, impostalo a 0.0.\n"
-                "- Se è una busta paga (payslip), di solito c'è un solo mese e un solo contributo.\n"
-                "- Se è un estratto conto (statement), estrai la lista storica dei contributi mese per mese presenti nel documento.\n\n"
-                f"Testo:\n{text}"
-            )
-            try:
-                response = client.models.generate_content(model=model_name, contents=prompt)
-            except Exception as primary_e:
-                print(f"Errore modello primario in parse_pension_pdf: {primary_e}. Tentativo con il fallback.")
-                fallback_model = app.config.get('GEMINI_MODEL_FALLBACK', 'gemini-3.5-flash-lite')
-                response = client.models.generate_content(model=fallback_model, contents=prompt)
-            resp_text = response.text.strip()
-            
-            if "```" in resp_text:
-                first_idx = resp_text.find("```")
-                start_idx = resp_text.find("\n", first_idx)
-                if start_idx == -1:
-                    start_idx = first_idx + 3
-                else:
-                    start_idx += 1
-                last_idx = resp_text.rfind("```")
-                if last_idx != -1 and last_idx > start_idx:
-                    resp_text = resp_text[start_idx:last_idx].strip()
-                else:
-                    resp_text = resp_text[start_idx:].strip()
-            
             import json as json_mod
             result = json_mod.loads(resp_text)
-            return jsonify({**result, "method": "gemini"})
-        except Exception as gemini_err:
-            print(f"Gemini processing error: {gemini_err}. Falling back to regex.")
+            return jsonify({
+                **result,
+                "method": res.get('provider') or "ai",
+                "model": res.get('model')
+            })
+        except Exception as json_err:
+            print(f"JSON parsing error from AI in parse_pension_pdf: {json_err}. Falling back to regex.")
             return run_pension_pdf_regex_fallback(text)
     except Exception as e:
         print(f"Error in parse_pension_pdf: {e}")
