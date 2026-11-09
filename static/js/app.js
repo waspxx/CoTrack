@@ -8,6 +8,9 @@ let gaugeSaldoObj = null;
 let gaugeFlussoObj = null;
 let gaugeSpeseObj = null;
 let trendSaldoObj = null;
+let trendSaldoObjFullscreen = null;
+let trendSaldoLabels = [];   // Etichette (YYYY-MM o YYYY-MM-DD) del trend saldo corrente
+let trendSaldoData = [];     // Valori cumulativi del trend saldo corrente
 // let graficoSaldiObj = null;
 
 // VARIABILI GLOBALI PER I FILTRI DEL GRAFICO
@@ -17,6 +20,7 @@ let currentPeriodoAndamento = 'All';
 let activeTickers = []; // Ticker attualmente selezionati per l'andamento
 let activePortfolioId = null; // ID del portafoglio correntemente visualizzato (Investimenti)
 let activeWalletId = null;    // ID del wallet correntemente visualizzato (Wallet)
+let walletEvents = [];        // Eventi importanti del wallet attivo
 let activeBillsId = null;     // ID del gruppo bollette correntemente visualizzato (Bollette)
 let activeGarageId = null;    // ID del garage correntemente visualizzato (Veicoli)
 let mostraDividendi = false;
@@ -42,6 +46,7 @@ async function handleReload() {
     if (gaugeFlussoObj) { gaugeFlussoObj.destroy(); gaugeFlussoObj = null; }
     if (gaugeSpeseObj) { gaugeSpeseObj.destroy(); gaugeSpeseObj = null; }
     if (trendSaldoObj) { trendSaldoObj.destroy(); trendSaldoObj = null; }
+    if (trendSaldoObjFullscreen) { trendSaldoObjFullscreen.destroy(); trendSaldoObjFullscreen = null; }
     if (graficoRisparmioPercentualeObj) { graficoRisparmioPercentualeObj.destroy(); graficoRisparmioPercentualeObj = null; }
 
     // Mostra i messaggi di caricamento in modo più visibile
@@ -2935,6 +2940,7 @@ async function caricaDatiWallet() {
             }
 
             await caricaConfigurazioneContiWallet();
+            await caricaWalletEvents();
             initFiltroDateWallet();
             initTableDateFilter();
             disegnaFiltriContiWallet();
@@ -3654,30 +3660,12 @@ function aggiornaDashboardWallet() {
         });
     }
 
+    trendSaldoLabels = trendLabels;
+    trendSaldoData = trendData;
+
     const ctxTrend = document.getElementById('graficoTrendSaldo').getContext('2d');
     if (trendSaldoObj !== null) trendSaldoObj.destroy();
-    trendSaldoObj = new Chart(ctxTrend, {
-        type: 'line',
-        data: {
-            labels: trendLabels,
-            datasets: [{
-                label: 'Saldo',
-                data: trendData,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                pointHitRadius: 10
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return formatEuro(ctx.raw); } } } },
-            scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { display: false, min: Math.min(...trendData) * 0.9 } }
-        }
-    });
+    trendSaldoObj = new Chart(ctxTrend, buildTrendSaldoChartConfig(trendLabels, trendData, true));
 
     document.getElementById('trend-saldo-kpi').innerText = formatEuro(totaleSaldoFinale);
 
@@ -3796,6 +3784,97 @@ function aggiornaDashboardWallet() {
                 }
             }
         });
+    }
+}
+
+// Configurazione condivisa per il grafico "Tendenza del saldo" (widget compatto e vista a schermo intero).
+function buildTrendSaldoChartConfig(labels, data, compatto) {
+    const minVal = data.length ? Math.min(...data) : 0;
+    const maxVal = data.length ? Math.max(...data) : 0;
+    // Margine del 10% solo sul minimo, per non schiacciare la linea in basso.
+    const minScala = minVal < 0 ? minVal * 1.1 : minVal * 0.9;
+
+    return {
+        type: 'line',
+        plugins: [createWalletEventsChartPlugin(walletEvents, labels)],
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Saldo',
+                data: data,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: compatto ? 0 : 3,
+                pointBackgroundColor: '#0d6efd',
+                pointHitRadius: 10
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) { return formatEuro(ctx.raw); },
+                        afterBody: function (tooltipItems) {
+                            if (!tooltipItems || !tooltipItems.length || !walletEvents.length) return '';
+                            const label = tooltipItems[0].label;
+                            const month = (label || '').substring(0, 7);
+                            const evts = walletEvents.filter(e => (e.event_date || '').substring(0, 7) === month);
+                            if (!evts.length) return '';
+                            return '\n📌 ' + evts.map(e => e.title + (e.notes ? ` (${e.notes})` : '')).join('\n📌 ');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: compatto ? 6 : 12, color: '#64748b', font: { size: compatto ? 10 : 11 } }
+                },
+                y: {
+                    display: true,
+                    min: minScala,
+                    max: maxVal === minVal ? undefined : maxVal * 1.02,
+                    ticks: {
+                        callback: function (v) { return formatEuro(v); },
+                        color: '#64748b',
+                        font: { size: compatto ? 10 : 11 },
+                        maxTicksLimit: compatto ? 4 : 8
+                    },
+                    grid: { borderDash: [5, 5], color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        }
+    };
+}
+
+// Apre il grafico della tendenza del saldo in una vista interna a schermo intero,
+// riutilizzando i dati già calcolati da aggiornaDashboardWallet().
+function apriTrendSaldoFullscreen() {
+    const modal = document.getElementById('modal-trend-saldo-fullscreen');
+    const canvas = document.getElementById('graficoTrendSaldoFullscreen');
+    if (!modal || !canvas) return;
+
+    modal.style.display = 'flex';
+
+    if (trendSaldoObjFullscreen !== null) {
+        trendSaldoObjFullscreen.destroy();
+        trendSaldoObjFullscreen = null;
+    }
+    trendSaldoObjFullscreen = new Chart(canvas.getContext('2d'), buildTrendSaldoChartConfig(trendSaldoLabels, trendSaldoData, false));
+}
+
+function chiudiTrendSaldoFullscreen() {
+    const modal = document.getElementById('modal-trend-saldo-fullscreen');
+    if (modal) modal.style.display = 'none';
+    if (trendSaldoObjFullscreen !== null) {
+        trendSaldoObjFullscreen.destroy();
+        trendSaldoObjFullscreen = null;
     }
 }
 
@@ -7621,3 +7700,256 @@ document.addEventListener('click', function(e) {
     }
 });
 
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WALLET EVENTS – CRUD & CHART PLUGIN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function caricaWalletEvents() {
+    if (!activeWalletId) { walletEvents = []; return; }
+    try {
+        const res = await fetch(`/api/wallets/${activeWalletId}/events`);
+        walletEvents = res.ok ? await res.json() : [];
+    } catch (e) {
+        console.error("Errore caricamento wallet events:", e);
+        walletEvents = [];
+    }
+}
+
+function createWalletEventsChartPlugin(events, chartLabels) {
+    return {
+        id: 'walletEventsPlugin',
+        afterDraw(chart) {
+            if (!events || events.length === 0) return;
+            const labels = chart.data.labels;
+            if (!labels || labels.length === 0) return;
+            const chartArea = chart.chartArea;
+            if (!chartArea) return;
+            const ctx = chart.ctx;
+
+            // Match events to chart labels by YYYY-MM prefix
+            const matched = [];
+            events.forEach(evt => {
+                if (!evt.event_date) return;
+                const evtMonth = evt.event_date.substring(0, 7);
+                // Labels can be YYYY-MM or YYYY-MM-DD – match by substring
+                for (let i = 0; i < labels.length; i++) {
+                    if ((labels[i] || '').substring(0, 7) === evtMonth) {
+                        matched.push({ ...evt, labelIdx: i });
+                        break;
+                    }
+                }
+            });
+
+            if (matched.length === 0) return;
+            matched.sort((a, b) => a.labelIdx - b.labelIdx || (a.event_date || '').localeCompare(b.event_date || ''));
+
+            const byIdx = {};
+            matched.forEach(evt => {
+                if (!byIdx[evt.labelIdx]) byIdx[evt.labelIdx] = [];
+                byIdx[evt.labelIdx].push(evt);
+            });
+
+            ctx.save();
+
+            Object.keys(byIdx).forEach(idxStr => {
+                const idx = parseInt(idxStr, 10);
+                const xPos = chart.scales.x.getPixelForValue(idx);
+                if (xPos < chartArea.left - 2 || xPos > chartArea.right + 2) return;
+
+                // Vertical dashed line
+                ctx.save();
+                ctx.beginPath();
+                ctx.setLineDash([5, 4]);
+                ctx.strokeStyle = '#e11d48';
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(xPos, chartArea.top);
+                ctx.lineTo(xPos, chartArea.bottom);
+                ctx.stroke();
+
+                // Pin dot
+                ctx.fillStyle = '#e11d48';
+                ctx.beginPath();
+                ctx.arc(xPos, chartArea.top, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Draw badges
+                const evtsHere = byIdx[idxStr];
+                evtsHere.forEach((evt, stackIdx) => {
+                    const titleText = evt.title || '';
+                    ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    const maxTextWidth = 120;
+                    let displayText = titleText;
+                    if (ctx.measureText(displayText).width > maxTextWidth) {
+                        while (displayText.length > 3 && ctx.measureText(displayText + '…').width > maxTextWidth) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText += '…';
+                    }
+                    const displayWidth = ctx.measureText(displayText).width;
+                    const badgeWidth = displayWidth + 14;
+                    const badgeHeight = 18;
+
+                    let badgeX = xPos - badgeWidth / 2;
+                    if (badgeX < chartArea.left + 2) badgeX = chartArea.left + 2;
+                    if (badgeX + badgeWidth > chartArea.right - 2) badgeX = chartArea.right - 2 - badgeWidth;
+
+                    const badgeY = chartArea.top + 4 + stackIdx * 21;
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(225, 29, 72, 0.92)';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetY = 1;
+                    ctx.beginPath();
+                    if (typeof ctx.roundRect === 'function') {
+                        ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 4);
+                    } else {
+                        ctx.rect(badgeX, badgeY, badgeWidth, badgeHeight);
+                    }
+                    ctx.fill();
+
+                    ctx.shadowColor = 'transparent';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(displayText, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2 + 0.5);
+                    ctx.restore();
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+}
+
+// ── Wallet Events: list modal ─────────────────────────────────────────────────
+function renderWalletEventsTable() {
+    const tbody = document.getElementById('wallet-events-table-body');
+    if (!tbody) return;
+
+    const sorted = [...walletEvents].sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted, #6c757d);">${window.Translations?.noEventsRegistered || 'Nessun evento registrato.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = sorted.map(e => {
+        return `<tr>
+            <td style="font-weight:600; white-space:nowrap;">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#e11d48;"></span>
+                    ${e.event_date}
+                </span>
+            </td>
+            <td style="font-weight:600;">${e.title}</td>
+            <td style="font-size:0.9em; color:var(--text-secondary, #6c757d);">${e.account || '–'}</td>
+            <td style="font-size:0.9em; color:var(--text-secondary, #6c757d);">${e.notes || '–'}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button onclick="window.openWalletEventFormModal('${e.id}')" title="Modifica" style="background:none; border:none; cursor:pointer; font-size:1em; padding:3px;">✏️</button>
+                <button onclick="window.deleteWalletEvent('${e.id}')" title="Elimina" style="background:none; border:none; cursor:pointer; font-size:1em; padding:3px; color:#ef4444;">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+window.openWalletEventsListModal = function() {
+    renderWalletEventsTable();
+    document.getElementById('modal-wallet-events-list').style.display = 'flex';
+};
+
+window.closeWalletEventModals = function() {
+    document.getElementById('modal-wallet-events-list').style.display = 'none';
+    document.getElementById('modal-wallet-event-form').style.display = 'none';
+};
+
+// ── Wallet Events: form modal ─────────────────────────────────────────────────
+window.openWalletEventFormModal = function(id) {
+    // Populate account select
+    const accSel = document.getElementById('wallet-event-account');
+    if (accSel) {
+        accSel.innerHTML = '<option value="">– ' + (window.Translations?.allAccounts || 'Tutti i conti') + ' –</option>';
+        (contiWalletGlobal || []).forEach(acc => {
+            const opt = document.createElement('option');
+            opt.value = acc; opt.textContent = acc;
+            accSel.appendChild(opt);
+        });
+    }
+
+    if (id) {
+        const evt = walletEvents.find(e => e.id === id);
+        if (!evt) return;
+        document.getElementById('wallet-event-edit-id').value = evt.id;
+        document.getElementById('wallet-event-form-title').textContent = window.Translations?.editEvent || 'Modifica Evento';
+        document.getElementById('wallet-event-date').value = evt.event_date;
+        document.getElementById('wallet-event-title').value = evt.title;
+        document.getElementById('wallet-event-notes').value = evt.notes || '';
+        if (accSel) accSel.value = evt.account || '';
+    } else {
+        document.getElementById('wallet-event-edit-id').value = '';
+        document.getElementById('wallet-event-form-title').textContent = window.Translations?.newEvent || 'Nuovo Evento';
+        document.getElementById('wallet-event-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('wallet-event-title').value = '';
+        document.getElementById('wallet-event-notes').value = '';
+        if (accSel) accSel.value = '';
+    }
+
+    document.getElementById('modal-wallet-event-form').style.display = 'flex';
+};
+
+window.handleWalletEventSubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('wallet-event-edit-id').value;
+    const eventDate = document.getElementById('wallet-event-date').value;
+    const title = document.getElementById('wallet-event-title').value.trim();
+    const notes = document.getElementById('wallet-event-notes').value.trim();
+    const account = document.getElementById('wallet-event-account').value;
+
+    if (!title || !eventDate) {
+        alert('Compila i campi obbligatori (Data, Titolo).');
+        return;
+    }
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/wallet_events/${id}` : `/api/wallets/${activeWalletId}/events`;
+    const body = { event_date: eventDate, title, notes, account };
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            document.getElementById('modal-wallet-event-form').style.display = 'none';
+            await caricaWalletEvents();
+            renderWalletEventsTable();
+            aggiornaDashboardWallet();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.errore || "Errore durante il salvataggio dell'evento.");
+        }
+    } catch (err) {
+        alert('Errore di rete durante il salvataggio.');
+    }
+};
+
+window.deleteWalletEvent = async function(id) {
+    const msg = window.Translations?.deleteEventConfirm || 'Sei sicuro di voler eliminare questo evento?';
+    if (!confirm(msg)) return;
+    try {
+        const res = await fetch(`/api/wallet_events/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            await caricaWalletEvents();
+            renderWalletEventsTable();
+            aggiornaDashboardWallet();
+        } else {
+            alert("Errore durante l'eliminazione dell'evento.");
+        }
+    } catch (err) {
+        alert('Errore di connessione.');
+    }
+};

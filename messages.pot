@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 10:15+0100\n"
+"POT-Creation-Date: 2026-11-09 11:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,514 +21,524 @@ msgstr ""
 msgid "Too many requests. Please try again later."
 msgstr ""
 
-#: app.py:3060
+#: app.py:3358
 msgid "Login successful"
 msgstr ""
 
-#: app.py:3061
+#: app.py:3359
 msgid "Invalid credentials"
 msgstr ""
 
-#: app.py:3099
+#: app.py:3397
 msgid "Username must be a valid email address"
 msgstr ""
 
-#: app.py:3101 app.py:3175 app.py:4104 app.py:4172 app.py:5027 app.py:5118
+#: app.py:3399 app.py:3473 app.py:4554 app.py:4622 app.py:5477 app.py:5568
 msgid "Missing data"
 msgstr ""
 
-#: app.py:3111 app.py:3114
+#: app.py:3409 app.py:3412
 msgid "Registration completed"
 msgstr ""
 
-#: app.py:3121
+#: app.py:3419
 msgid "Logout successful"
 msgstr ""
 
-#: app.py:3155
+#: app.py:3453
 msgid "Valid email required"
 msgstr ""
 
-#: app.py:3168
+#: app.py:3466
 msgid "If the email exists, a reset link has been sent."
 msgstr ""
 
-#: app.py:3180
+#: app.py:3478
 msgid "Invalid or expired token"
 msgstr ""
 
-#: app.py:3185
+#: app.py:3483
 msgid "Password updated successfully"
 msgstr ""
 
-#: app.py:3191 app.py:3206 app.py:3217 app.py:3240 app.py:3272 app.py:3371
-#: app.py:3714 app.py:3777 app.py:3788 app.py:3809 app.py:3841 app.py:3858
-#: app.py:3880 app.py:3898 app.py:3913 app.py:3931 app.py:3947 app.py:3962
-#: app.py:3980 app.py:3998 app.py:4013 app.py:4031 app.py:4048 app.py:4092
-#: app.py:4154 app.py:4164 app.py:4184 app.py:4217 app.py:4229 app.py:4287
-#: app.py:4329 app.py:4445 app.py:4522 app.py:4548 app.py:4718 app.py:5013
-#: app.py:5021 app.py:5074 app.py:5096 app.py:5159 app.py:5184 app.py:5194
-#: app.py:5218 app.py:5247 app.py:5443 app.py:5576 app.py:5596 app.py:5622
-#: app.py:5665 app.py:5740 app.py:5784 app.py:5809 app.py:5940 app.py:5969
-#: app.py:6032 app.py:6085 app.py:6160 app.py:6226 app.py:6319 app.py:6379
-#: app.py:6442 app.py:7010 app.py:7071 app.py:7133 app.py:7197 app.py:7289
-#: app.py:7342 app.py:7412 app.py:7441 app.py:7512 app.py:7541 app.py:7592
-#: app.py:7607 app.py:7625 app.py:7643 app.py:7697 app.py:7742 app.py:7794
-#: app.py:7834 app.py:7963 app.py:9166 app.py:9186 app.py:9280 app.py:9403
-#: app.py:9417 app.py:9431 app.py:9445
+#: app.py:3489 app.py:3504 app.py:3515 app.py:3538 app.py:3570 app.py:3669
+#: app.py:4067 app.py:4158 app.py:4169 app.py:4190 app.py:4222 app.py:4239
+#: app.py:4261 app.py:4279 app.py:4294 app.py:4312 app.py:4329 app.py:4360
+#: app.py:4397 app.py:4412 app.py:4430 app.py:4448 app.py:4463 app.py:4481
+#: app.py:4498 app.py:4542 app.py:4604 app.py:4614 app.py:4634 app.py:4667
+#: app.py:4679 app.py:4737 app.py:4779 app.py:4895 app.py:4972 app.py:4998
+#: app.py:5168 app.py:5463 app.py:5471 app.py:5524 app.py:5546 app.py:5609
+#: app.py:5634 app.py:5644 app.py:5668 app.py:5697 app.py:5893 app.py:6026
+#: app.py:6046 app.py:6072 app.py:6115 app.py:6190 app.py:6234 app.py:6259
+#: app.py:6390 app.py:6419 app.py:6482 app.py:6535 app.py:6610 app.py:6676
+#: app.py:6769 app.py:6829 app.py:6892 app.py:7460 app.py:7521 app.py:7583
+#: app.py:7765 app.py:7869 app.py:7922 app.py:7992 app.py:8021 app.py:8092
+#: app.py:8121 app.py:8172 app.py:8187 app.py:8205 app.py:8223 app.py:8277
+#: app.py:8322 app.py:8374 app.py:8414 app.py:8543 app.py:8790 app.py:8822
+#: app.py:9816 app.py:9836 app.py:9930 app.py:10053 app.py:10067 app.py:10081
+#: app.py:10095
 msgid "Not authenticated"
 msgstr ""
 
-#: app.py:3258
+#: app.py:3556
 msgid "Settings updated successfully"
 msgstr ""
 
-#: app.py:3283
+#: app.py:3581
 msgid "Invalid email address format"
 msgstr ""
 
-#: app.py:3290
+#: app.py:3588
 msgid "Email notification settings updated successfully"
 msgstr ""
 
-#: app.py:3381
+#: app.py:3679
 msgid "Selected AI provider is not available or its API key is not configured."
 msgstr ""
 
-#: app.py:3396
+#: app.py:3694
 msgid "AI Provider updated successfully"
 msgstr ""
 
-#: app.py:3720
+#: app.py:4073
 msgid ""
 "Nessun provider AI configurato. Configura GEMINI_API_KEY o "
 "OPENROUTER_API_KEY nel file .env per utilizzare l'assistente."
 msgstr ""
 
-#: app.py:3729
+#: app.py:4083
 msgid "La domanda non può essere vuota."
 msgstr ""
 
-#: app.py:3762
+#: app.py:4101 app.py:4143
 msgid "Errore durante l'interrogazione dell'assistente AI."
 msgstr ""
 
-#: app.py:3845 templates/components/tab_investimenti.html:7
+#: app.py:4226 templates/components/tab_investimenti.html:7
 msgid "New Portfolio"
 msgstr ""
 
-#: app.py:3850
+#: app.py:4231
 msgid "Portfolio created"
 msgstr ""
 
-#: app.py:3862 app.py:3916 app.py:3965 app.py:4016 app.py:6054
+#: app.py:4243 app.py:4297 app.py:4415 app.py:4466 app.py:6504
 msgid "Name cannot be empty"
 msgstr ""
 
-#: app.py:3873 app.py:3886
+#: app.py:4254 app.py:4267
 msgid "Portfolio not found or unauthorized"
 msgstr ""
 
-#: app.py:3876
+#: app.py:4257
 msgid "Portfolio renamed successfully"
 msgstr ""
 
-#: app.py:3893
+#: app.py:4274
 msgid "Portfolio deleted successfully"
 msgstr ""
 
-#: app.py:3901 templates/components/tab_wallet.html:7
+#: app.py:4282 templates/components/tab_wallet.html:7
 msgid "New Wallet"
 msgstr ""
 
-#: app.py:3906
+#: app.py:4287
 msgid "Wallet created"
 msgstr ""
 
-#: app.py:3925 app.py:3936 app.py:5634
+#: app.py:4306 app.py:4317 app.py:4334 app.py:6084
 msgid "Wallet not found or unauthorized"
 msgstr ""
 
-#: app.py:3927
+#: app.py:4308
 msgid "Wallet renamed successfully"
 msgstr ""
 
-#: app.py:3942
+#: app.py:4324
 msgid "Wallet deleted successfully"
 msgstr ""
 
-#: app.py:3950 templates/components/tab_bollette.html:8
+#: app.py:4343 app.py:4383 app.py:6271 app.py:6547 app.py:6690 app.py:6804
+#: app.py:8804 app.py:8845
+msgid "Missing required fields"
+msgstr ""
+
+#: app.py:4368 app.py:8830
+msgid "Event not found"
+msgstr ""
+
+#: app.py:4400 templates/components/tab_bollette.html:8
 msgid "New Bills Group"
 msgstr ""
 
-#: app.py:3955
+#: app.py:4405
 msgid "Bills group created"
 msgstr ""
 
-#: app.py:3974 app.py:3985 app.py:5827 app.py:5899 app.py:5987 app.py:6022
-#: app.py:6102 app.py:6135 app.py:6178 app.py:6206 app.py:6251 app.py:6276
-#: app.py:6386 app.py:6452
+#: app.py:4424 app.py:4435 app.py:6277 app.py:6349 app.py:6437 app.py:6472
+#: app.py:6552 app.py:6585 app.py:6628 app.py:6656 app.py:6701 app.py:6726
+#: app.py:6836 app.py:6902
 msgid "Bills group not found or unauthorized"
 msgstr ""
 
-#: app.py:3976
+#: app.py:4426
 msgid "Bills group renamed successfully"
 msgstr ""
 
-#: app.py:3993
+#: app.py:4443
 msgid "Bills group deleted successfully"
 msgstr ""
 
-#: app.py:4001 templates/components/tab_veicoli.html:6
+#: app.py:4451 templates/components/tab_veicoli.html:6
 msgid "New Garage"
 msgstr ""
 
-#: app.py:4006
+#: app.py:4456
 msgid "Garage created"
 msgstr ""
 
-#: app.py:4025 app.py:4036 app.py:7020 app.py:7207 app.py:7352 app.py:7522
-#: app.py:7554
+#: app.py:4475 app.py:4486 app.py:7470 app.py:7775 app.py:7932 app.py:8102
+#: app.py:8134
 msgid "Garage not found or unauthorized"
 msgstr ""
 
-#: app.py:4027
+#: app.py:4477
 msgid "Garage renamed successfully"
 msgstr ""
 
-#: app.py:4044
+#: app.py:4494
 msgid "Garage deleted successfully"
 msgstr ""
 
-#: app.py:4082
+#: app.py:4532
 msgid "Transaction saved successfully!"
 msgstr ""
 
-#: app.py:4098
+#: app.py:4548
 msgid "Transaction deleted!"
 msgstr ""
 
-#: app.py:4109
+#: app.py:4559
 msgid "Instrument (ISIN) is required"
 msgstr ""
 
-#: app.py:4125
+#: app.py:4575
 msgid "Invalid numeric values"
 msgstr ""
 
-#: app.py:4141 app.py:5108
+#: app.py:4591 app.py:5558
 msgid "Transaction not found or unauthorized"
 msgstr ""
 
-#: app.py:4150
+#: app.py:4600
 msgid "Transaction updated successfully!"
 msgstr ""
 
-#: app.py:4160
+#: app.py:4610
 msgid "All transactions deleted!"
 msgstr ""
 
-#: app.py:4179
+#: app.py:4629
 msgid "Asset type updated successfully!"
 msgstr ""
 
-#: app.py:4220
+#: app.py:4670
 msgid "Database not found"
 msgstr ""
 
-#: app.py:4233 app.py:4290 app.py:4333 app.py:4449 app.py:4525 app.py:5249
-#: app.py:5447 app.py:6444 app.py:7844 app.py:9168 app.py:9193 app.py:9286
+#: app.py:4683 app.py:4740 app.py:4783 app.py:4899 app.py:4975 app.py:5699
+#: app.py:5897 app.py:6894 app.py:8424 app.py:9818 app.py:9843 app.py:9936
 msgid "No file uploaded"
 msgstr ""
 
-#: app.py:4239 app.py:4294 app.py:4455 app.py:4529 app.py:5252 app.py:6446
+#: app.py:4689 app.py:4744 app.py:4905 app.py:4979 app.py:5702 app.py:6896
 msgid "No file selected"
 msgstr ""
 
-#: app.py:4278
+#: app.py:4728
 #, python-format
 msgid "CSV format error: %(err)s"
 msgstr ""
 
-#: app.py:4281
+#: app.py:4731
 msgid "Import completed successfully!"
 msgstr ""
 
-#: app.py:4283 app.py:4324 app.py:5439
+#: app.py:4733 app.py:4774 app.py:5889
 msgid "Invalid file format. Expected CSV."
 msgstr ""
 
-#: app.py:4306 app.py:4350 app.py:5260 app.py:5464 app.py:6462 app.py:7867
-#: app.py:9210 app.py:9303
+#: app.py:4756 app.py:4800 app.py:5710 app.py:5914 app.py:6912 app.py:8447
+#: app.py:9860 app.py:9953
 msgid "The uploaded file is empty."
 msgstr ""
 
-#: app.py:4318 app.py:9316
+#: app.py:4768 app.py:9966
 msgid "CSV format error."
 msgstr ""
 
-#: app.py:4338 app.py:5452 app.py:7850 app.py:9198 app.py:9291
+#: app.py:4788 app.py:5902 app.py:8430 app.py:9848 app.py:9941
 msgid "Missing column mapping"
 msgstr ""
 
-#: app.py:4343 app.py:5457 app.py:7856 app.py:9203 app.py:9296
+#: app.py:4793 app.py:5907 app.py:8436 app.py:9853 app.py:9946
 msgid "Invalid mapping format"
 msgstr ""
 
-#: app.py:4438
+#: app.py:4888
 #, python-format
 msgid "Import error: %(err)s"
 msgstr ""
 
-#: app.py:4440
+#: app.py:4890
 msgid "Custom import completed successfully!"
 msgstr ""
 
-#: app.py:4459
+#: app.py:4909
 msgid ""
 "PyPDF2 library not installed. Add it to the server with 'pip install "
 "PyPDF2'."
 msgstr ""
 
-#: app.py:4478
+#: app.py:4928
 msgid "ISIN code not found in PDF"
 msgstr ""
 
-#: app.py:4497
+#: app.py:4947
 msgid "Execution data (quantity, price, total) not found in PDF"
 msgstr ""
 
-#: app.py:4511
+#: app.py:4961
 #, python-format
 msgid "Transaction for %(name)s imported successfully!"
 msgstr ""
 
-#: app.py:4513
+#: app.py:4963
 msgid "This transaction has already been imported into the portfolio."
 msgstr ""
 
-#: app.py:4516 app.py:4542
+#: app.py:4966 app.py:4992
 #, python-format
 msgid "Error reading PDF: %(err)s"
 msgstr ""
 
-#: app.py:4518 app.py:4544
+#: app.py:4968 app.py:4994
 msgid "Invalid file format. Expected PDF."
 msgstr ""
 
-#: app.py:4533
+#: app.py:4983
 msgid "PyPDF2 library not installed."
 msgstr ""
 
-#: app.py:4552
+#: app.py:5002
 msgid ""
 "Nessun provider AI configurato. Imposta GEMINI_API_KEY o "
 "OPENROUTER_API_KEY nel file .env."
 msgstr ""
 
-#: app.py:4611
+#: app.py:5061
 msgid "Errore durante l'analisi"
 msgstr ""
 
-#: app.py:5039 app.py:5130 app.py:6246 app.py:6360
+#: app.py:5489 app.py:5580 app.py:6696 app.py:6810
 msgid "Invalid amount"
 msgstr ""
 
-#: app.py:5042 app.py:5133
+#: app.py:5492 app.py:5583
 msgid "Date, account and category are required"
 msgstr ""
 
-#: app.py:5060
+#: app.py:5510
 msgid "Transaction added successfully"
 msgstr ""
 
-#: app.py:5080
+#: app.py:5530
 msgid "Missing category"
 msgstr ""
 
-#: app.py:5087
+#: app.py:5537
 msgid "Category updated successfully"
 msgstr ""
 
-#: app.py:5113
+#: app.py:5563
 msgid "Transaction deleted successfully"
 msgstr ""
 
-#: app.py:5150
+#: app.py:5600
 msgid "Transaction updated successfully"
 msgstr ""
 
-#: app.py:5175
+#: app.py:5625
 msgid "Configuration saved!"
 msgstr ""
 
-#: app.py:5190
+#: app.py:5640
 msgid "All Wallet transactions deleted!"
 msgstr ""
 
-#: app.py:5201
+#: app.py:5651
 msgid "No transactions selected"
 msgstr ""
 
-#: app.py:5209
+#: app.py:5659
 msgid "Selected transactions deleted!"
 msgstr ""
 
-#: app.py:5430 app.py:5563
+#: app.py:5880 app.py:6013
 #, python-format
 msgid ""
 "Imported %(count)s new transactions. (Ignored %(ignored)s already "
 "present). WARNING: %(errors)s rows were not read correctly."
 msgstr ""
 
-#: app.py:5432 app.py:5565
+#: app.py:5882 app.py:6015
 #, python-format
 msgid ""
 "Imported %(count)s new transactions successfully! (Ignored %(ignored)s "
 "already present)."
 msgstr ""
 
-#: app.py:5609
+#: app.py:6059
 msgid "BudgetBakers token saved successfully!"
 msgstr ""
 
-#: app.py:5639
+#: app.py:6089
 msgid "No wallet found for this user"
 msgstr ""
 
-#: app.py:5646
+#: app.py:6096
 msgid "Sync failed"
 msgstr ""
 
-#: app.py:5654
+#: app.py:6104
 #, python-format
 msgid ""
 "Sync completed! %(imported)s new transactions imported, %(ignored)s "
 "already present (total fetched: %(total)s from %(start)s to %(end)s)."
 msgstr ""
 
-#: app.py:5681
+#: app.py:6131
 msgid "Name, match value and target tab are required"
 msgstr ""
 
-#: app.py:5747
+#: app.py:6197
 msgid "Trigger rule not found"
 msgstr ""
 
-#: app.py:5753
+#: app.py:6203
 msgid "Trigger rule deleted successfully"
 msgstr ""
 
-#: app.py:5802
+#: app.py:6252
 #, python-format
 msgid "Applied triggers: %(count)s transaction actions processed."
 msgstr ""
 
-#: app.py:5821 app.py:6097 app.py:6240 app.py:6354
-msgid "Missing required fields"
-msgstr ""
-
-#: app.py:5883
+#: app.py:6333
 msgid "Bill saved successfully"
 msgstr ""
 
-#: app.py:5894 app.py:6017 app.py:6130 app.py:6173 app.py:6201 app.py:6271
+#: app.py:6344 app.py:6467 app.py:6580 app.py:6623 app.py:6651 app.py:6721
 msgid "Missing bills_id"
 msgstr ""
 
-#: app.py:5952
+#: app.py:6402
 msgid "Bill not found or unauthorized"
 msgstr ""
 
-#: app.py:5958
+#: app.py:6408
 msgid "Bill deleted successfully"
 msgstr ""
 
-#: app.py:5982
+#: app.py:6432
 msgid "Name and bills group are required"
 msgstr ""
 
-#: app.py:5997
+#: app.py:6447
 msgid "Appliance added successfully"
 msgstr ""
 
-#: app.py:6043
+#: app.py:6493
 msgid "Appliance not found or unauthorized"
 msgstr ""
 
-#: app.py:6062
+#: app.py:6512
 msgid "Appliance updated successfully"
 msgstr ""
 
-#: app.py:6074
+#: app.py:6524
 msgid "Appliance deleted successfully"
 msgstr ""
 
-#: app.py:6116
+#: app.py:6566
 msgid "Appliance consumptions saved successfully"
 msgstr ""
 
-#: app.py:6190
+#: app.py:6640
 msgid "Config saved successfully"
 msgstr ""
 
-#: app.py:6261
+#: app.py:6711
 msgid "Payment saved successfully"
 msgstr ""
 
-#: app.py:6331
+#: app.py:6781
 msgid "Record not found or unauthorized"
 msgstr ""
 
-#: app.py:6338
+#: app.py:6788
 msgid "Payment deleted successfully"
 msgstr ""
 
-#: app.py:6370
+#: app.py:6820
 msgid "Payment updated successfully"
 msgstr ""
 
-#: app.py:6564
+#: app.py:7014
 #, python-format
 msgid "Imported %(count)s bills successfully!"
 msgstr ""
 
-#: app.py:6572
+#: app.py:7022
 msgid "Invalid file type"
 msgstr ""
 
-#: app.py:7014 app.py:7201 app.py:7346 app.py:7516 app.py:7548
+#: app.py:7464 app.py:7769 app.py:7926 app.py:8096 app.py:8128
 msgid "Missing garage_id"
 msgstr ""
 
-#: app.py:7081 app.py:7146 app.py:9408
+#: app.py:7531 app.py:7596 app.py:10058
 msgid "Vehicle not found or unauthorized"
 msgstr ""
 
-#: app.py:7152
+#: app.py:7602
 msgid "Vehicle has no chassis number (VIN) registered"
 msgstr ""
 
-#: app.py:7300
+#: app.py:7880
 msgid "Activity not found or unauthorized"
 msgstr ""
 
-#: app.py:7703 app.py:7749 app.py:7840 app.py:9422
+#: app.py:8283 app.py:8329 app.py:8420 app.py:10072
 msgid "Loan not found or unauthorized"
 msgstr ""
 
-#: app.py:7806
+#: app.py:8386
 msgid "Payment not found or unauthorized"
 msgstr ""
 
-#: app.py:7953
+#: app.py:8533
 #, python-format
 msgid ""
 "Import completed: %(imported)d payments imported, %(skipped)d skipped as "
 "duplicates."
 msgstr ""
 
-#: app.py:9171
+#: app.py:8795
+msgid "Group not found"
+msgstr ""
+
+#: app.py:9821
 msgid "The file must be a PDF"
 msgstr ""
 
@@ -695,163 +705,184 @@ msgstr ""
 msgid "No people. Add a payslip to create a person."
 msgstr ""
 
-#: templates/index.html:80
-msgid "No items."
+#: templates/components/tab_stipendi.html:449 templates/index.html:80
+msgid "No events registered."
 msgstr ""
 
-#: templates/components/tab_veicoli.html:240 templates/index.html:81
-msgid "No activities registered. Click on \"Add\" to start."
+#: templates/components/tab_stipendi.html:435
+#: templates/components/tab_stipendi.html:484 templates/index.html:81
+msgid "New Event"
 msgstr ""
 
-#: templates/components/tab_veicoli.html:251 templates/index.html:82
-msgid "No active reminders."
+#: templates/index.html:82
+msgid "Edit Event"
 msgstr ""
 
 #: templates/index.html:83
-msgid "No activities found for selected filters."
+msgid "Are you sure you want to delete this event?"
 msgstr ""
 
 #: templates/index.html:84
-msgid "No refuelings registered."
+msgid "All accounts"
 msgstr ""
 
 #: templates/index.html:85
-msgid "No expenses registered."
+msgid "No items."
 msgstr ""
 
-#: templates/index.html:86
-msgid "No incomes registered."
+#: templates/components/tab_veicoli.html:240 templates/index.html:86
+msgid "No activities registered. Click on \"Add\" to start."
 msgstr ""
 
-#: templates/index.html:87
-msgid "No maintenances registered."
+#: templates/components/tab_veicoli.html:251 templates/index.html:87
+msgid "No active reminders."
 msgstr ""
 
 #: templates/index.html:88
-msgid "No reminders registered."
+msgid "No activities found for selected filters."
 msgstr ""
 
 #: templates/index.html:89
-msgid "No odometer data available."
+msgid "No refuelings registered."
 msgstr ""
 
 #: templates/index.html:90
-msgid "No expenses registered to generate chart."
+msgid "No expenses registered."
 msgstr ""
 
 #: templates/index.html:91
-msgid "No consecutive fills registered."
+msgid "No incomes registered."
 msgstr ""
 
 #: templates/index.html:92
-msgid "No data available."
+msgid "No maintenances registered."
 msgstr ""
 
 #: templates/index.html:93
-msgid "Media ultimi 12 mesi"
+msgid "No reminders registered."
 msgstr ""
 
 #: templates/index.html:94
-msgid "Loading..."
+msgid "No odometer data available."
 msgstr ""
 
 #: templates/index.html:95
-msgid "No amortization plan available."
+msgid "No expenses registered to generate chart."
 msgstr ""
 
 #: templates/index.html:96
-msgid "No transactions found."
+msgid "No consecutive fills registered."
 msgstr ""
 
 #: templates/index.html:97
-msgid "No assets in portfolio."
+msgid "No data available."
 msgstr ""
 
-#: templates/components/tab_prestiti.html:388 templates/index.html:98
-msgid "Interest Rate Change (TAN)"
+#: templates/index.html:98
+msgid "Media ultimi 12 mesi"
 msgstr ""
 
 #: templates/index.html:99
-msgid "Interest Rate Change"
+msgid "Loading..."
 msgstr ""
 
 #: templates/index.html:100
-msgid "Fixed"
+msgid "No amortization plan available."
 msgstr ""
 
 #: templates/index.html:101
+msgid "No transactions found."
+msgstr ""
+
+#: templates/index.html:102
+msgid "No assets in portfolio."
+msgstr ""
+
+#: templates/components/tab_prestiti.html:388 templates/index.html:103
+msgid "Interest Rate Change (TAN)"
+msgstr ""
+
+#: templates/index.html:104
+msgid "Interest Rate Change"
+msgstr ""
+
+#: templates/index.html:105
+msgid "Fixed"
+msgstr ""
+
+#: templates/index.html:106
 msgid "Variable"
 msgstr ""
 
-#: templates/components/tab_fondopensione.html:305 templates/index.html:102
+#: templates/components/tab_fondopensione.html:305 templates/index.html:107
 msgid "Spese"
 msgstr ""
 
 #: templates/components/tab_bollette.html:79
-#: templates/components/tab_bollette.html:107 templates/index.html:103
+#: templates/components/tab_bollette.html:107 templates/index.html:108
 msgid "Solar Production"
 msgstr ""
 
-#: templates/index.html:104
+#: templates/index.html:109
 msgid "Grid Feed-in"
 msgstr ""
 
 #: templates/components/tab_bollette.html:132
-#: templates/components/tab_bollette.html:136 templates/index.html:105
+#: templates/components/tab_bollette.html:136 templates/index.html:110
 msgid "Grid Withdrawal"
 msgstr ""
 
-#: templates/index.html:106
+#: templates/index.html:111
 msgid "Self-Consumption"
 msgstr ""
 
-#: templates/components/tab_bollette.html:123 templates/index.html:107
+#: templates/components/tab_bollette.html:123 templates/index.html:112
 msgid "Total Home Consumption"
 msgstr ""
 
-#: templates/components/tab_bollette.html:131 templates/index.html:108
+#: templates/components/tab_bollette.html:131 templates/index.html:113
 msgid "Solar Autonomy"
 msgstr ""
 
-#: templates/index.html:109
+#: templates/index.html:114
 msgid "solar coverage"
 msgstr ""
 
 #: templates/components/tab_bollette.html:154
-#: templates/components/tab_bollette.html:299 templates/index.html:110
+#: templates/components/tab_bollette.html:299 templates/index.html:115
 msgid "Appliances"
 msgstr ""
 
-#: templates/components/tab_bollette.html:206 templates/index.html:111
+#: templates/components/tab_bollette.html:206 templates/index.html:116
 msgid "No appliances added yet."
 msgstr ""
 
-#: templates/index.html:112
+#: templates/index.html:117
 msgid ""
 "Are you sure you want to delete this appliance and all its recorded "
 "consumptions?"
 msgstr ""
 
-#: templates/index.html:113
+#: templates/index.html:118
 msgid "Are you sure you want to delete this bill and its associated energy data?"
 msgstr ""
 
-#: templates/index.html:114
+#: templates/index.html:119
 msgid "No AI providers configured in .env"
 msgstr ""
 
-#: templates/index.html:115
+#: templates/index.html:120
 msgid "AI Provider updated successfully!"
 msgstr ""
 
-#: templates/index.html:121
+#: templates/index.html:126
 msgid "Map Pension Fund CSV Columns"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:467
 #: templates/components/tab_prestiti.html:718
-#: templates/components/tab_stipendi.html:486
-#: templates/components/tab_wallet.html:423 templates/index.html:122
+#: templates/components/tab_stipendi.html:561
+#: templates/components/tab_wallet.html:434 templates/index.html:127
 msgid ""
 "Select the corresponding column from your CSV file for each required "
 "field."
@@ -875,17 +906,18 @@ msgstr ""
 #: templates/components/tab_prestiti.html:708
 #: templates/components/tab_prestiti.html:723
 #: templates/components/tab_settings.html:416
-#: templates/components/tab_stipendi.html:348
-#: templates/components/tab_stipendi.html:431
-#: templates/components/tab_stipendi.html:491
-#: templates/components/tab_stipendi.html:526
-#: templates/components/tab_stipendi.html:605
+#: templates/components/tab_stipendi.html:359
+#: templates/components/tab_stipendi.html:473
+#: templates/components/tab_stipendi.html:506
+#: templates/components/tab_stipendi.html:566
+#: templates/components/tab_stipendi.html:601
+#: templates/components/tab_stipendi.html:680
 #: templates/components/tab_veicoli.html:873
 #: templates/components/tab_veicoli.html:1017
-#: templates/components/tab_wallet.html:413
-#: templates/components/tab_wallet.html:428
-#: templates/components/tab_wallet.html:451
-#: templates/components/tab_wallet.html:479 templates/index.html:127
+#: templates/components/tab_wallet.html:424
+#: templates/components/tab_wallet.html:439
+#: templates/components/tab_wallet.html:462
+#: templates/components/tab_wallet.html:490 templates/index.html:132
 msgid "Cancel"
 msgstr ""
 
@@ -894,9 +926,9 @@ msgstr ""
 #: templates/components/tab_investimenti.html:555
 #: templates/components/tab_prestiti.html:709
 #: templates/components/tab_prestiti.html:724
-#: templates/components/tab_stipendi.html:492
-#: templates/components/tab_stipendi.html:606
-#: templates/components/tab_wallet.html:429 templates/index.html:128
+#: templates/components/tab_stipendi.html:567
+#: templates/components/tab_stipendi.html:681
+#: templates/components/tab_wallet.html:440 templates/index.html:133
 msgid "Confirm and Import"
 msgstr ""
 
@@ -981,6 +1013,7 @@ msgstr ""
 
 #: templates/components/modal_ask_ai.html:26
 #: templates/components/tab_veicoli.html:1055
+#: templates/components/tab_wallet.html:530
 msgid "Chiudi"
 msgstr ""
 
@@ -998,11 +1031,21 @@ msgstr ""
 msgid "L'assistente sta analizzando i dati..."
 msgstr ""
 
-#: templates/components/modal_ask_ai.html:55
-msgid "Scrivi una domanda... (es: quanto ho speso in veicoli lo scorso mese?)"
+#: templates/components/modal_ask_ai.html:54
+msgid ""
+"Interroga direttamente il database: risposte su qualsiasi periodo o "
+"dettaglio"
 msgstr ""
 
 #: templates/components/modal_ask_ai.html:56
+msgid "Modalità libera (SQL)"
+msgstr ""
+
+#: templates/components/modal_ask_ai.html:59
+msgid "Scrivi una domanda... (es: quanto ho speso in veicoli lo scorso mese?)"
+msgstr ""
+
+#: templates/components/modal_ask_ai.html:60
 msgid "Invia"
 msgstr ""
 
@@ -1035,7 +1078,7 @@ msgstr ""
 #: templates/components/tab_stipendi.html:9
 #: templates/components/tab_veicoli.html:8
 #: templates/components/tab_wallet.html:9
-#: templates/components/tab_wallet.html:355
+#: templates/components/tab_wallet.html:366
 msgid "Delete"
 msgstr ""
 
@@ -1314,11 +1357,13 @@ msgid "Importo Incassato"
 msgstr ""
 
 #: templates/components/tab_bollette.html:273
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:371
+#: templates/components/tab_wallet.html:520
 msgid "Note"
 msgstr ""
 
 #: templates/components/tab_bollette.html:274
+#: templates/components/tab_wallet.html:521
 msgid "Azioni"
 msgstr ""
 
@@ -1341,13 +1386,14 @@ msgstr ""
 #: templates/components/tab_bollette.html:301
 #: templates/components/tab_fondopensione.html:306
 #: templates/components/tab_investimenti.html:435
-#: templates/components/tab_stipendi.html:389
-#: templates/components/tab_stipendi.html:454
+#: templates/components/tab_stipendi.html:400
+#: templates/components/tab_stipendi.html:445
+#: templates/components/tab_stipendi.html:529
 #: templates/components/tab_veicoli.html:325
 #: templates/components/tab_veicoli.html:351
 #: templates/components/tab_veicoli.html:377
 #: templates/components/tab_veicoli.html:404
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:371
 msgid "Actions"
 msgstr ""
 
@@ -1361,13 +1407,13 @@ msgstr ""
 
 #: templates/components/tab_bollette.html:315
 #: templates/components/tab_investimenti.html:392
-#: templates/components/tab_wallet.html:283
+#: templates/components/tab_wallet.html:294
 msgid "Import CSV"
 msgstr ""
 
 #: templates/components/tab_bollette.html:316
 #: templates/components/tab_investimenti.html:393
-#: templates/components/tab_wallet.html:284
+#: templates/components/tab_wallet.html:295
 msgid "Export CSV"
 msgstr ""
 
@@ -1387,10 +1433,10 @@ msgstr ""
 #: templates/components/tab_fondopensione.html:400
 #: templates/components/tab_fondopensione.html:479
 #: templates/components/tab_prestiti.html:467
-#: templates/components/tab_stipendi.html:250
-#: templates/components/tab_stipendi.html:385
-#: templates/components/tab_stipendi.html:511
-#: templates/components/tab_stipendi.html:590
+#: templates/components/tab_stipendi.html:261
+#: templates/components/tab_stipendi.html:396
+#: templates/components/tab_stipendi.html:586
+#: templates/components/tab_stipendi.html:665
 msgid "Month"
 msgstr ""
 
@@ -1507,8 +1553,9 @@ msgstr ""
 #: templates/components/tab_bollette.html:621
 #: templates/components/tab_fondopensione.html:381
 #: templates/components/tab_settings.html:197
-#: templates/components/tab_stipendi.html:349
-#: templates/components/tab_stipendi.html:432
+#: templates/components/tab_stipendi.html:360
+#: templates/components/tab_stipendi.html:474
+#: templates/components/tab_stipendi.html:507
 #: templates/components/tab_veicoli.html:874
 msgid "Save"
 msgstr ""
@@ -1632,6 +1679,7 @@ msgid "Importo Incassato (€)"
 msgstr ""
 
 #: templates/components/tab_bollette.html:615
+#: templates/components/tab_wallet.html:559
 msgid "Note (Opzionale)"
 msgstr ""
 
@@ -1767,12 +1815,13 @@ msgstr ""
 #: templates/components/tab_prestiti.html:624
 #: templates/components/tab_prestiti.html:676
 #: templates/components/tab_prestiti.html:697
-#: templates/components/tab_stipendi.html:254
-#: templates/components/tab_stipendi.html:344
-#: templates/components/tab_stipendi.html:388
-#: templates/components/tab_stipendi.html:516
-#: templates/components/tab_stipendi.html:572
-#: templates/components/tab_stipendi.html:594
+#: templates/components/tab_stipendi.html:265
+#: templates/components/tab_stipendi.html:355
+#: templates/components/tab_stipendi.html:399
+#: templates/components/tab_stipendi.html:444
+#: templates/components/tab_stipendi.html:591
+#: templates/components/tab_stipendi.html:647
+#: templates/components/tab_stipendi.html:669
 #: templates/components/tab_veicoli.html:350
 #: templates/components/tab_veicoli.html:376
 #: templates/components/tab_veicoli.html:403
@@ -1796,7 +1845,7 @@ msgid "New Contribution"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:226
-#: templates/components/tab_stipendi.html:284
+#: templates/components/tab_stipendi.html:295
 msgid "Month *"
 msgstr ""
 
@@ -1852,18 +1901,18 @@ msgstr ""
 
 #: templates/components/tab_fondopensione.html:272
 #: templates/components/tab_prestiti.html:409
-#: templates/components/tab_stipendi.html:362
+#: templates/components/tab_stipendi.html:373
 msgid "Custom PDF Import"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:274
-#: templates/components/tab_stipendi.html:363
+#: templates/components/tab_stipendi.html:374
 msgid "Analysis in progress... ⏳"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:281
 #: templates/components/tab_prestiti.html:417
-#: templates/components/tab_stipendi.html:368
+#: templates/components/tab_stipendi.html:379
 msgid "Import from CSV"
 msgstr ""
 
@@ -1874,7 +1923,7 @@ msgid ""
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:284
-#: templates/components/tab_stipendi.html:371
+#: templates/components/tab_stipendi.html:382
 msgid "Select CSV and Import"
 msgstr ""
 
@@ -1884,7 +1933,7 @@ msgstr ""
 
 #: templates/components/tab_fondopensione.html:292
 #: templates/components/tab_prestiti.html:430
-#: templates/components/tab_stipendi.html:379
+#: templates/components/tab_stipendi.html:390
 #: templates/components/tab_veicoli.html:297
 msgid "Svuota Cronologia"
 msgstr ""
@@ -1928,8 +1977,8 @@ msgstr ""
 #: templates/components/tab_fondopensione.html:354
 #: templates/components/tab_prestiti.html:622
 #: templates/components/tab_prestiti.html:695
-#: templates/components/tab_stipendi.html:452
-#: templates/components/tab_stipendi.html:465
+#: templates/components/tab_stipendi.html:527
+#: templates/components/tab_stipendi.html:540
 msgid "Type"
 msgstr ""
 
@@ -1982,42 +2031,42 @@ msgstr ""
 
 #: templates/components/tab_fondopensione.html:416
 #: templates/components/tab_prestiti.html:635
-#: templates/components/tab_stipendi.html:527
+#: templates/components/tab_stipendi.html:602
 msgid "Import Selected"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:424
 #: templates/components/tab_prestiti.html:643
-#: templates/components/tab_stipendi.html:535
+#: templates/components/tab_stipendi.html:610
 msgid "Custom PDF Import Workbench"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:429
 #: templates/components/tab_prestiti.html:648
-#: templates/components/tab_stipendi.html:540
+#: templates/components/tab_stipendi.html:615
 msgid "Extracted PDF Text"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:435
 #: templates/components/tab_prestiti.html:654
-#: templates/components/tab_stipendi.html:546
+#: templates/components/tab_stipendi.html:621
 msgid "Extraction Pattern (Regex)"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:438
 #: templates/components/tab_prestiti.html:657
-#: templates/components/tab_stipendi.html:549
+#: templates/components/tab_stipendi.html:624
 msgid "Use capture groups () to capture fields from matching lines."
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:442
 #: templates/components/tab_prestiti.html:661
-#: templates/components/tab_stipendi.html:553
+#: templates/components/tab_stipendi.html:628
 msgid "Map Capture Groups to Fields"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:445
-#: templates/components/tab_stipendi.html:556
+#: templates/components/tab_stipendi.html:631
 msgid "Month (YYYY-MM) *"
 msgstr ""
 
@@ -2035,19 +2084,19 @@ msgstr ""
 
 #: templates/components/tab_fondopensione.html:467
 #: templates/components/tab_prestiti.html:682
-#: templates/components/tab_stipendi.html:578
+#: templates/components/tab_stipendi.html:653
 msgid "Test & Parse"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:473
 #: templates/components/tab_prestiti.html:688
-#: templates/components/tab_stipendi.html:584
+#: templates/components/tab_stipendi.html:659
 msgid "Parsed Results Preview"
 msgstr ""
 
 #: templates/components/tab_fondopensione.html:488
 #: templates/components/tab_prestiti.html:701
-#: templates/components/tab_stipendi.html:598
+#: templates/components/tab_stipendi.html:673
 msgid "Enter a pattern and click Test to view results."
 msgstr ""
 
@@ -2565,7 +2614,7 @@ msgstr ""
 
 #: templates/components/tab_investimenti.html:350
 #: templates/components/tab_investimenti.html:596
-#: templates/components/tab_wallet.html:376
+#: templates/components/tab_wallet.html:387
 msgid "Date:"
 msgstr ""
 
@@ -2589,22 +2638,22 @@ msgstr ""
 #: templates/components/tab_investimenti.html:424
 #: templates/components/tab_investimenti.html:439
 #: templates/components/tab_investimenti.html:617
-#: templates/components/tab_wallet.html:394
+#: templates/components/tab_wallet.html:405
 msgid "Type:"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:379
-#: templates/components/tab_wallet.html:262
+#: templates/components/tab_wallet.html:273
 msgid "Add Transaction"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:384
-#: templates/components/tab_wallet.html:228
+#: templates/components/tab_wallet.html:239
 msgid "CSV Data Source:"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:386
-#: templates/components/tab_wallet.html:230
+#: templates/components/tab_wallet.html:241
 msgid "Custom Mapping"
 msgstr ""
 
@@ -2627,7 +2676,7 @@ msgid "Instrument (Ticker/ISIN)"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:428
-#: templates/components/tab_wallet.html:354
+#: templates/components/tab_wallet.html:365
 msgid "Search transactions..."
 msgstr ""
 
@@ -2639,7 +2688,7 @@ msgstr ""
 #: templates/components/tab_veicoli.html:346
 #: templates/components/tab_veicoli.html:372
 #: templates/components/tab_veicoli.html:398
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:371
 msgid "Date"
 msgstr ""
 
@@ -2660,7 +2709,7 @@ msgid "AI Portfolio Analysis"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:458
-#: templates/components/tab_stipendi.html:477
+#: templates/components/tab_stipendi.html:552
 msgid "Close"
 msgstr ""
 
@@ -2710,12 +2759,12 @@ msgid "Total Value"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:563
-#: templates/components/tab_wallet.html:371
+#: templates/components/tab_wallet.html:382
 msgid "Edit Transaction"
 msgstr ""
 
 #: templates/components/tab_investimenti.html:627
-#: templates/components/tab_wallet.html:414
+#: templates/components/tab_wallet.html:425
 msgid "Save Changes"
 msgstr ""
 
@@ -3047,6 +3096,7 @@ msgid "Extraordinary Early Repayment"
 msgstr ""
 
 #: templates/components/tab_prestiti.html:392
+#: templates/components/tab_stipendi.html:502
 msgid "Notes (optional)"
 msgstr ""
 
@@ -3239,9 +3289,9 @@ msgstr ""
 
 #: templates/components/tab_prestiti.html:623
 #: templates/components/tab_prestiti.html:696
-#: templates/components/tab_stipendi.html:453
+#: templates/components/tab_stipendi.html:528
 #: templates/components/tab_veicoli.html:374
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:371
 msgid "Amount"
 msgstr ""
 
@@ -3374,7 +3424,7 @@ msgid "BudgetBakers Integration"
 msgstr ""
 
 #: templates/components/tab_settings.html:186
-#: templates/components/tab_wallet.html:240
+#: templates/components/tab_wallet.html:251
 msgid "Checking..."
 msgstr ""
 
@@ -3471,15 +3521,15 @@ msgstr ""
 #: templates/components/tab_settings.html:303
 #: templates/components/tab_veicoli.html:347
 #: templates/components/tab_veicoli.html:373
-#: templates/components/tab_wallet.html:267
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:278
+#: templates/components/tab_wallet.html:371
 msgid "Category"
 msgstr ""
 
 #: templates/components/tab_settings.html:304
-#: templates/components/tab_wallet.html:209
-#: templates/components/tab_wallet.html:265
-#: templates/components/tab_wallet.html:360
+#: templates/components/tab_wallet.html:220
+#: templates/components/tab_wallet.html:276
+#: templates/components/tab_wallet.html:371
 msgid "Account"
 msgstr ""
 
@@ -3591,8 +3641,8 @@ msgstr ""
 #: templates/components/tab_settings.html:384
 #: templates/components/tab_veicoli.html:265
 #: templates/components/tab_veicoli.html:583
-#: templates/components/tab_wallet.html:271
-#: templates/components/tab_wallet.html:396
+#: templates/components/tab_wallet.html:282
+#: templates/components/tab_wallet.html:407
 msgid "Expense"
 msgstr ""
 
@@ -3650,295 +3700,339 @@ msgid "Contributo Persone"
 msgstr ""
 
 #: templates/components/tab_stipendi.html:84
-#: templates/components/tab_stipendi.html:268
+#: templates/components/tab_stipendi.html:279
 msgid "Payslips"
 msgstr ""
 
 #: templates/components/tab_stipendi.html:88
+msgid "Events"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:92
 msgid "Manage People"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:95
+#: templates/components/tab_stipendi.html:99
 msgid "PDF Keywords"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:100
+#: templates/components/tab_stipendi.html:104
 msgid "Month/Period"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:104
+#: templates/components/tab_stipendi.html:108
 msgid "Employee"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:108
+#: templates/components/tab_stipendi.html:112
 msgid "Gross Salary"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:112
+#: templates/components/tab_stipendi.html:116
 msgid "Net Salary"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:115
+#: templates/components/tab_stipendi.html:119
 msgid "Reset Defaults"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:126
+#: templates/components/tab_stipendi.html:131
 msgid "Salary Dashboard"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:127
+#: templates/components/tab_stipendi.html:132
 msgid "Gross/net summary and main items for the selected period."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:140
+#: templates/components/tab_stipendi.html:136
+msgid "Aggiungi Evento"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:151
 msgid "Total Gross (12m)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:152
+#: templates/components/tab_stipendi.html:163
 msgid "Total Net (12m)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:166
+#: templates/components/tab_stipendi.html:177
 msgid "Monthly Net Average"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:178
+#: templates/components/tab_stipendi.html:189
 msgid "Total Gross Work"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:192
+#: templates/components/tab_stipendi.html:203
 msgid "Total Net Work"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:205
+#: templates/components/tab_stipendi.html:216
 msgid "Monthly Net Work Average"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:213
+#: templates/components/tab_stipendi.html:224
 msgid "Average Payslip Breakdown"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:219
+#: templates/components/tab_stipendi.html:230
 msgid "Monthly Net Trend"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:225
+#: templates/components/tab_stipendi.html:236
 msgid "Average Work Payslip Breakdown"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:231
+#: templates/components/tab_stipendi.html:242
 msgid "Monthly Work Trend (Gross vs Net)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:237
+#: templates/components/tab_stipendi.html:248
 msgid "Andamento Annuale (Lordo, Netto, Lordo Lavoro, Netto Lavoro)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:245
+#: templates/components/tab_stipendi.html:256
 msgid "Recent Payslips"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:251
-#: templates/components/tab_stipendi.html:386
-#: templates/components/tab_stipendi.html:513
-#: templates/components/tab_stipendi.html:592
+#: templates/components/tab_stipendi.html:262
+#: templates/components/tab_stipendi.html:397
+#: templates/components/tab_stipendi.html:588
+#: templates/components/tab_stipendi.html:667
 msgid "Gross"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:252
-#: templates/components/tab_stipendi.html:387
-#: templates/components/tab_stipendi.html:514
-#: templates/components/tab_stipendi.html:593
+#: templates/components/tab_stipendi.html:263
+#: templates/components/tab_stipendi.html:398
+#: templates/components/tab_stipendi.html:589
+#: templates/components/tab_stipendi.html:668
 msgid "Net"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:253
+#: templates/components/tab_stipendi.html:264
 msgid "Net Work"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:258
+#: templates/components/tab_stipendi.html:269
 msgid "No payslips registered."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:269
+#: templates/components/tab_stipendi.html:280
 msgid ""
 "Record and manage monthly payslips. You can import from PDF for automatic"
 " recognition."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:276
+#: templates/components/tab_stipendi.html:287
 msgid "Record Payslip"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:280
+#: templates/components/tab_stipendi.html:291
+#: templates/components/tab_stipendi.html:490
 msgid "Person *"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:289
+#: templates/components/tab_stipendi.html:300
 msgid "Gross (€) *"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:293
+#: templates/components/tab_stipendi.html:304
 msgid "Net (€) *"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:301
+#: templates/components/tab_stipendi.html:312
 msgid "Dettagli Aggiuntivi (Scorporo)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:305
+#: templates/components/tab_stipendi.html:316
 msgid ""
 "Inserisci solo i valori presenti in busta. Lordo e netto da lavoro "
 "vengono calcolati automaticamente."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:309
+#: templates/components/tab_stipendi.html:320
 msgid "Rimborso Spese (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:313
+#: templates/components/tab_stipendi.html:324
 msgid "Conguaglio 730 (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:317
+#: templates/components/tab_stipendi.html:328
 msgid "Premio Produzione Lordo (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:321
+#: templates/components/tab_stipendi.html:332
 msgid "Premio Produzione Netto (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:325
+#: templates/components/tab_stipendi.html:336
 msgid "TFR Liquidato (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:331
+#: templates/components/tab_stipendi.html:342
 msgid "Contiene 13ª / 14ª"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:337
+#: templates/components/tab_stipendi.html:348
 msgid "Lordo lavoro"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:338
+#: templates/components/tab_stipendi.html:349
 msgid "Netto lavoro"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:345
+#: templates/components/tab_stipendi.html:356
 msgid "e.g., with 13th month"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:357
+#: templates/components/tab_stipendi.html:368
 msgid "Import from PDF Payslip"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:358
+#: templates/components/tab_stipendi.html:369
 msgid "Upload payslip in PDF to automatically detect gross, net, and items."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:360
+#: templates/components/tab_stipendi.html:371
 msgid "Select PDF"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:369
+#: templates/components/tab_stipendi.html:380
 msgid "Upload a CSV file to import multiple salaries by mapping columns."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:378
+#: templates/components/tab_stipendi.html:389
 msgid "Payslips History"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:393
+#: templates/components/tab_stipendi.html:404
 msgid "No data."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:405
+#: templates/components/tab_stipendi.html:416
 msgid "People in the Group"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:406
-#: templates/components/tab_stipendi.html:421
+#: templates/components/tab_stipendi.html:417
+#: templates/components/tab_stipendi.html:463
 msgid "New Person"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:409
+#: templates/components/tab_stipendi.html:420
 msgid "No people added."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:427
-#: templates/components/tab_stipendi.html:560
-msgid "Person Name *"
+#: templates/components/tab_stipendi.html:430
+msgid "Important Career & Salary Events"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:428
-msgid "e.g. John Doe"
+#: templates/components/tab_stipendi.html:432
+msgid ""
+"Milestones and career events (promotions, pay rises, contract renewals) "
+"marked on timeline charts."
+msgstr ""
+
+#: templates/components/tab_stipendi.html:441
+msgid "Date / Month"
 msgstr ""
 
 #: templates/components/tab_stipendi.html:442
-msgid "Payslip Items"
+#: templates/components/tab_stipendi.html:587
+#: templates/components/tab_stipendi.html:666
+msgid "Person"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:451
-msgid "Item"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:460
-msgid "Add Item"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:463
-msgid "Label"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:463
-msgid "e.g., Allowance"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:467
-msgid "Bonus / Allowance"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:468
-msgid "Deduction"
+#: templates/components/tab_stipendi.html:443
+msgid "Event Title"
 msgstr ""
 
 #: templates/components/tab_stipendi.html:469
+#: templates/components/tab_stipendi.html:635
+msgid "Person Name *"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:470
+msgid "e.g. John Doe"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:494
+msgid "Date / Month *"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:498
+msgid "Event Title *"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:499
+msgid "e.g. Promotion, Salary Raise, CCNL Level Upgrade"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:503
+msgid "Optional details or impact on salary..."
+msgstr ""
+
+#: templates/components/tab_stipendi.html:517
+msgid "Payslip Items"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:526
+msgid "Item"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:535
+msgid "Add Item"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:538
+msgid "Label"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:538
+msgid "e.g., Allowance"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:542
+msgid "Bonus / Allowance"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:543
+msgid "Deduction"
+msgstr ""
+
+#: templates/components/tab_stipendi.html:544
 msgid "Expense Reimbursement"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:472
-#: templates/components/tab_wallet.html:275
+#: templates/components/tab_stipendi.html:547
+#: templates/components/tab_wallet.html:286
 msgid "Amount (€)"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:485
+#: templates/components/tab_stipendi.html:560
 msgid "Map Salaries CSV Columns"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:501
+#: templates/components/tab_stipendi.html:576
 msgid "Review Detected Salaries"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:505
+#: templates/components/tab_stipendi.html:580
 msgid ""
 "The following salaries and payslip details were detected in the PDF file."
 " Select those you want to import."
 msgstr ""
 
-#: templates/components/tab_stipendi.html:512
-#: templates/components/tab_stipendi.html:591
-msgid "Person"
-msgstr ""
-
-#: templates/components/tab_stipendi.html:515
+#: templates/components/tab_stipendi.html:590
 msgid "Items"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:564
+#: templates/components/tab_stipendi.html:639
 msgid "Gross Salary (€) *"
 msgstr ""
 
-#: templates/components/tab_stipendi.html:568
+#: templates/components/tab_stipendi.html:643
 msgid "Net Salary (€) *"
 msgstr ""
 
@@ -3981,13 +4075,13 @@ msgstr ""
 
 #: templates/components/tab_veicoli.html:80
 #: templates/components/tab_veicoli.html:293
-#: templates/components/tab_wallet.html:147
+#: templates/components/tab_wallet.html:158
 msgid "Expenses"
 msgstr ""
 
 #: templates/components/tab_veicoli.html:84
 #: templates/components/tab_veicoli.html:295
-#: templates/components/tab_wallet.html:144
+#: templates/components/tab_wallet.html:155
 msgid "Incomes"
 msgstr ""
 
@@ -4114,8 +4208,8 @@ msgstr ""
 
 #: templates/components/tab_veicoli.html:273
 #: templates/components/tab_veicoli.html:585
-#: templates/components/tab_wallet.html:272
-#: templates/components/tab_wallet.html:397
+#: templates/components/tab_wallet.html:283
+#: templates/components/tab_wallet.html:408
 msgid "Income"
 msgstr ""
 
@@ -4213,7 +4307,7 @@ msgstr ""
 #: templates/components/tab_veicoli.html:422
 #: templates/components/tab_veicoli.html:437
 #: templates/components/tab_veicoli.html:452
-#: templates/components/tab_wallet.html:278
+#: templates/components/tab_wallet.html:289
 msgid "Add"
 msgstr ""
 
@@ -4270,7 +4364,7 @@ msgid "Annual Mileage"
 msgstr ""
 
 #: templates/components/tab_veicoli.html:512
-#: templates/components/tab_wallet.html:189
+#: templates/components/tab_wallet.html:200
 msgid "Expenses by Category"
 msgstr ""
 
@@ -4799,17 +4893,17 @@ msgid "Ask AI about your wallet"
 msgstr ""
 
 #: templates/components/tab_wallet.html:70
-#: templates/components/tab_wallet.html:312
+#: templates/components/tab_wallet.html:323
 msgid "From:"
 msgstr ""
 
 #: templates/components/tab_wallet.html:71
-#: templates/components/tab_wallet.html:313
+#: templates/components/tab_wallet.html:324
 msgid "To:"
 msgstr ""
 
 #: templates/components/tab_wallet.html:72
-#: templates/components/tab_wallet.html:314
+#: templates/components/tab_wallet.html:325
 msgid "Apply range"
 msgstr ""
 
@@ -4818,7 +4912,7 @@ msgid "View the full history of transactions recorded in the accounts."
 msgstr ""
 
 #: templates/components/tab_wallet.html:96
-#: templates/components/tab_wallet.html:335
+#: templates/components/tab_wallet.html:346
 msgid "Select All"
 msgstr ""
 
@@ -4838,196 +4932,270 @@ msgstr ""
 msgid "EXPENSES"
 msgstr ""
 
-#: templates/components/tab_wallet.html:128
+#: templates/components/tab_wallet.html:129
 msgid "Balance Trend"
 msgstr ""
 
-#: templates/components/tab_wallet.html:138
+#: templates/components/tab_wallet.html:131
+msgid "Manage wallet events"
+msgstr ""
+
+#: templates/components/tab_wallet.html:132
+msgid "Eventi"
+msgstr ""
+
+#: templates/components/tab_wallet.html:134
+msgid "Add wallet event"
+msgstr ""
+
+#: templates/components/tab_wallet.html:149
 msgid "Cash Flow"
 msgstr ""
 
-#: templates/components/tab_wallet.html:154
+#: templates/components/tab_wallet.html:165
 msgid "Medie Ultimi 12 Mesi"
 msgstr ""
 
-#: templates/components/tab_wallet.html:157
+#: templates/components/tab_wallet.html:168
 msgid "Media Entrate"
 msgstr ""
 
-#: templates/components/tab_wallet.html:161
+#: templates/components/tab_wallet.html:172
 msgid "Media Uscite"
 msgstr ""
 
-#: templates/components/tab_wallet.html:165
+#: templates/components/tab_wallet.html:176
 msgid "Media Risparmio"
 msgstr ""
 
-#: templates/components/tab_wallet.html:173
+#: templates/components/tab_wallet.html:184
 msgid "Andamento Risparmio"
 msgstr ""
 
-#: templates/components/tab_wallet.html:176
+#: templates/components/tab_wallet.html:187
 msgid "Risparmio medio degli ultimi 12 mesi"
 msgstr ""
 
-#: templates/components/tab_wallet.html:184
+#: templates/components/tab_wallet.html:195
 msgid "Monthly Cash Flow"
 msgstr ""
 
-#: templates/components/tab_wallet.html:191
+#: templates/components/tab_wallet.html:202
 msgid "Macro"
 msgstr ""
 
-#: templates/components/tab_wallet.html:192
+#: templates/components/tab_wallet.html:203
 msgid "Detail"
 msgstr ""
 
-#: templates/components/tab_wallet.html:203
+#: templates/components/tab_wallet.html:214
 msgid "Estimated Account Balances"
 msgstr ""
 
-#: templates/components/tab_wallet.html:210
+#: templates/components/tab_wallet.html:221
 msgid "Initial Balance (Global)"
 msgstr ""
 
-#: templates/components/tab_wallet.html:211
+#: templates/components/tab_wallet.html:222
 msgid "Starting Balance"
 msgstr ""
 
-#: templates/components/tab_wallet.html:212
+#: templates/components/tab_wallet.html:223
 msgid "Period Incomes"
 msgstr ""
 
-#: templates/components/tab_wallet.html:213
+#: templates/components/tab_wallet.html:224
 msgid "Period Expenses"
 msgstr ""
 
-#: templates/components/tab_wallet.html:214
+#: templates/components/tab_wallet.html:225
 msgid "Transfers (Net)"
 msgstr ""
 
-#: templates/components/tab_wallet.html:215
+#: templates/components/tab_wallet.html:226
 msgid "Net Change"
 msgstr ""
 
-#: templates/components/tab_wallet.html:216
+#: templates/components/tab_wallet.html:227
 msgid "Final Balance (Estimated)"
 msgstr ""
 
-#: templates/components/tab_wallet.html:226
+#: templates/components/tab_wallet.html:237
 msgid "Wallet Management"
 msgstr ""
 
-#: templates/components/tab_wallet.html:244
+#: templates/components/tab_wallet.html:255
 msgid "Sync Previous Month"
 msgstr ""
 
-#: templates/components/tab_wallet.html:248
+#: templates/components/tab_wallet.html:259
 msgid "Configure"
 msgstr ""
 
-#: templates/components/tab_wallet.html:251
+#: templates/components/tab_wallet.html:262
 msgid "Custom Range"
 msgstr ""
 
-#: templates/components/tab_wallet.html:256
+#: templates/components/tab_wallet.html:267
 msgid "Auto-syncs previous month on the 20th"
 msgstr ""
 
-#: templates/components/tab_wallet.html:273
-#: templates/components/tab_wallet.html:398
+#: templates/components/tab_wallet.html:284
+#: templates/components/tab_wallet.html:409
 msgid "Transfer"
 msgstr ""
 
-#: templates/components/tab_wallet.html:277
+#: templates/components/tab_wallet.html:288
 msgid "Note (optional)"
 msgstr ""
 
-#: templates/components/tab_wallet.html:288
+#: templates/components/tab_wallet.html:299
 msgid "Empty Wallet Transactions"
 msgstr ""
 
-#: templates/components/tab_wallet.html:294
+#: templates/components/tab_wallet.html:305
 msgid "Latest Wallet Transactions"
 msgstr ""
 
-#: templates/components/tab_wallet.html:342
+#: templates/components/tab_wallet.html:353
 msgid "Filter by Account"
 msgstr ""
 
-#: templates/components/tab_wallet.html:346
+#: templates/components/tab_wallet.html:357
 msgid "Filter by Macro-Category"
 msgstr ""
 
-#: templates/components/tab_wallet.html:350
+#: templates/components/tab_wallet.html:361
 msgid "Filter by Category"
 msgstr ""
 
-#: templates/components/tab_wallet.html:355
+#: templates/components/tab_wallet.html:366
 msgid "Delete selected transactions"
 msgstr ""
 
-#: templates/components/tab_wallet.html:381
+#: templates/components/tab_wallet.html:392
 msgid "Account:"
 msgstr ""
 
-#: templates/components/tab_wallet.html:387
+#: templates/components/tab_wallet.html:398
 msgid "Category:"
 msgstr ""
 
-#: templates/components/tab_wallet.html:402
+#: templates/components/tab_wallet.html:413
 msgid "Amount (€):"
 msgstr ""
 
-#: templates/components/tab_wallet.html:408
+#: templates/components/tab_wallet.html:419
 msgid "Note:"
 msgstr ""
 
-#: templates/components/tab_wallet.html:422
+#: templates/components/tab_wallet.html:433
 msgid "Map Wallet CSV Columns"
 msgstr ""
 
-#: templates/components/tab_wallet.html:438
+#: templates/components/tab_wallet.html:449
 msgid "BudgetBakers API Configuration"
 msgstr ""
 
-#: templates/components/tab_wallet.html:441
+#: templates/components/tab_wallet.html:452
 msgid ""
 "Enter your personal BudgetBakers Bearer Token / API Key. You can get your"
 " token from the BudgetBakers Web App or developer portal."
 msgstr ""
 
-#: templates/components/tab_wallet.html:445
+#: templates/components/tab_wallet.html:456
 msgid "API Token / Bearer Token:"
 msgstr ""
 
-#: templates/components/tab_wallet.html:446
+#: templates/components/tab_wallet.html:457
 msgid "Paste your token here..."
 msgstr ""
 
-#: templates/components/tab_wallet.html:452
+#: templates/components/tab_wallet.html:463
 msgid "Save Token"
 msgstr ""
 
-#: templates/components/tab_wallet.html:461
+#: templates/components/tab_wallet.html:472
 msgid "Custom BudgetBakers Sync"
 msgstr ""
 
-#: templates/components/tab_wallet.html:464
+#: templates/components/tab_wallet.html:475
 msgid ""
 "Select a date range to download and synchronize transactions directly "
 "from BudgetBakers."
 msgstr ""
 
-#: templates/components/tab_wallet.html:469
+#: templates/components/tab_wallet.html:480
 msgid "Start Date (From):"
 msgstr ""
 
-#: templates/components/tab_wallet.html:473
+#: templates/components/tab_wallet.html:484
 msgid "End Date (To):"
 msgstr ""
 
-#: templates/components/tab_wallet.html:480
+#: templates/components/tab_wallet.html:491
 msgid "Start Sync"
+msgstr ""
+
+#: templates/components/tab_wallet.html:501
+msgid "Eventi Importanti del Wallet"
+msgstr ""
+
+#: templates/components/tab_wallet.html:505
+msgid "Nuovo Evento"
+msgstr ""
+
+#: templates/components/tab_wallet.html:511
+msgid ""
+"Gli eventi registrati appariranno come linee verticali con badge sul "
+"grafico dell'andamento del saldo."
+msgstr ""
+
+#: templates/components/tab_wallet.html:517
+msgid "Data / Mese"
+msgstr ""
+
+#: templates/components/tab_wallet.html:518
+msgid "Titolo Evento"
+msgstr ""
+
+#: templates/components/tab_wallet.html:519
+msgid "Conto"
+msgstr ""
+
+#: templates/components/tab_wallet.html:525
+msgid "Nessun evento registrato."
+msgstr ""
+
+#: templates/components/tab_wallet.html:540
+msgid "Nuovo Evento Wallet"
+msgstr ""
+
+#: templates/components/tab_wallet.html:547
+msgid "Data / Mese *"
+msgstr ""
+
+#: templates/components/tab_wallet.html:551
+msgid "Titolo Evento *"
+msgstr ""
+
+#: templates/components/tab_wallet.html:552
+msgid "es. Rogito casa, Acquisto auto, Rimborso tasse"
+msgstr ""
+
+#: templates/components/tab_wallet.html:555
+msgid "Conto (Opzionale)"
+msgstr ""
+
+#: templates/components/tab_wallet.html:560
+msgid "Dettagli opzionali sull'evento..."
+msgstr ""
+
+#: templates/components/tab_wallet.html:563
+msgid "Annulla"
+msgstr ""
+
+#: templates/components/tab_wallet.html:564
+msgid "Salva"
 msgstr ""
 

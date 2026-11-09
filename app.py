@@ -487,6 +487,18 @@ def init_db():
         )
     ''')
     conn.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_events (
+            id          TEXT PRIMARY KEY,
+            wallet_id   INTEGER NOT NULL,
+            event_date  TEXT NOT NULL,
+            title       TEXT NOT NULL,
+            notes       TEXT,
+            account     TEXT,
+            FOREIGN KEY (wallet_id) REFERENCES wallets (id) ON DELETE CASCADE
+        )
+    ''')
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_wallet_events_wallet ON wallet_events(wallet_id)")
+    conn.execute('''
         CREATE TABLE IF NOT EXISTS wallet_triggers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -896,6 +908,19 @@ def init_db():
             FOREIGN KEY (salary_id) REFERENCES salaries (id) ON DELETE CASCADE
         )
     ''')
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS salary_events (
+            id              TEXT PRIMARY KEY,
+            salary_group_id INTEGER NOT NULL,
+            person_name     TEXT NOT NULL,
+            event_date      TEXT NOT NULL,
+            title           TEXT NOT NULL,
+            notes           TEXT,
+            FOREIGN KEY (salary_group_id) REFERENCES salary_groups (id) ON DELETE CASCADE
+        )
+    ''')
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_salary_events_group ON salary_events(salary_group_id)")
 
     # ── PENSION FUNDS ─────────────────────────────────────────────────────
     conn.execute('''
@@ -1412,8 +1437,8 @@ AI_SQL_TABLES = {
     'bills', 'bills_appliance_consumptions', 'bills_appliances', 'bills_profiles', 'bills_solar_incentives',
     'drivvo_activities', 'drivvo_vehicles', 'garages', 'loan_groups', 'loan_payments', 'loans',
     'pension_contributions', 'pension_fund_compartments', 'pension_fund_groups', 'pension_fund_prices',
-    'pension_funds', 'portfolios', 'price_history', 'salaries', 'salary_groups', 'saldi_conto',
-    'transactions', 'vehicle_activities', 'vehicles', 'wallet_account_config', 'wallet_transactions',
+    'pension_funds', 'portfolios', 'price_history', 'salaries', 'salary_events', 'salary_groups', 'saldi_conto',
+    'transactions', 'vehicle_activities', 'vehicles', 'wallet_account_config', 'wallet_events', 'wallet_transactions',
     'wallet_triggers', 'wallets',
 }
 
@@ -4290,12 +4315,81 @@ def delete_wallet(wallet_id):
     if not w:
         conn.close()
         return jsonify({"errore": _("Wallet not found or unauthorized")}), 404
+    conn.execute("DELETE FROM wallet_events WHERE wallet_id = ?", (wallet_id,))
     conn.execute("DELETE FROM wallet_transactions WHERE wallet_id = ?", (wallet_id,))
     conn.execute("DELETE FROM wallet_account_config WHERE wallet_id = ?", (wallet_id,))
     conn.execute("DELETE FROM wallets WHERE id = ?", (wallet_id,))
     conn.commit()
     conn.close()
     return jsonify({"messaggio": _("Wallet deleted successfully")}), 200
+
+# --- WALLET EVENTS CRUD ---
+@app.route('/api/wallets/<int:wallet_id>/events', methods=['GET', 'POST'])
+def wallet_events_route(wallet_id):
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    w = conn.execute("SELECT id FROM wallets WHERE id = ? AND user_id = ?", (wallet_id, session['user_id'])).fetchone()
+    if not w:
+        conn.close()
+        return jsonify({"errore": _("Wallet not found or unauthorized")}), 404
+    if request.method == 'POST':
+        data = request.json or {}
+        title = (data.get('title') or '').strip()
+        event_date = (data.get('event_date') or '').strip()
+        notes = (data.get('notes') or '').strip()
+        account = (data.get('account') or '').strip()
+        if not title or not event_date:
+            conn.close()
+            return jsonify({"errore": _("Missing required fields")}), 400
+        eid = f"wevt-{int(time.time()*1000)}"
+        conn.execute(
+            "INSERT INTO wallet_events (id, wallet_id, event_date, title, notes, account) VALUES (?, ?, ?, ?, ?, ?)",
+            (eid, wallet_id, event_date, title, notes, account if account else None)
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM wallet_events WHERE id = ?", (eid,)).fetchone()
+        conn.close()
+        return jsonify(dict(row)), 201
+
+    rows = conn.execute("SELECT * FROM wallet_events WHERE wallet_id = ? ORDER BY event_date DESC, id DESC", (wallet_id,)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/wallet_events/<event_id>', methods=['PUT', 'DELETE'])
+def wallet_event_detail(event_id):
+    if 'user_id' not in session: return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    evt = conn.execute(
+        "SELECT e.* FROM wallet_events e JOIN wallets w ON e.wallet_id = w.id WHERE e.id = ? AND w.user_id = ?",
+        (event_id, session['user_id'])
+    ).fetchone()
+    if not evt:
+        conn.close()
+        return jsonify({"errore": _("Event not found")}), 404
+
+    if request.method == 'DELETE':
+        conn.execute("DELETE FROM wallet_events WHERE id = ?", (event_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"ok": True})
+
+    data = request.json or {}
+    title = (data.get('title') or '').strip()
+    event_date = (data.get('event_date') or '').strip()
+    notes = (data.get('notes') or '').strip()
+    account = (data.get('account') or '').strip()
+    if not title or not event_date:
+        conn.close()
+        return jsonify({"errore": _("Missing required fields")}), 400
+
+    conn.execute(
+        "UPDATE wallet_events SET event_date = ?, title = ?, notes = ?, account = ? WHERE id = ?",
+        (event_date, title, notes, account if account else None, event_id)
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM wallet_events WHERE id = ?", (event_id,)).fetchone()
+    conn.close()
+    return jsonify(dict(row))
 
 # --- BILLS PROFILES CRUD ---
 @app.route('/api/bills_profiles', methods=['GET', 'POST'])
@@ -7547,6 +7641,124 @@ def check_vehicle_recall_route(vehicle_id):
         conn.close()
         return jsonify({"errore": f"Errore durante la verifica del richiamo: {str(e)}"}), 500
 
+def calculate_next_target_date(base_date_str, recurrence_val, recurrence_unit):
+    """Calculates the next target date string (YYYY-MM-DD) based on a base date and recurrence rule."""
+    if not base_date_str or not recurrence_val or not recurrence_unit:
+        return None
+    try:
+        parts = str(base_date_str).split('T')[0].split(' ')[0].split('-')
+        if len(parts) == 3:
+            y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+            base_date = datetime(y, m, d)
+            rec_val = int(recurrence_val)
+            if recurrence_unit == 'days':
+                next_date = base_date + timedelta(days=rec_val)
+            elif recurrence_unit == 'months':
+                month = base_date.month - 1 + rec_val
+                year = base_date.year + month // 12
+                month = month % 12 + 1
+                is_leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+                max_days = [31, 29 if is_leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+                day = min(base_date.day, max_days)
+                next_date = base_date.replace(year=year, month=month, day=day)
+            elif recurrence_unit == 'years':
+                year = base_date.year + rec_val
+                month = base_date.month
+                is_leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+                max_days = [31, 29 if is_leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+                day = min(base_date.day, max_days)
+                next_date = base_date.replace(year=year, month=month, day=day)
+            else:
+                return None
+            return next_date.strftime('%Y-%m-%d')
+    except Exception as e:
+        app.logger.error(f"Errore calcolo next_target_date: {e}")
+    return None
+
+def check_and_handle_triggered_reminders(conn, vehicle_id, activity_data, vehicle_odometer=0):
+    """
+    Automatically advances recurring reminders matching a newly recorded expense or service activity.
+    """
+    act_type = activity_data.get('type')
+    if act_type not in ('expense', 'service'):
+        return []
+
+    date_str = str(activity_data.get('date') or datetime.now().strftime('%Y-%m-%d')).split('T')[0].split(' ')[0]
+    odometer_val = activity_data.get('odometer')
+    if odometer_val is None:
+        odometer_val = vehicle_odometer or 0.0
+    else:
+        try:
+            odometer_val = float(odometer_val)
+        except (ValueError, TypeError):
+            odometer_val = vehicle_odometer or 0.0
+
+    reminders = conn.execute(
+        "SELECT * FROM vehicle_activities WHERE type = 'reminder' AND vehicleId = ?",
+        (vehicle_id,)
+    ).fetchall()
+
+    updated_reminders = []
+    category_raw = (activity_data.get('category') or '').strip().lower()
+    desc_raw = (activity_data.get('description') or '').strip().lower()
+
+    service_items = set()
+    if act_type == 'service':
+        raw_desc = activity_data.get('description') or ''
+        if raw_desc.startswith('{') and raw_desc.endswith('}'):
+            try:
+                parsed = json.loads(raw_desc)
+                if isinstance(parsed, dict):
+                    service_items = {k.strip().lower() for k in parsed.keys()}
+            except Exception:
+                pass
+        if desc_raw:
+            service_items.add(desc_raw)
+
+    for rem in reminders:
+        if not rem['isRecurring']:
+            continue
+
+        rem_desc = (rem['description'] or '').strip().lower()
+        is_match = False
+
+        if act_type == 'expense':
+            if category_raw and category_raw == rem_desc:
+                is_match = True
+            elif desc_raw and desc_raw == rem_desc:
+                is_match = True
+        elif act_type == 'service':
+            if rem_desc in service_items:
+                is_match = True
+            elif category_raw and category_raw == rem_desc:
+                is_match = True
+
+        if is_match:
+            new_target_date = rem['targetDate']
+            new_next_target_date = rem['nextTargetDate']
+            new_target_odometer = rem['targetOdometer']
+
+            if rem['triggerType'] in ('date', 'both') and rem['recurrenceVal'] and rem['recurrenceUnit']:
+                calculated_next = calculate_next_target_date(date_str, rem['recurrenceVal'], rem['recurrenceUnit'])
+                if calculated_next:
+                    new_target_date = date_str
+                    new_next_target_date = calculated_next
+
+            if rem['triggerType'] in ('odometer', 'both') and rem['recurrenceKm']:
+                new_target_odometer = odometer_val + float(rem['recurrenceKm'])
+
+            conn.execute('''
+                UPDATE vehicle_activities
+                SET targetDate = ?, targetOdometer = ?, nextTargetDate = ?
+                WHERE id = ?
+            ''', (new_target_date, new_target_odometer, new_next_target_date, rem['id']))
+
+            updated_row = conn.execute("SELECT * FROM vehicle_activities WHERE id = ?", (rem['id'],)).fetchone()
+            if updated_row:
+                updated_reminders.append(dict(updated_row))
+
+    return updated_reminders
+
 @app.route('/api/vehicle-entries', methods=['GET', 'POST'])
 def vehicle_entries_route():
     if 'user_id' not in session:
@@ -7602,6 +7814,16 @@ def vehicle_entries_route():
         if odometer_val is not None and v_type != 'reminder':
             if odometer_val > (v['odometer'] or 0):
                 conn.execute("UPDATE vehicles SET odometer = ? WHERE id = ?", (odometer_val, vehicle_id))
+
+        # Aggiornamento automatico dei promemoria ricorrenti corrispondenti
+        updated_reminders = []
+        if v_type in ('expense', 'service'):
+            try:
+                updated_reminders = check_and_handle_triggered_reminders(
+                    conn, vehicle_id, data, vehicle_odometer=v['odometer']
+                )
+            except Exception as rem_err:
+                app.logger.error(f"Errore gestione promemoria ricorrenti: {rem_err}")
                 
         conn.commit()
         row = conn.execute("SELECT * FROM vehicle_activities WHERE id = ?", (act_id,)).fetchone()
@@ -7615,6 +7837,8 @@ def vehicle_entries_route():
                 v_brand = v['brand'] if 'brand' in v.keys() else None
                 v_model = v['model'] if 'model' in v.keys() else None
                 drivvo_service.sync_activity_async(row_dict, vehicle_plate=v_plate, vehicle_brand=v_brand, vehicle_model=v_model)
+                for ur in updated_reminders:
+                    drivvo_service.sync_activity_async(ur, vehicle_plate=v_plate, vehicle_brand=v_brand, vehicle_model=v_model)
             except Exception as sync_err:
                 app.logger.error(f"Errore avvio sync Drivvo: {sync_err}")
 
@@ -8446,6 +8670,7 @@ def salary_group_detail(group_id):
         conn.close()
         return jsonify({"errore": "Gruppo non trovato"}), 404
     if request.method == 'DELETE':
+        conn.execute("DELETE FROM salary_events WHERE salary_group_id = ?", (group_id,))
         conn.execute("DELETE FROM salary_groups WHERE id = ?", (group_id,))
         conn.commit()
         conn.close()
@@ -8556,6 +8781,75 @@ def salary_item_detail(item_id):
                  (data.get('label',''), float(data.get('amount',0)), data.get('item_type','deduction'), item_id))
     conn.commit()
     row = conn.execute("SELECT * FROM salary_items WHERE id=?", (item_id,)).fetchone()
+    conn.close()
+    return jsonify(dict(row))
+
+@app.route('/api/salary_groups/<int:group_id>/events', methods=['GET', 'POST'])
+def salary_group_events_route(group_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    g = conn.execute("SELECT id FROM salary_groups WHERE id = ? AND user_id = ?", (group_id, session['user_id'])).fetchone()
+    if not g:
+        conn.close()
+        return jsonify({"errore": _("Group not found")}), 404
+    if request.method == 'POST':
+        data = request.json or {}
+        title = (data.get('title') or '').strip()
+        person_name = (data.get('person_name') or '').strip()
+        event_date = (data.get('event_date') or '').strip()
+        notes = (data.get('notes') or '').strip()
+        if not title or not person_name or not event_date:
+            conn.close()
+            return jsonify({"errore": _("Missing required fields")}), 400
+        eid = f"sevt-{int(time.time()*1000)}"
+        conn.execute(
+            "INSERT INTO salary_events (id, salary_group_id, person_name, event_date, title, notes) VALUES (?, ?, ?, ?, ?, ?)",
+            (eid, group_id, person_name, event_date, title, notes)
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM salary_events WHERE id = ?", (eid,)).fetchone()
+        conn.close()
+        return jsonify(dict(row)), 201
+
+    rows = conn.execute("SELECT * FROM salary_events WHERE salary_group_id = ? ORDER BY event_date DESC, id DESC", (group_id,)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/salary_events/<event_id>', methods=['PUT', 'DELETE'])
+def salary_event_detail(event_id):
+    if 'user_id' not in session:
+        return jsonify({"errore": _("Not authenticated")}), 401
+    conn = get_db_connection()
+    evt = conn.execute(
+        "SELECT e.* FROM salary_events e JOIN salary_groups g ON e.salary_group_id = g.id WHERE e.id = ? AND g.user_id = ?",
+        (event_id, session['user_id'])
+    ).fetchone()
+    if not evt:
+        conn.close()
+        return jsonify({"errore": _("Event not found")}), 404
+
+    if request.method == 'DELETE':
+        conn.execute("DELETE FROM salary_events WHERE id = ?", (event_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"ok": True})
+
+    data = request.json or {}
+    title = (data.get('title') or '').strip()
+    person_name = (data.get('person_name') or '').strip()
+    event_date = (data.get('event_date') or '').strip()
+    notes = (data.get('notes') or '').strip()
+    if not title or not person_name or not event_date:
+        conn.close()
+        return jsonify({"errore": _("Missing required fields")}), 400
+
+    conn.execute(
+        "UPDATE salary_events SET person_name = ?, event_date = ?, title = ?, notes = ? WHERE id = ?",
+        (person_name, event_date, title, notes, event_id)
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM salary_events WHERE id = ?", (event_id,)).fetchone()
     conn.close()
     return jsonify(dict(row))
 

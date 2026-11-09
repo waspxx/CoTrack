@@ -5,6 +5,7 @@ const stipState = {
     persons: [],      // unique person names in the active group
     activePersonName: null,
     salaries: [],     // all salaries for active group
+    events: [],       // all career/salary events for active group
     activeSalaryId: null,
     items: [],
     subTab: 'dashboard',
@@ -107,8 +108,14 @@ window.caricaDatiStipendi = async function() {
     const res = await fetch(`/api/salary_groups/${stipState.activeGroupId}/salaries`);
     stipState.salaries = res.ok ? await res.json() : [];
 
-    // Build unique persons list from recorded salaries
-    const names = [...new Set(stipState.salaries.map(s => s.person_name))];
+    const resEvents = await fetch(`/api/salary_groups/${stipState.activeGroupId}/events`);
+    stipState.events = resEvents.ok ? await resEvents.json() : [];
+
+    // Build unique persons list from recorded salaries and events
+    const names = [...new Set([
+        ...stipState.salaries.map(s => s.person_name),
+        ...stipState.events.map(e => e.person_name)
+    ])];
 
     // Read custom added persons from localStorage for the active group
     const storedPersonsKey = `salary_group_${stipState.activeGroupId}_persons`;
@@ -142,6 +149,7 @@ window.caricaDatiStipendi = async function() {
     renderStipDashboard();
     renderSalaryHistoryTable();
     renderPersonsGrid();
+    renderSalaryEventsTable();
 };
 
 function initStipSettingsTags() {
@@ -270,6 +278,7 @@ window.handlePersonChange = function(e) {
     
     renderStipDashboard();
     renderSalaryHistoryTable();
+    renderSalaryEventsTable();
 };
 
 function populateFormPersonSelect() {
@@ -334,6 +343,7 @@ window.handleGroupPersonToggle = function() {
     
     renderStipDashboard();
     renderSalaryHistoryTable();
+    renderSalaryEventsTable();
 };
 
 // ── SUB-TAB SWITCHER ──────────────────────────────────────────────────────────
@@ -346,6 +356,7 @@ window.switchStipSubTab = function(tab, event) {
     document.querySelectorAll('.stip-tab-content').forEach(el => {
         el.classList.toggle('active', el.id === `stip-tab-${tab}`);
     });
+    if (tab === 'eventi') renderSalaryEventsTable();
 };
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -629,11 +640,23 @@ function renderStipCharts(data) {
     }
     const sorted = monthlyMerged.sort((a,b) => a.month.localeCompare(b.month));
 
+    // Filter relevant events for charts based on active person / group selection
+    let relevantEvents = [];
+    if (stipState.activePersonName === '__GROUP__') {
+        const groupPersons = getSelectedGroupPersons();
+        relevantEvents = (stipState.events || []).filter(e => groupPersons.includes(e.person_name));
+    } else {
+        relevantEvents = (stipState.events || []).filter(e => e.person_name === stipState.activePersonName);
+    }
+    const lineEventsPlugin = createSalaryEventsPlugin(relevantEvents, false);
+    const annualEventsPlugin = createSalaryEventsPlugin(relevantEvents, true);
+
     const lineCtx = document.getElementById('chart-stip-line');
     if (lineCtx) {
         if (chartStipLine) chartStipLine.destroy();
         chartStipLine = new Chart(lineCtx, {
             type: 'line',
+            plugins: [lineEventsPlugin],
             data: {
                 labels: sorted.map(s => s.month),
                 datasets: [{
@@ -644,7 +667,23 @@ function renderStipCharts(data) {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                if (!tooltipItems || !tooltipItems.length) return '';
+                                const month = tooltipItems[0].label;
+                                const evts = relevantEvents.filter(e => (e.event_date || '').substring(0, 7) === month);
+                                if (!evts.length) return '';
+                                return '\n📌 ' + evts.map(e => {
+                                    const prefix = (stipState.activePersonName === '__GROUP__' && e.person_name) ? `[${e.person_name}] ` : '';
+                                    return prefix + e.title + (e.notes ? ` (${e.notes})` : '');
+                                }).join('\n📌 ');
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
                     y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => '€' + v.toLocaleString('it-IT') }, grid: { color: 'rgba(0,0,0,0.05)' } }
@@ -680,6 +719,7 @@ function renderStipCharts(data) {
         if (chartStipLavoroLine) chartStipLavoroLine.destroy();
         chartStipLavoroLine = new Chart(lavoroLineCtx, {
             type: 'line',
+            plugins: [lineEventsPlugin],
             data: {
                 labels: sorted.map(s => s.month),
                 datasets: [
@@ -697,7 +737,23 @@ function renderStipCharts(data) {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'top', labels: { color: '#64748b', font: { size: 12 } } } },
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#64748b', font: { size: 12 } } },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                if (!tooltipItems || !tooltipItems.length) return '';
+                                const month = tooltipItems[0].label;
+                                const evts = relevantEvents.filter(e => (e.event_date || '').substring(0, 7) === month);
+                                if (!evts.length) return '';
+                                return '\n📌 ' + evts.map(e => {
+                                    const prefix = (stipState.activePersonName === '__GROUP__' && e.person_name) ? `[${e.person_name}] ` : '';
+                                    return prefix + e.title + (e.notes ? ` (${e.notes})` : '');
+                                }).join('\n📌 ');
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
                     y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => '€' + v.toLocaleString('it-IT') }, grid: { color: 'rgba(0,0,0,0.05)' } }
@@ -725,6 +781,7 @@ function renderStipCharts(data) {
         if (chartStipAnnuale) chartStipAnnuale.destroy();
         chartStipAnnuale = new Chart(annualCtx, {
             type: 'line',
+            plugins: [annualEventsPlugin],
             data: {
                 labels: years,
                 datasets: [
@@ -772,6 +829,16 @@ function renderStipCharts(data) {
                                 if (label) label += ': ';
                                 if (context.parsed.y !== null) label += fmtEur(context.parsed.y);
                                 return label;
+                            },
+                            afterBody: function(tooltipItems) {
+                                if (!tooltipItems || !tooltipItems.length) return '';
+                                const year = tooltipItems[0].label;
+                                const evts = relevantEvents.filter(e => (e.event_date || '').substring(0, 4) === year);
+                                if (!evts.length) return '';
+                                return '\n📌 ' + evts.map(e => {
+                                    const prefix = (stipState.activePersonName === '__GROUP__' && e.person_name) ? `[${e.person_name}] ` : '';
+                                    return prefix + e.title + (e.notes ? ` (${e.notes})` : '');
+                                }).join('\n📌 ');
                             }
                         }
                     }
@@ -783,6 +850,118 @@ function renderStipCharts(data) {
             }
         });
     }
+}
+
+// ── SALARY EVENTS CHART PLUGIN ────────────────────────────────────────────────
+function createSalaryEventsPlugin(events, isAnnual = false) {
+    return {
+        id: isAnnual ? 'salaryAnnualEventsPlugin' : 'salaryEventsPlugin',
+        afterDraw(chart) {
+            if (!events || events.length === 0) return;
+            const ctx = chart.ctx;
+            const labels = chart.data.labels;
+            if (!labels || labels.length === 0) return;
+            const chartArea = chart.chartArea;
+            if (!chartArea) return;
+
+            const matched = [];
+            events.forEach(evt => {
+                if (!evt.event_date) return;
+                const key = isAnnual ? evt.event_date.substring(0, 4) : evt.event_date.substring(0, 7);
+                const idx = labels.indexOf(key);
+                if (idx !== -1) {
+                    matched.push({ ...evt, key, labelIdx: idx });
+                }
+            });
+
+            if (matched.length === 0) return;
+
+            matched.sort((a, b) => a.labelIdx - b.labelIdx || (a.event_date || '').localeCompare(b.event_date || ''));
+
+            const byIdx = {};
+            matched.forEach(evt => {
+                if (!byIdx[evt.labelIdx]) byIdx[evt.labelIdx] = [];
+                byIdx[evt.labelIdx].push(evt);
+            });
+
+            ctx.save();
+
+            Object.keys(byIdx).forEach(idxStr => {
+                const idx = parseInt(idxStr, 10);
+                const xPos = chart.scales.x.getPixelForValue(idx);
+                if (xPos < chartArea.left - 2 || xPos > chartArea.right + 2) return;
+
+                // Vertical dashed line
+                ctx.save();
+                ctx.beginPath();
+                ctx.setLineDash([5, 4]);
+                ctx.strokeStyle = '#e11d48';
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(xPos, chartArea.top);
+                ctx.lineTo(xPos, chartArea.bottom);
+                ctx.stroke();
+
+                // Pin dot at the top of the line
+                ctx.fillStyle = '#e11d48';
+                ctx.beginPath();
+                ctx.arc(xPos, chartArea.top, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Draw badges for all events in this category
+                const evtsHere = byIdx[idxStr];
+                evtsHere.forEach((evt, stackIdx) => {
+                    const titleText = (stipState.activePersonName === '__GROUP__' && evt.person_name)
+                        ? `${evt.person_name}: ${evt.title}`
+                        : evt.title;
+
+                    ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    const textMetrics = ctx.measureText(titleText);
+                    const maxTextWidth = 140;
+                    let displayText = titleText;
+                    if (textMetrics.width > maxTextWidth) {
+                        while (displayText.length > 3 && ctx.measureText(displayText + '…').width > maxTextWidth) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText += '…';
+                    }
+                    const displayWidth = ctx.measureText(displayText).width;
+                    const badgeWidth = displayWidth + 14;
+                    const badgeHeight = 18;
+
+                    let badgeX = xPos - badgeWidth / 2;
+                    if (badgeX < chartArea.left + 2) badgeX = chartArea.left + 2;
+                    if (badgeX + badgeWidth > chartArea.right - 2) badgeX = chartArea.right - 2 - badgeWidth;
+
+                    const badgeY = chartArea.top + 4 + stackIdx * 21;
+
+                    // Badge background
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(225, 29, 72, 0.92)';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetY = 1;
+                    ctx.beginPath();
+                    if (typeof ctx.roundRect === 'function') {
+                        ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 4);
+                    } else {
+                        ctx.rect(badgeX, badgeY, badgeWidth, badgeHeight);
+                    }
+                    ctx.fill();
+
+                    // Badge text
+                    ctx.shadowColor = 'transparent';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(displayText, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2 + 0.5);
+                    ctx.restore();
+                });
+            });
+
+            ctx.restore();
+        }
+    };
 }
 
 // ── SALARY HISTORY TABLE ──────────────────────────────────────────────────────
@@ -862,6 +1041,145 @@ window.removeSalaryPerson = function(name) {
     }
     
     window.caricaDatiStipendi();
+};
+
+// ── SALARY EVENTS TABLE & MODAL ───────────────────────────────────────────────
+function renderSalaryEventsTable() {
+    const tbody = document.getElementById('stip-events-table-body');
+    if (!tbody) return;
+
+    let events = stipState.events || [];
+    if (stipState.activePersonName !== '__GROUP__') {
+        events = events.filter(e => e.person_name === stipState.activePersonName);
+    } else {
+        const groupPersons = getSelectedGroupPersons();
+        events = events.filter(e => groupPersons.includes(e.person_name));
+    }
+
+    const sorted = [...events].sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">${window.Translations?.noEventsRegistered || 'Nessun evento registrato.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = sorted.map(e => {
+        const safeNotes = (e.notes || '').replace(/"/g, '&quot;');
+        return `<tr>
+            <td style="font-weight:600; white-space:nowrap;">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#e11d48;"></span>
+                    ${e.event_date}
+                </span>
+            </td>
+            <td><span class="badge" style="background:var(--bg-app); border:1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-weight:600; font-size:0.85em;">${e.person_name}</span></td>
+            <td style="font-weight:600; color:var(--text-primary);">${e.title}</td>
+            <td style="color:var(--text-secondary); font-size:0.9em;">${e.notes ? e.notes : '–'}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="icon-btn" onclick="window.editSalaryEvent('${e.id}')" title="Modifica" style="margin-right:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="icon-btn btn-delete" onclick="window.deleteSalaryEvent('${e.id}')" title="Elimina">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+window.openSalaryEventModal = function(id = null) {
+    const pSel = document.getElementById('stip-event-person');
+    if (pSel) {
+        pSel.innerHTML = '';
+        stipState.persons.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p; opt.textContent = p;
+            pSel.appendChild(opt);
+        });
+    }
+
+    if (id) {
+        const evt = (stipState.events || []).find(e => e.id === id);
+        if (!evt) return;
+        document.getElementById('stip-event-edit-id').value = evt.id;
+        document.getElementById('stip-event-modal-title').textContent = window.Translations?.editEvent || 'Modifica Evento';
+        if (pSel) pSel.value = evt.person_name;
+        document.getElementById('stip-event-date').value = evt.event_date;
+        document.getElementById('stip-event-title').value = evt.title;
+        document.getElementById('stip-event-notes').value = evt.notes || '';
+    } else {
+        document.getElementById('stip-event-edit-id').value = '';
+        document.getElementById('stip-event-modal-title').textContent = window.Translations?.newEvent || 'Nuovo Evento';
+        if (pSel && stipState.activePersonName && stipState.activePersonName !== '__GROUP__') {
+            pSel.value = stipState.activePersonName;
+        }
+        document.getElementById('stip-event-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('stip-event-title').value = '';
+        document.getElementById('stip-event-notes').value = '';
+    }
+
+    const modal = document.getElementById('stip-event-modal');
+    if (modal) modal.classList.add('open');
+};
+
+window.closeSalaryEventModal = function() {
+    const modal = document.getElementById('stip-event-modal');
+    if (modal) modal.classList.remove('open');
+};
+
+window.editSalaryEvent = function(id) {
+    window.openSalaryEventModal(id);
+};
+
+window.deleteSalaryEvent = async function(id) {
+    const msg = window.Translations?.deleteEventConfirm || 'Sei sicuro di voler eliminare questo evento?';
+    if (!confirm(msg)) return;
+    try {
+        const res = await fetch(`/api/salary_events/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            await window.caricaDatiStipendi();
+        } else {
+            alert('Errore durante l\'eliminazione dell\'evento.');
+        }
+    } catch (e) {
+        alert('Errore di connessione.');
+    }
+};
+
+window.handleSalaryEventSubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('stip-event-edit-id').value;
+    const personName = document.getElementById('stip-event-person').value;
+    const eventDate = document.getElementById('stip-event-date').value;
+    const title = document.getElementById('stip-event-title').value.trim();
+    const notes = document.getElementById('stip-event-notes').value.trim();
+
+    if (!personName || !eventDate || !title) {
+        alert('Compila tutti i campi obbligatori (Persona, Data, Titolo).');
+        return;
+    }
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/salary_events/${id}` : `/api/salary_groups/${stipState.activeGroupId}/events`;
+    const body = { person_name: personName, event_date: eventDate, title, notes };
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+            window.closeSalaryEventModal();
+            await window.caricaDatiStipendi();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.errore || 'Errore durante il salvataggio dell\'evento.');
+        }
+    } catch (err) {
+        alert('Errore di rete durante il salvataggio.');
+    }
 };
 
 // ── PERSON MODAL ──────────────────────────────────────────────────────────────

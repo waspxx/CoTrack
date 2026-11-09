@@ -125,7 +125,21 @@
 
             <!-- Tendenza del saldo -->
             <div class="widget-box">
-                <div class="widget-header">{{ _('Balance Trend') }} <div class="widget-header-actions"><span title="Seleziona layout">⊞</span> <span title="Rimuovi">🗑️</span></div></div>
+                <div class="widget-header">
+                    <span>{{ _('Balance Trend') }}</span>
+                    <div class="widget-header-actions" style="display:flex; align-items:center; gap:6px;">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.openWalletEventsListModal()" title="{{ _('Manage wallet events') }}" style="font-size:0.75em; padding:2px 7px; border-radius:4px; font-weight:600; cursor:pointer;">
+                            📌 {{ _('Eventi') }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="window.openWalletEventFormModal()" title="{{ _('Add wallet event') }}" style="font-size:0.75em; padding:2px 7px; border-radius:4px; font-weight:600; cursor:pointer;">
+                            +
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="apriTrendSaldoFullscreen()" title="{{ _('Expand chart') }}" style="font-size:0.75em; padding:2px 7px; border-radius:4px; font-weight:600; cursor:pointer;">
+                            ⛶
+                        </button>
+                        <span title="Seleziona layout">⊞</span> <span title="Rimuovi">🗑️</span>
+                    </div>
+                </div>
                 <div>
                     <div style="font-size: 1.6em; font-weight: bold;" id="trend-saldo-kpi">€0,00</div>
                     <div id="trend-saldo-sub" style="color: #28a745; font-size: 0.85em; font-weight: 600; margin-bottom: 5px;"></div>
@@ -479,6 +493,93 @@
                 <button type="button" onclick="chiudiModalSyncBudgetBakersCustom()" class="btn-secondary" style="background-color:#6c757d; padding: 8px 20px;">{{ _('Cancel') }}</button>
                 <button type="button" onclick="eseguiSyncBudgetBakersCustom()" class="btn-primary" style="margin-top: 0; width: auto; padding: 8px 20px; background-color: #198754;">{{ _('Start Sync') }}</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODALE LISTA EVENTI WALLET -->
+    <div id="modal-wallet-events-list" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:var(--bg-card, #ffffff); color:var(--text-primary, #212529); padding:24px; border-radius:12px; max-width:680px; width:92%; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color, #dee2e6); padding-bottom:12px; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:1.15em; display:flex; align-items:center; gap:8px;">
+                    📌 {{ _('Eventi Importanti del Wallet') }}
+                </h3>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" onclick="window.openWalletEventFormModal()" class="btn btn-sm btn-primary" style="padding:4px 10px; font-size:0.85em; font-weight:600;">
+                        + {{ _('Nuovo Evento') }}
+                    </button>
+                    <button type="button" onclick="window.closeWalletEventModals()" style="background:none; border:none; font-size:1.3em; cursor:pointer; color:var(--text-muted, #6c757d); line-height:1;">×</button>
+                </div>
+            </div>
+            <p style="font-size:0.82em; color:var(--text-muted, #6c757d); margin:0 0 12px 0;">
+                {{ _('Gli eventi registrati appariranno come linee verticali con badge sul grafico dell\'andamento del saldo.') }}
+            </p>
+            <div style="overflow-y:auto; flex:1; max-height:450px;">
+                <table class="table" style="width:100%; border-collapse:collapse; font-size:0.88em;">
+                    <thead>
+                        <tr style="border-bottom:2px solid var(--border-color, #dee2e6); text-align:left;">
+                            <th style="padding:8px;">{{ _('Data / Mese') }}</th>
+                            <th style="padding:8px;">{{ _('Titolo Evento') }}</th>
+                            <th style="padding:8px;">{{ _('Conto') }}</th>
+                            <th style="padding:8px;">{{ _('Note') }}</th>
+                            <th style="padding:8px; text-align:right;">{{ _('Azioni') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wallet-events-table-body">
+                        <tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted, #6c757d);">{{ _('Nessun evento registrato.') }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align:right; padding-top:12px; border-top:1px solid var(--border-color, #dee2e6); margin-top:12px;">
+                <button type="button" onclick="window.closeWalletEventModals()" class="btn btn-secondary" style="padding:6px 16px;">{{ _('Chiudi') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CREAZIONE / MODIFICA EVENTO WALLET -->
+    <div id="modal-wallet-event-form" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; backdrop-filter: blur(3px);">
+        <div style="background:var(--bg-card, #ffffff); color:var(--text-primary, #212529); padding:24px; border-radius:12px; max-width:480px; width:90%; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color, #dee2e6); padding-bottom:12px; margin-bottom:16px;">
+                <h3 id="wallet-event-form-title" style="margin:0; font-size:1.15em;">
+                    {{ _('Nuovo Evento Wallet') }}
+                </h3>
+                <button type="button" onclick="document.getElementById('modal-wallet-event-form').style.display='none'" style="background:none; border:none; font-size:1.3em; cursor:pointer; color:var(--text-muted, #6c757d); line-height:1;">×</button>
+            </div>
+            <form id="wallet-event-form" onsubmit="window.handleWalletEventSubmit(event)" style="display:flex; flex-direction:column; gap:12px;">
+                <input type="hidden" id="wallet-event-edit-id" value="">
+                <div class="form-group">
+                    <label for="wallet-event-date" style="font-size:0.85em; font-weight:600; color:var(--text-secondary, #495057); margin-bottom:4px; display:block;">{{ _('Data / Mese *') }}</label>
+                    <input type="date" id="wallet-event-date" required style="width:100%; padding:8px 10px; border:1px solid var(--border-color, #ced4da); border-radius:6px; background:var(--bg-card, #fff); color:var(--text-primary, #000); box-sizing:border-box;">
+                </div>
+                <div class="form-group">
+                    <label for="wallet-event-title" style="font-size:0.85em; font-weight:600; color:var(--text-secondary, #495057); margin-bottom:4px; display:block;">{{ _('Titolo Evento *') }}</label>
+                    <input type="text" id="wallet-event-title" placeholder="{{ _('es. Rogito casa, Acquisto auto, Rimborso tasse') }}" required style="width:100%; padding:8px 10px; border:1px solid var(--border-color, #ced4da); border-radius:6px; background:var(--bg-card, #fff); color:var(--text-primary, #000); box-sizing:border-box;">
+                </div>
+                <div class="form-group">
+                    <label for="wallet-event-account" style="font-size:0.85em; font-weight:600; color:var(--text-secondary, #495057); margin-bottom:4px; display:block;">{{ _('Conto (Opzionale)') }}</label>
+                    <select id="wallet-event-account" style="width:100%; padding:8px 10px; border:1px solid var(--border-color, #ced4da); border-radius:6px; background:var(--bg-card, #fff); color:var(--text-primary, #000); box-sizing:border-box;"></select>
+                </div>
+                <div class="form-group">
+                    <label for="wallet-event-notes" style="font-size:0.85em; font-weight:600; color:var(--text-secondary, #495057); margin-bottom:4px; display:block;">{{ _('Note (Opzionale)') }}</label>
+                    <textarea id="wallet-event-notes" rows="2" placeholder="{{ _('Dettagli opzionali sull\'evento...') }}" style="width:100%; padding:8px 10px; border:1px solid var(--border-color, #ced4da); border-radius:6px; background:var(--bg-card, #fff); color:var(--text-primary, #000); box-sizing:border-box; resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                    <button type="button" onclick="document.getElementById('modal-wallet-event-form').style.display='none'" class="btn btn-secondary" style="padding:6px 16px;">{{ _('Annulla') }}</button>
+                    <button type="submit" class="btn btn-primary" style="padding:6px 16px;">{{ _('Salva') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE TREND SALDO A SCHERMO INTERO -->
+    <div id="modal-trend-saldo-fullscreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(3px);" onclick="if (event.target === this) chiudiTrendSaldoFullscreen();">
+        <div style="background:var(--bg-card, #ffffff); color:var(--text-primary, #212529); padding:24px; border-radius:12px; width:95vw; height:90vh; display:flex; flex-direction:column; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color, #dee2e6); padding-bottom:12px; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:1.15em; display:flex; align-items:center; gap:8px;">
+                    📈 {{ _('Balance Trend') }}
+                </h3>
+                <button type="button" onclick="chiudiTrendSaldoFullscreen()" style="background:none; border:none; font-size:1.3em; cursor:pointer; color:var(--text-muted, #6c757d); line-height:1;">×</button>
+            </div>
+            <div style="flex:1; position:relative; min-height:0;"><canvas id="graficoTrendSaldoFullscreen"></canvas></div>
         </div>
     </div>
 <!-- FINE TAB WALLET -->

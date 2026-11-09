@@ -3176,12 +3176,10 @@ window.updateReminderNextDate = function() {
     }
 };
 
-// Automatically resolve or update targets of matching reminders when recording an activity
+// Automatically resolve non-recurring reminders when recording a new activity (recurring reminders are handled server-side)
 async function checkAndHandleTriggeredReminders(newEntry) {
     const vehicleId = newEntry.vehicleId;
     const type = newEntry.type;
-    const date = newEntry.date;
-    const odometer = parseInt(newEntry.odometer) || getCurrentOdometer(vehicleId, true);
     
     const reminders = state.entries.filter(e => e.type === 'reminder' && String(e.vehicleId) === String(vehicleId));
     
@@ -3203,74 +3201,14 @@ async function checkAndHandleTriggeredReminders(newEntry) {
             }
         }
         
-        if (isMatch) {
-            if (rem.isRecurring) {
-                let newTargetDate = rem.targetDate;
-                let newTargetOdometer = rem.targetOdometer;
-                
-                let nextTargetDate = null;
-                if ((rem.triggerType === 'date' || rem.triggerType === 'both') && rem.recurrenceVal && rem.recurrenceUnit) {
-                    const baseDateStr = date || new Date().toISOString().split('T')[0];
-                    const parts = baseDateStr.split('-');
-                    if (parts.length === 3) {
-                        const y = parseInt(parts[0]);
-                        const m = parseInt(parts[1]) - 1;
-                        const d = parseInt(parts[2]);
-                        const nextBaseDate = new Date(y, m, d);
-                        
-                        if (rem.recurrenceUnit === 'days') {
-                            nextBaseDate.setDate(nextBaseDate.getDate() + parseInt(rem.recurrenceVal));
-                        } else if (rem.recurrenceUnit === 'months') {
-                            nextBaseDate.setMonth(nextBaseDate.getMonth() + parseInt(rem.recurrenceVal));
-                        } else if (rem.recurrenceUnit === 'years') {
-                            nextBaseDate.setFullYear(nextBaseDate.getFullYear() + parseInt(rem.recurrenceVal));
-                        }
-                        
-                        const nY = nextBaseDate.getFullYear();
-                        const nM = String(nextBaseDate.getMonth() + 1).padStart(2, '0');
-                        const nD = String(nextBaseDate.getDate()).padStart(2, '0');
-                        newTargetDate = baseDateStr;
-                        nextTargetDate = `${nY}-${nM}-${nD}`;
-                    }
-                }
-                
-                if ((rem.triggerType === 'odometer' || rem.triggerType === 'both') && rem.recurrenceKm) {
-                    newTargetOdometer = odometer + parseInt(rem.recurrenceKm);
-                }
-                
-                const updatedRem = {
-                    ...rem,
-                    targetDate: newTargetDate,
-                    targetOdometer: newTargetOdometer,
-                    nextTargetDate: nextTargetDate
-                };
-                delete updatedRem._isExpired;
-                delete updatedRem._isExpiring;
-                delete updatedRem.garage_id;
-                delete updatedRem.portfolio_id;
-                
+        if (isMatch && !rem.isRecurring) {
+            const confirmMessage = `È presente un promemoria attivo per "${rem.description}". Vuoi segnarlo come completato ed eliminarlo?`;
+            if (confirm(confirmMessage)) {
                 const resp = await fetch(`/api/vehicle-entries/${rem.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedRem)
+                    method: 'DELETE'
                 });
                 if (resp.ok) {
-                    const data = await resp.json();
-                    const idx = state.entries.findIndex(e => e.id === rem.id);
-                    if (idx !== -1) {
-                        state.entries[idx] = { ...state.entries[idx], ...data, targetDate: newTargetDate, targetOdometer: newTargetOdometer, nextTargetDate: nextTargetDate };
-                        delete state.entries[idx]._isExpired;
-                    }
-                }
-            } else {
-                const confirmMessage = `È presente un promemoria attivo per "${rem.description}". Vuoi segnarlo come completato ed eliminarlo?`;
-                if (confirm(confirmMessage)) {
-                    const resp = await fetch(`/api/vehicle-entries/${rem.id}`, {
-                        method: 'DELETE'
-                    });
-                    if (resp.ok) {
-                        state.entries = state.entries.filter(e => e.id !== rem.id);
-                    }
+                    state.entries = state.entries.filter(e => e.id !== rem.id);
                 }
             }
         }
@@ -3615,7 +3553,7 @@ elActivityForm.addEventListener('submit', async (e) => {
         
         if (response.ok) {
             closeActivityModal();
-            if (type === 'expense' || type === 'service') {
+            if (!id && (type === 'expense' || type === 'service')) {
                 try {
                     await checkAndHandleTriggeredReminders(entryData);
                 } catch(remErr) {

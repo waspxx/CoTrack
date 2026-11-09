@@ -83,6 +83,10 @@
                     <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     <span>{{ _('Payslips') }}</span>
                 </a>
+                <a class="nav-link" data-stip-tab="eventi" href="#" id="stip-nav-eventi" onclick="window.switchStipSubTab('eventi',event)">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span>{{ _('Events') }}</span>
+                </a>
                 <a class="nav-link" data-stip-tab="persone" href="#" id="stip-nav-persone" onclick="window.switchStipSubTab('persone',event)">
                     <svg class="nav-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <span>{{ _('Manage People') }}</span>
@@ -122,9 +126,16 @@
 
             <!-- 1. DASHBOARD -->
             <section class="stip-tab-content active" id="stip-tab-dashboard">
-                <div class="dashboard-header">
-                    <h1 id="stip-dashboard-title">{{ _('Salary Dashboard') }}</h1>
-                    <p class="description">{{ _('Gross/net summary and main items for the selected period.') }}</p>
+                <div class="dashboard-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h1 id="stip-dashboard-title">{{ _('Salary Dashboard') }}</h1>
+                        <p class="description">{{ _('Gross/net summary and main items for the selected period.') }}</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="window.openSalaryEventModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:8px 14px; font-size:0.85em; border-radius:6px;">
+                            <span>📌</span> {{ _('Aggiungi Evento') }}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="stats-grid">
@@ -411,6 +422,37 @@
                 </div>
             </section>
 
+            <!-- 4. GESTIONE EVENTI -->
+            <section class="stip-tab-content" id="stip-tab-eventi">
+                <div class="card" style="padding:20px;">
+                    <div class="card-header-actions" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h3 style="margin:0;">{{ _('Important Career & Salary Events') }}</h3>
+                            <p class="description" style="margin:4px 0 0 0; font-size:0.85em; color:var(--text-muted);">
+                                {{ _('Milestones and career events (promotions, pay rises, contract renewals) marked on timeline charts.') }}
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.openSalaryEventModal()">+ {{ _('New Event') }}</button>
+                    </div>
+                    <div style="overflow-x:auto; margin-top:12px;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Date / Month') }}</th>
+                                    <th>{{ _('Person') }}</th>
+                                    <th>{{ _('Event Title') }}</th>
+                                    <th>{{ _('Notes') }}</th>
+                                    <th style="text-align:right;">{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stip-events-table-body">
+                                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">{{ _('No events registered.') }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -429,6 +471,39 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="window.closeSalaryPersonModal()">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Nuovo / Modifica Evento -->
+    <div class="modal-overlay" id="stip-event-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="stip-event-modal-title">{{ _('New Event') }}</h2>
+                <button class="modal-close" onclick="window.closeSalaryEventModal()">×</button>
+            </div>
+            <form class="modal-form" id="stip-event-form" onsubmit="window.handleSalaryEventSubmit(event)" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+                <input type="hidden" id="stip-event-edit-id" value="">
+                <div class="form-group">
+                    <label for="stip-event-person" style="font-size:0.85em; font-weight:600; color:var(--text-secondary); margin-bottom:4px; display:block;">{{ _('Person *') }}</label>
+                    <select id="stip-event-person" required style="width: 100%; border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; background:var(--bg-card); color:var(--text-primary);"></select>
+                </div>
+                <div class="form-group">
+                    <label for="stip-event-date" style="font-size:0.85em; font-weight:600; color:var(--text-secondary); margin-bottom:4px; display:block;">{{ _('Date / Month *') }}</label>
+                    <input type="date" id="stip-event-date" required style="width: 100%; border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; background:var(--bg-card); color:var(--text-primary);">
+                </div>
+                <div class="form-group">
+                    <label for="stip-event-title" style="font-size:0.85em; font-weight:600; color:var(--text-secondary); margin-bottom:4px; display:block;">{{ _('Event Title *') }}</label>
+                    <input type="text" id="stip-event-title" placeholder="{{ _('e.g. Promotion, Salary Raise, CCNL Level Upgrade') }}" required style="width: 100%; border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; background:var(--bg-card); color:var(--text-primary);">
+                </div>
+                <div class="form-group">
+                    <label for="stip-event-notes" style="font-size:0.85em; font-weight:600; color:var(--text-secondary); margin-bottom:4px; display:block;">{{ _('Notes (optional)') }}</label>
+                    <textarea id="stip-event-notes" rows="2" placeholder="{{ _('Optional details or impact on salary...') }}" style="width: 100%; border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; background:var(--bg-card); color:var(--text-primary); resize: vertical;"></textarea>
+                </div>
+                <div class="form-actions" style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="window.closeSalaryEventModal()">{{ _('Cancel') }}</button>
                     <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
                 </div>
             </form>
